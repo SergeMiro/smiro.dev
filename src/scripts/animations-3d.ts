@@ -5,6 +5,16 @@ import Lenis from 'lenis';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
+// ── Easing map (wodniack-style named curves) ──
+const ease = {
+  expo: 'expo.inOut',
+  expoOut: 'expo.out',
+  expoIn: 'expo.in',
+  smooth: 'power3.out',
+  smooth2: 'power4.out',
+  bounce: 'back.out(1.4)',
+};
+
 export function init3DAnimations() {
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (prefersReduced) return;
@@ -16,479 +26,343 @@ export function init3DAnimations() {
   gsap.ticker.lagSmoothing(0);
   (window as any).__lenis = lenis;
 
-  // ── Add perspective wrapper ──
-  const main = document.getElementById('main-content');
-  if (main) {
-    main.style.perspective = '1200px';
-    main.style.perspectiveOrigin = '50% 50%';
-    main.style.overflowX = 'hidden';
-  }
-
-  // ── Create floating 3D shapes ──
-  createFloatingShapes();
-
   // ── Nav entrance ──
-  gsap.from('nav', {
-    y: -40,
-    opacity: 0,
-    rotateX: -15,
-    transformOrigin: 'top center',
-    duration: 0.6,
-    ease: 'power3.out',
-  });
-
-  // ── Hero 3D ──
-  initHero3D();
-
-  // ── Scroll-triggered 3D sections ──
-  initSectionReveals();
-
-  // ── About 3D ──
-  initAbout3D();
-
-  // ── Projects 3D ──
-  initProjects3D();
+  gsap.from('nav', { y: -30, opacity: 0, duration: 0.8, ease: ease.smooth });
 
   // ── Scroll progress bar ──
   const progressBar = document.querySelector('[data-scroll-progress]');
   if (progressBar) {
     gsap.to(progressBar, {
-      scaleX: 1,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: document.body,
-        start: 'top top',
-        end: 'bottom bottom',
-        scrub: 0.3,
-      },
+      scaleX: 1, ease: 'none',
+      scrollTrigger: { trigger: document.body, start: 'top top', end: 'bottom bottom', scrub: 0.3 },
     });
   }
 
-  // ── Parallax background blobs ──
-  initParallaxBlobs();
+  // ── Sections ──
+  initHero();
+  initAbout();
+  initProjects();
+  initContact();
 }
 
 // ═══════════════════════════════════════
-// Hero 3D animations
+// HERO — pinned, scroll-driven typography
 // ═══════════════════════════════════════
-function initHero3D() {
-  const heroHeading = document.querySelector('[data-split="chars"]');
-  if (heroHeading) {
-    const el = heroHeading as HTMLElement;
-    el.style.transformStyle = 'preserve-3d';
+function initHero() {
+  const section = document.getElementById('hero-3d');
+  if (!section) return;
 
-    const split = new SplitText(heroHeading, { type: 'chars' });
+  const sticky = section.querySelector('.hero-3d__sticky') as HTMLElement;
+  const lines = section.querySelectorAll('[data-hero-line]');
+  const badge = section.querySelector('[data-hero-badge]');
+  const sub = section.querySelector('[data-hero-sub]');
+  const scroll = section.querySelector('[data-hero-scroll]');
+  const ticker = section.querySelector('[data-hero-ticker]');
+  const grid = section.querySelector('.hero-3d__grid');
+  const crosses = section.querySelectorAll('.hero-3d__cross');
 
-    gsap.from(split.chars, {
-      rotateY: -90,
-      rotateX: 10,
-      z: -300,
+  // ── Entrance timeline (plays once) ──
+  const entrance = gsap.timeline({ delay: 0.2 });
+
+  // Grid fades in
+  entrance.from(grid, { opacity: 0, duration: 1.2, ease: ease.smooth });
+
+  // Crosses
+  entrance.from(crosses, { opacity: 0, scale: 0, duration: 0.6, stagger: 0.1, ease: ease.bounce }, 0.3);
+
+  // Lines appear one by one with stagger
+  lines.forEach((line, i) => {
+    const split = new SplitText(line, { type: 'chars' });
+    entrance.to(line, { opacity: 1, duration: 0.01 }, 0.3 + i * 0.2);
+    entrance.from(split.chars, {
+      y: 120,
+      rotateX: -80,
       opacity: 0,
-      stagger: {
-        each: 0.03,
-        from: 'start',
-      },
-      duration: 1,
-      ease: 'back.out(1.4)',
-      delay: 0.3,
-    });
-
-    // Subtle parallax on hero heading while scrolling
-    gsap.to(heroHeading, {
-      z: -150,
-      rotateX: 8,
-      opacity: 0.3,
-      scrollTrigger: {
-        trigger: heroHeading,
-        start: 'top 20%',
-        end: 'bottom -50%',
-        scrub: 1,
-      },
-    });
-  }
-
-  // Subheading flies up with 3D rotation
-  const heroSub = document.querySelector('.hero-sub');
-  if (heroSub) {
-    gsap.from(heroSub, {
-      y: 60,
-      z: -200,
-      rotateX: 25,
-      opacity: 0,
+      stagger: 0.02,
       duration: 0.8,
-      delay: 0.7,
-      ease: 'power3.out',
-    });
-  }
+      ease: ease.smooth2,
+    }, 0.3 + i * 0.2);
+  });
 
-  // CTAs scale in with bounce
-  const heroCtas = document.querySelector('.hero-ctas');
-  if (heroCtas) {
-    gsap.from(heroCtas, {
-      scale: 0.5,
-      z: -100,
-      opacity: 0,
-      duration: 0.6,
-      delay: 1,
-      ease: 'back.out(2)',
-    });
-  }
+  // Badge
+  entrance.to(badge, { opacity: 1, duration: 0.6, ease: ease.smooth }, 0.9);
 
-  // Availability badge
-  const badge = document.querySelector('[data-reveal]');
-  if (badge) {
-    gsap.from(badge, {
-      y: -30,
-      z: 100,
-      rotateX: -20,
-      opacity: 0,
-      duration: 0.7,
-      delay: 0.1,
-      ease: 'power3.out',
-    });
-  }
+  // Ticker
+  entrance.to(ticker, { opacity: 1, duration: 0.8, ease: ease.smooth }, 1.0);
 
-  // Scroll indicator 3D
-  const scrollIndicator = document.querySelector('.absolute.bottom-8');
-  if (scrollIndicator) {
-    gsap.from(scrollIndicator, {
-      z: -200,
-      opacity: 0,
-      duration: 1,
-      delay: 1.3,
-      ease: 'power2.out',
-    });
-  }
+  // Sub text
+  entrance.to(sub, { opacity: 1, duration: 0.6, ease: ease.smooth }, 1.1);
+
+  // Scroll indicator
+  entrance.to(scroll, { opacity: 1, duration: 0.6, ease: ease.smooth }, 1.3);
+
+  // ── Scroll-driven exit timeline (pinned) ──
+  const scrollTl = gsap.timeline({
+    scrollTrigger: {
+      trigger: section,
+      start: 'top top',
+      end: '+=200%',
+      scrub: 1,
+      pin: sticky,
+      pinSpacing: false,
+    },
+  });
+
+  // Lines spread apart and scale
+  scrollTl.to(lines[0], { y: '-30vh', scale: 1.3, opacity: 0.2, ease: 'none' }, 0);
+  scrollTl.to(lines[1], { scale: 1.5, opacity: 0.15, ease: 'none' }, 0);
+  scrollTl.to(lines[2], { y: '30vh', scale: 1.3, opacity: 0.2, ease: 'none' }, 0);
+
+  // Grid rotates slightly in 3D
+  scrollTl.to(grid, { rotateX: 15, rotateY: -5, opacity: 0, ease: 'none' }, 0);
+
+  // Badge, sub, scroll fade out
+  scrollTl.to(badge, { y: -100, opacity: 0, ease: 'none' }, 0);
+  scrollTl.to(sub, { y: 100, opacity: 0, ease: 'none' }, 0);
+  scrollTl.to(scroll, { y: 50, opacity: 0, ease: 'none' }, 0);
+  scrollTl.to(ticker, { opacity: 0, ease: 'none' }, 0);
+
+  // Crosses fly out
+  scrollTl.to(crosses, { scale: 3, opacity: 0, ease: 'none' }, 0);
 }
 
 // ═══════════════════════════════════════
-// Section reveals — each section "unfolds" into view
+// ABOUT — pinned, phased reveal
 // ═══════════════════════════════════════
-function initSectionReveals() {
-  const sections = document.querySelectorAll('section');
+function initAbout() {
+  const section = document.getElementById('about-3d');
+  if (!section) return;
 
-  sections.forEach((section, i) => {
-    if (i === 0) return; // Skip hero
+  const sticky = section.querySelector('.about-3d__sticky') as HTMLElement;
+  const bio = section.querySelector('[data-about-bio]') as HTMLElement;
+  const bioText = section.querySelector('[data-about-text]') as HTMLElement;
+  const bioText2 = section.querySelector('[data-about-text-2]') as HTMLElement;
+  const stats = section.querySelector('[data-about-stats]') as HTMLElement;
+  const statItems = section.querySelectorAll('[data-about-stat]');
+  const stack = section.querySelector('[data-about-stack]') as HTMLElement;
+  const label = section.querySelector('[data-about-label]') as HTMLElement;
 
-    const el = section as HTMLElement;
-    el.style.transformStyle = 'preserve-3d';
-    el.style.willChange = 'transform';
+  // Split bio text into words for reveal
+  const split1 = new SplitText(bioText, { type: 'words' });
+  const split2 = new SplitText(bioText2, { type: 'words' });
 
-    // Alternate rotation direction for variety
-    const rotateXStart = i % 2 === 0 ? -12 : -8;
-    const rotateYStart = i % 2 === 0 ? -4 : 4;
+  // Set initial state
+  gsap.set(split1.words, { opacity: 0.1 });
+  gsap.set(split2.words, { opacity: 0.1 });
 
-    gsap.fromTo(
-      section,
-      {
-        rotateX: rotateXStart,
-        rotateY: rotateYStart,
-        z: -200,
-        opacity: 0,
-        transformOrigin: 'center top',
-      },
-      {
-        rotateX: 0,
-        rotateY: 0,
-        z: 0,
-        opacity: 1,
-        duration: 1,
-        ease: 'power2.out',
-        scrollTrigger: {
-          trigger: section,
-          start: 'top 90%',
-          end: 'top 40%',
-          scrub: 0.8,
-        },
-      }
-    );
+  const tl = gsap.timeline({
+    scrollTrigger: {
+      trigger: section,
+      start: 'top top',
+      end: '+=350%',
+      scrub: 1,
+      pin: sticky,
+      pinSpacing: false,
+    },
   });
+
+  // Phase 0: Section label flashes and fades
+  tl.fromTo(label, { opacity: 0, scale: 0.8 }, { opacity: 0.04, scale: 1, duration: 0.1, ease: 'none' }, 0);
+  tl.to(label, { opacity: 0.02, scale: 1.2, duration: 0.9, ease: 'none' }, 0.1);
+
+  // Phase 1: Bio text reveals word by word (0 → 0.4)
+  tl.to(split1.words, {
+    opacity: 1,
+    stagger: 0.01,
+    duration: 0.3,
+    ease: 'none',
+  }, 0.02);
+
+  tl.to(split2.words, {
+    opacity: 1,
+    stagger: 0.01,
+    duration: 0.2,
+    ease: 'none',
+  }, 0.15);
+
+  // Phase 2: Bio exits, stats enter (0.4 → 0.7)
+  tl.to(bio, { y: -100, opacity: 0, duration: 0.15, ease: 'none' }, 0.4);
+
+  tl.to(stats, { opacity: 1, duration: 0.05, ease: 'none' }, 0.45);
+  tl.from(statItems, {
+    y: 80,
+    rotateX: -40,
+    opacity: 0,
+    stagger: 0.03,
+    duration: 0.15,
+    ease: 'none',
+  }, 0.45);
+
+  // Phase 3: Stack ticker enters (0.65 → 0.8)
+  tl.to(stack, { opacity: 1, duration: 0.1, ease: 'none' }, 0.65);
+
+  // Phase 4: Everything exits (0.8 → 1)
+  tl.to(stats, { y: -80, opacity: 0, duration: 0.15, ease: 'none' }, 0.8);
+  tl.to(stack, { y: -40, opacity: 0, duration: 0.1, ease: 'none' }, 0.85);
+  tl.to(label, { opacity: 0, duration: 0.1, ease: 'none' }, 0.85);
 }
 
 // ═══════════════════════════════════════
-// About 3D — stats flip in, tech stack cascades
+// PROJECTS — cards in 3D space with parallax
 // ═══════════════════════════════════════
-function initAbout3D() {
-  // Stats cards flip in
-  const countElements = document.querySelectorAll('[data-count]');
-  countElements.forEach((el: any, i) => {
-    const parent = el.closest('.text-center, .md\\:text-left')?.parentElement;
+function initProjects() {
+  const section = document.getElementById('projects-3d');
+  if (!section) return;
 
-    // Count-up animation
-    const target = parseInt(el.dataset.count);
-    const obj = { val: 0 };
-    gsap.to(obj, {
-      val: target,
-      duration: 2,
-      ease: 'power2.out',
-      scrollTrigger: { trigger: el, start: 'top 85%' },
-      onUpdate: () => {
-        el.textContent = Math.floor(obj.val) + '+';
-      },
-    });
+  const sticky = section.querySelector('.proj-3d__sticky') as HTMLElement;
+  const titleEl = section.querySelector('[data-proj-title]') as HTMLElement;
+  const cards = section.querySelectorAll('[data-proj-card]');
+  const cta = section.querySelector('[data-proj-cta]') as HTMLElement;
 
-    // 3D flip entrance for each stat
-    const statBox = el.parentElement;
-    if (statBox) {
-      gsap.from(statBox, {
-        rotateY: 180,
-        z: -100,
-        opacity: 0,
-        duration: 0.8,
-        delay: i * 0.15,
-        ease: 'back.out(1.5)',
-        scrollTrigger: { trigger: statBox, start: 'top 85%' },
-      });
-    }
-  });
-
-  // Tech stack items cascade from different Z depths
-  document.querySelectorAll('[data-scale-reveal]').forEach((container: any) => {
-    const items = container.children;
-    gsap.from(items, {
-      scrollTrigger: { trigger: container, start: 'top 80%' },
-      z: () => gsap.utils.random(-300, -100),
-      rotateX: () => gsap.utils.random(-20, 20),
-      rotateY: () => gsap.utils.random(-30, 30),
-      opacity: 0,
-      stagger: 0.06,
-      duration: 0.7,
-      ease: 'power3.out',
-    });
-  });
-
-  // Word splits with 3D
-  document.querySelectorAll('[data-split="words"]').forEach((el) => {
-    const split = new SplitText(el, { type: 'words' });
-    gsap.from(split.words, {
-      scrollTrigger: { trigger: el, start: 'top 80%' },
-      y: 60,
-      z: -150,
-      rotateX: -30,
-      opacity: 0,
-      stagger: 0.05,
-      duration: 0.7,
-      ease: 'power3.out',
-    });
-  });
-
-  // Bio text reveal
-  const bioContainer = document.querySelector('[data-reveal]');
-  if (bioContainer) {
-    const section = bioContainer.closest('section');
-    if (section && section.id === 'about') {
-      gsap.from(bioContainer, {
-        scrollTrigger: { trigger: bioContainer, start: 'top 85%' },
-        y: 50,
-        z: -100,
-        rotateX: -10,
-        opacity: 0,
-        duration: 0.8,
-        ease: 'power3.out',
-      });
-    }
-  }
-}
-
-// ═══════════════════════════════════════
-// Projects 3D — cards stack and spread
-// ═══════════════════════════════════════
-function initProjects3D() {
-  const projectSection = document.getElementById('projects');
-  if (!projectSection) return;
-
-  const cards = projectSection.querySelectorAll('[class*="rounded-2xl"]');
-
-  cards.forEach((card, i) => {
-    const el = card as HTMLElement;
-    el.style.transformStyle = 'preserve-3d';
-    el.style.transition = 'transform 0.3s ease';
-
-    // Cards fan in from stacked position
-    gsap.from(card, {
-      rotateY: i === 0 ? -20 : 15,
-      rotateX: 5,
-      z: -300 + i * -100,
-      x: i === 0 ? -100 : 100,
-      opacity: 0,
-      duration: 1,
-      ease: 'power3.out',
-      scrollTrigger: {
-        trigger: projectSection,
-        start: 'top 75%',
-      },
-      delay: i * 0.2,
-    });
-
-    // 3D tilt on hover
-    el.addEventListener('mousemove', (e: MouseEvent) => {
-      const rect = el.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-      const rotateX = (y - centerY) / centerY * -8;
-      const rotateY = (x - centerX) / centerX * 8;
-
-      gsap.to(el, {
-        rotateX,
-        rotateY,
-        z: 30,
-        duration: 0.3,
-        ease: 'power2.out',
-        overwrite: 'auto',
-      });
-    });
-
-    el.addEventListener('mouseleave', () => {
-      gsap.to(el, {
-        rotateX: 0,
-        rotateY: 0,
-        z: 0,
-        duration: 0.5,
-        ease: 'power3.out',
-        overwrite: 'auto',
-      });
-    });
-  });
-}
-
-// ═══════════════════════════════════════
-// Parallax background blobs
-// ═══════════════════════════════════════
-function initParallaxBlobs() {
-  const blobs = document.querySelectorAll('.animate-pulse-slow, [class*="blur-"]');
-
-  blobs.forEach((blob, i) => {
-    gsap.to(blob, {
-      y: i % 2 === 0 ? -300 : -200,
-      z: i % 2 === 0 ? 100 : -100,
-      rotation: i % 2 === 0 ? 15 : -15,
-      scrollTrigger: {
-        trigger: blob.closest('section') || blob,
-        start: 'top bottom',
-        end: 'bottom top',
-        scrub: 1.5,
-      },
-    });
-  });
-}
-
-// ═══════════════════════════════════════
-// Floating 3D geometric shapes
-// ═══════════════════════════════════════
-function createFloatingShapes() {
-  const container = document.createElement('div');
-  container.className = 'floating-shapes-3d';
-  container.setAttribute('aria-hidden', 'true');
-  container.style.cssText = `
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    perspective: 1000px;
-    overflow: hidden;
-  `;
-  document.body.prepend(container);
-
-  const shapes = [
-    { type: 'cube', size: 40, x: '10%', y: '20%', color: 'var(--color-primary)' },
-    { type: 'ring', size: 60, x: '85%', y: '15%', color: 'var(--color-primary)' },
-    { type: 'diamond', size: 30, x: '75%', y: '60%', color: 'var(--color-primary)' },
-    { type: 'cube', size: 25, x: '20%', y: '70%', color: 'var(--color-primary)' },
-    { type: 'ring', size: 45, x: '50%', y: '45%', color: 'var(--color-primary)' },
-    { type: 'diamond', size: 35, x: '90%', y: '80%', color: 'var(--color-primary)' },
+  // Card layout positions (spread in 3D space)
+  const positions = [
+    { x: '-30%', y: '-15%', z: -100, rotate: -3 },
+    { x: '25%',  y: '-20%', z: -200, rotate: 4 },
+    { x: '-25%', y: '15%',  z: -150, rotate: 2 },
+    { x: '30%',  y: '10%',  z: -50,  rotate: -2 },
+    { x: '-10%', y: '25%',  z: -250, rotate: 5 },
+    { x: '15%',  y: '-5%',  z: -300, rotate: -4 },
   ];
 
-  shapes.forEach((shape, i) => {
-    const el = document.createElement('div');
-    el.style.cssText = `
-      position: absolute;
-      left: ${shape.x};
-      top: ${shape.y};
-      width: ${shape.size}px;
-      height: ${shape.size}px;
-      transform-style: preserve-3d;
-      opacity: 0;
-    `;
+  const tl = gsap.timeline({
+    scrollTrigger: {
+      trigger: section,
+      start: 'top top',
+      end: '+=450%',
+      scrub: 1,
+      pin: sticky,
+      pinSpacing: false,
+    },
+  });
 
-    if (shape.type === 'cube') {
-      el.innerHTML = createCubeHTML(shape.size, shape.color);
-    } else if (shape.type === 'ring') {
-      el.innerHTML = createRingHTML(shape.size, shape.color);
-    } else {
-      el.innerHTML = createDiamondHTML(shape.size, shape.color);
-    }
+  // Phase 0: Title zooms in and fades (0 → 0.15)
+  tl.fromTo(titleEl,
+    { scale: 0.3, opacity: 0 },
+    { scale: 1, opacity: 1, duration: 0.1, ease: 'none' },
+    0
+  );
+  tl.to(titleEl, { scale: 3, opacity: 0, duration: 0.15, ease: 'none' }, 0.1);
 
-    container.appendChild(el);
+  // Phase 1: Cards fly in from far Z (0.15 → 0.5)
+  cards.forEach((card, i) => {
+    const pos = positions[i] || positions[0];
+    const startTime = 0.15 + i * 0.04;
 
-    // Fade in
-    gsap.to(el, {
-      opacity: 0.15,
-      duration: 1.5,
-      delay: 0.5 + i * 0.2,
-      ease: 'power2.out',
+    // Initial state: far away, invisible
+    gsap.set(card, {
+      xPercent: parseFloat(pos.x),
+      yPercent: parseFloat(pos.y),
+      z: -800,
+      rotateY: pos.rotate * 3,
+      rotateX: 10,
+      opacity: 0,
     });
 
-    // Continuous rotation
-    gsap.to(el, {
-      rotateX: `+=${gsap.utils.random(180, 360)}`,
-      rotateY: `+=${gsap.utils.random(180, 360)}`,
-      rotateZ: `+=${gsap.utils.random(90, 180)}`,
-      duration: gsap.utils.random(15, 25),
-      repeat: -1,
+    // Fly in to position
+    tl.to(card, {
+      z: pos.z,
+      rotateY: pos.rotate,
+      rotateX: 0,
+      opacity: 1,
+      duration: 0.25,
       ease: 'none',
-    });
+    }, startTime);
+  });
 
-    // Scroll-linked depth movement
-    gsap.to(el, {
-      y: gsap.utils.random(-400, -200),
-      z: gsap.utils.random(-200, 200),
-      scrollTrigger: {
-        trigger: document.body,
-        start: 'top top',
-        end: 'bottom bottom',
-        scrub: 2,
-      },
+  // Phase 2: Cards drift with parallax (0.5 → 0.85)
+  cards.forEach((card, i) => {
+    const parallaxY = (i % 2 === 0 ? -1 : 1) * (30 + i * 10);
+    const parallaxZ = (i % 2 === 0 ? 1 : -1) * 50;
+
+    tl.to(card, {
+      yPercent: `+=${parallaxY}`,
+      z: `+=${parallaxZ}`,
+      rotateY: `+=${(i % 2 === 0 ? -2 : 2)}`,
+      duration: 0.35,
+      ease: 'none',
+    }, 0.5);
+  });
+
+  // CTA appears
+  tl.to(cta, { opacity: 1, duration: 0.1, ease: 'none' }, 0.6);
+
+  // Phase 3: Everything exits (0.85 → 1)
+  cards.forEach((card, i) => {
+    tl.to(card, {
+      z: 500,
+      opacity: 0,
+      duration: 0.15,
+      ease: 'none',
+    }, 0.85 + i * 0.01);
+  });
+
+  tl.to(cta, { opacity: 0, duration: 0.1, ease: 'none' }, 0.9);
+
+  // ── Mouse parallax on cards ──
+  let mouseX = 0;
+  let mouseY = 0;
+
+  sticky.addEventListener('mousemove', (e: MouseEvent) => {
+    const rect = sticky.getBoundingClientRect();
+    mouseX = (e.clientX - rect.left) / rect.width - 0.5;
+    mouseY = (e.clientY - rect.top) / rect.height - 0.5;
+
+    cards.forEach((card, i) => {
+      const depth = 1 + i * 0.3;
+      gsap.to(card, {
+        x: mouseX * 30 * depth,
+        y: mouseY * 20 * depth,
+        duration: 0.8,
+        ease: 'power2.out',
+        overwrite: 'auto',
+      });
     });
   });
 }
 
-function createCubeHTML(size: number, color: string): string {
-  const half = size / 2;
-  const face = `border: 1px solid ${color}; background: transparent; position: absolute; width: ${size}px; height: ${size}px;`;
-  return `
-    <div style="transform-style: preserve-3d; width: ${size}px; height: ${size}px; position: relative;">
-      <div style="${face} transform: translateZ(${half}px);"></div>
-      <div style="${face} transform: rotateY(180deg) translateZ(${half}px);"></div>
-      <div style="${face} transform: rotateY(90deg) translateZ(${half}px);"></div>
-      <div style="${face} transform: rotateY(-90deg) translateZ(${half}px);"></div>
-      <div style="${face} transform: rotateX(90deg) translateZ(${half}px);"></div>
-      <div style="${face} transform: rotateX(-90deg) translateZ(${half}px);"></div>
-    </div>
-  `;
-}
+// ═══════════════════════════════════════
+// CONTACT — entrance animation
+// ═══════════════════════════════════════
+function initContact() {
+  const section = document.getElementById('contact-3d');
+  if (!section) return;
 
-function createRingHTML(size: number, color: string): string {
-  return `
-    <div style="
-      width: ${size}px;
-      height: ${size}px;
-      border-radius: 50%;
-      border: 1.5px solid ${color};
-      transform-style: preserve-3d;
-    "></div>
-  `;
-}
+  const title = section.querySelector('[data-contact-title]');
+  const sub = section.querySelector('[data-contact-sub]');
+  const btn = section.querySelector('[data-contact-btn]');
 
-function createDiamondHTML(size: number, color: string): string {
-  return `
-    <div style="
-      width: ${size}px;
-      height: ${size}px;
-      border: 1.5px solid ${color};
-      transform: rotate(45deg);
-      transform-style: preserve-3d;
-    "></div>
-  `;
+  if (title) {
+    const split = new SplitText(title, { type: 'chars' });
+    gsap.from(split.chars, {
+      scrollTrigger: { trigger: section, start: 'top 80%' },
+      y: 100,
+      rotateX: -60,
+      opacity: 0,
+      stagger: 0.03,
+      duration: 0.8,
+      ease: ease.smooth2,
+    });
+  }
+
+  if (sub) {
+    gsap.from(sub, {
+      scrollTrigger: { trigger: section, start: 'top 75%' },
+      y: 30,
+      opacity: 0,
+      duration: 0.6,
+      delay: 0.3,
+      ease: ease.smooth,
+    });
+  }
+
+  if (btn) {
+    gsap.from(btn, {
+      scrollTrigger: { trigger: section, start: 'top 70%' },
+      y: 20,
+      opacity: 0,
+      duration: 0.5,
+      delay: 0.5,
+      ease: ease.smooth,
+    });
+  }
 }

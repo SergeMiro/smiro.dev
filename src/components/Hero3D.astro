@@ -1,0 +1,260 @@
+---
+
+---
+
+<section class="hero-3d" id="hero-3d">
+  <div class="hero-3d__sticky">
+    <!-- Grid overlay -->
+    <div class="hero-3d__grid" aria-hidden="true">
+      {Array.from({ length: 8 }).map(() => (
+        <div class="hero-3d__grid-line hero-3d__grid-line--v" />
+      ))}
+      {Array.from({ length: 6 }).map(() => (
+        <div class="hero-3d__grid-line hero-3d__grid-line--h" />
+      ))}
+    </div>
+
+    <!-- Decorative crosses -->
+    <div class="hero-3d__cross hero-3d__cross--tl" aria-hidden="true">+</div>
+    <div class="hero-3d__cross hero-3d__cross--tr" aria-hidden="true">+</div>
+    <div class="hero-3d__cross hero-3d__cross--bl" aria-hidden="true">+</div>
+    <div class="hero-3d__cross hero-3d__cross--br" aria-hidden="true">+</div>
+
+    <!-- Badge -->
+    <div class="hero-3d__badge" data-hero-badge>
+      <span class="hero-3d__badge-dot"></span>
+      Available for freelance
+    </div>
+
+    <!-- Main typography -->
+    <div class="hero-3d__text">
+      <h1 class="hero-3d__line" data-hero-line="1">FULL STACK</h1>
+      <h1 class="hero-3d__line hero-3d__line--accent" data-hero-line="2">AI WHISPERER</h1>
+      <h1 class="hero-3d__line" data-hero-line="3">DEVELOPER.</h1>
+    </div>
+
+    <!-- Subtext -->
+    <p class="hero-3d__sub" data-hero-sub>
+      Building the web & teaching machines — Dijon, France
+    </p>
+
+    <!-- Scroll indicator -->
+    <div class="hero-3d__scroll" data-hero-scroll>
+      <span>SCROLL</span>
+      <div class="hero-3d__scroll-line"></div>
+    </div>
+
+    <!-- Binary ticker -->
+    <div class="hero-3d__ticker" aria-hidden="true" data-hero-ticker>
+      <span>01100110 //// 01110101 //// 01101100 //// 01101100 //// 01110011 //// 01110100 //// 01100001 //// 01100011 //// 01101011 //// 00101110 //// 01100100 //// 01100101 //// 01110110</span>
+      <span>01100110 //// 01110101 //// 01101100 //// 01101100 //// 01110011 //// 01110100 //// 01100001 //// 01100011 //// 01101011 //// 00101110 //// 01100100 //// 01100101 //// 01110110</span>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero-3d {
+    height: 300vh;
+    position: relative;
+  }
+
+  .hero-3d__sticky {
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg);
+  }
+
+  /* Grid */
+  .hero-3d__grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.06;
+  }
+
+  .hero-3d__grid-line {
+    position: absolute;
+    background: var(--color-text);
+  }
+
+  .hero-3d__grid-line--v {
+    width: 1px;
+    height: 100%;
+    top: 0;
+  }
+
+  .hero-3d__grid-line--v:nth-child(1) { left: 12.5%; }
+  .hero-3d__grid-line--v:nth-child(2) { left: 25%; }
+  .hero-3d__grid-line--v:nth-child(3) { left: 37.5%; }
+  .hero-3d__grid-line--v:nth-child(4) { left: 50%; }
+  .hero-3d__grid-line--v:nth-child(5) { left: 62.5%; }
+  .hero-3d__grid-line--v:nth-child(6) { left: 75%; }
+  .hero-3d__grid-line--v:nth-child(7) { left: 87.5%; }
+  .hero-3d__grid-line--v:nth-child(8) { left: 100%; }
+
+  .hero-3d__grid-line--h {
+    height: 1px;
+    width: 100%;
+    left: 0;
+  }
+
+  .hero-3d__grid-line--h:nth-child(9) { top: 16.6%; }
+  .hero-3d__grid-line--h:nth-child(10) { top: 33.3%; }
+  .hero-3d__grid-line--h:nth-child(11) { top: 50%; }
+  .hero-3d__grid-line--h:nth-child(12) { top: 66.6%; }
+  .hero-3d__grid-line--h:nth-child(13) { top: 83.3%; }
+  .hero-3d__grid-line--h:nth-child(14) { top: 100%; }
+
+  /* Crosses */
+  .hero-3d__cross {
+    position: absolute;
+    font-family: var(--font-body);
+    font-size: 1.5rem;
+    color: var(--color-text);
+    opacity: 0.15;
+    line-height: 1;
+  }
+  .hero-3d__cross--tl { top: 2rem; left: 2rem; }
+  .hero-3d__cross--tr { top: 2rem; right: 2rem; }
+  .hero-3d__cross--bl { bottom: 2rem; left: 2rem; }
+  .hero-3d__cross--br { bottom: 2rem; right: 2rem; }
+
+  /* Badge */
+  .hero-3d__badge {
+    position: absolute;
+    top: 6rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    opacity: 0;
+  }
+
+  .hero-3d__badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Typography */
+  .hero-3d__text {
+    text-align: center;
+    z-index: 2;
+    position: relative;
+  }
+
+  .hero-3d__line {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(3.5rem, 12vw, 12rem);
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    color: var(--color-text);
+    margin: 0;
+    opacity: 0;
+    white-space: nowrap;
+  }
+
+  .hero-3d__line--accent {
+    color: var(--color-primary);
+  }
+
+  /* Subtext */
+  .hero-3d__sub {
+    position: absolute;
+    bottom: 6rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    opacity: 0;
+  }
+
+  /* Scroll indicator */
+  .hero-3d__scroll {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0;
+  }
+
+  .hero-3d__scroll span {
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--color-text-faint);
+  }
+
+  .hero-3d__scroll-line {
+    width: 1px;
+    height: 3rem;
+    background: linear-gradient(to bottom, var(--color-text-faint), transparent);
+    animation: scroll-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes scroll-pulse {
+    0% { transform: scaleY(0); transform-origin: top; }
+    50% { transform: scaleY(1); transform-origin: top; }
+    51% { transform: scaleY(1); transform-origin: bottom; }
+    100% { transform: scaleY(0); transform-origin: bottom; }
+  }
+
+  /* Binary ticker */
+  .hero-3d__ticker {
+    position: absolute;
+    bottom: 35%;
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    font-family: monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    color: var(--color-text-faint);
+    opacity: 0;
+  }
+
+  .hero-3d__ticker span {
+    display: inline-block;
+    animation: ticker-scroll 30s linear infinite;
+  }
+
+  .hero-3d__ticker span:nth-child(2) {
+    animation-delay: -15s;
+  }
+
+  @keyframes ticker-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
+</style>
