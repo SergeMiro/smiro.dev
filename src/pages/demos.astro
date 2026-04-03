@@ -1,0 +1,80 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const demos = [
+  {
+    name: 'Multi-LLM Comparison',
+    description: 'Input a prompt and compare responses from Claude, Gemini, and OpenAI side by side. See how different models think.',
+    icon: '🧠',
+    tags: ['Claude API', 'Gemini', 'OpenAI'],
+    status: 'Live',
+  },
+  {
+    name: 'Email Parser AI',
+    description: 'Paste a messy email and get structured JSON output. Extracts names, dates, action items, and sentiment.',
+    icon: '📧',
+    tags: ['NLP', 'Claude API', 'JSON'],
+    status: 'Live',
+  },
+  {
+    name: 'Workflow Visualizer',
+    description: 'Visualize n8n automation workflows as interactive diagrams. Upload a JSON and see your flow.',
+    icon: '🔄',
+    tags: ['n8n', 'SVG', 'Automation'],
+    status: 'Beta',
+  },
+  {
+    name: 'SQL Query Builder',
+    description: 'Describe what you need in natural language and get a production-ready SQL query. Powered by LLM.',
+    icon: '🗃️',
+    tags: ['SQL', 'LLM', 'NLP'],
+    status: 'Coming Soon',
+  },
+];
+---
+
+<Layout title="Demos" description="Live AI & automation experiments by SergeMiro.">
+  <section class="pt-32 pb-24 md:pb-32">
+    <div class="mx-auto max-w-7xl px-6">
+      <h1
+        data-split="words"
+        class="font-[var(--font-display)] text-[length:var(--text-2xl)] font-bold leading-tight mb-4"
+      >
+        Live experiments
+      </h1>
+      <p class="text-[var(--color-text-muted)] text-lg mb-4 max-w-2xl">
+        AI & automation in action. Try them out — some demos require your own API key.
+      </p>
+      <p class="text-xs text-[var(--color-text-faint)] mb-12">
+        Note: API-powered demos use your key client-side. Nothing is stored.
+      </p>
+
+      <div class="grid md:grid-cols-2 gap-6" data-stagger>
+        {demos.map((demo) => (
+          <div class="group rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 hover:border-[var(--color-primary)]/30 transition-all duration-300 hover:-translate-y-1">
+            <div class="flex items-start justify-between mb-4">
+              <span class="text-3xl">{demo.icon}</span>
+              <span class:list={[
+                'px-2 py-0.5 rounded text-[10px] font-medium tracking-wider uppercase border',
+                demo.status === 'Live' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                demo.status === 'Beta' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                'bg-[var(--color-surface-2)] text-[var(--color-text-faint)] border-[var(--color-border)]'
+              ]}>
+                {demo.status}
+              </span>
+            </div>
+            <h3 class="font-[var(--font-display)] text-xl font-bold mb-2">{demo.name}</h3>
+            <p class="text-sm text-[var(--color-text-muted)] leading-relaxed mb-4">{demo.description}</p>
+            <div class="flex flex-wrap gap-1.5">
+              {demo.tags.map((tag) => (
+                <span class="px-2 py-0.5 rounded text-[11px] bg-[var(--color-surface-2)] text-[var(--color-text-faint)]">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+</Layout>

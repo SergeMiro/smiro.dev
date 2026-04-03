@@ -1,0 +1,70 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const posts = [
+  {
+    title: 'How I Built a Multi-Agent AI System with Claude',
+    date: '2026-03-15',
+    readTime: '8 min',
+    tags: ['AI', 'Claude', 'Architecture'],
+    excerpt: 'A deep dive into building autonomous agent orchestration — the mistakes, the breakthroughs, and why multi-agent is the future.',
+  },
+  {
+    title: 'Automating Everything: My n8n + AI Pipeline',
+    date: '2026-02-28',
+    readTime: '6 min',
+    tags: ['Automation', 'n8n', 'Productivity'],
+    excerpt: 'How I automated 80% of repetitive tasks using n8n workflows powered by LLMs. Real examples from production.',
+  },
+  {
+    title: 'Why I Switched from Next.js to Astro for My Portfolio',
+    date: '2026-02-10',
+    readTime: '4 min',
+    tags: ['Astro', 'Performance', 'Web Dev'],
+    excerpt: 'Zero JS by default, content collections, and island architecture. Why Astro was the right choice for a developer portfolio.',
+  },
+];
+
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+---
+
+<Layout title="Blog" description="Thoughts on AI, automation, and building fast.">
+  <section class="pt-32 pb-24 md:pb-32">
+    <div class="mx-auto max-w-3xl px-6">
+      <h1
+        data-split="words"
+        class="font-[var(--font-display)] text-[length:var(--text-2xl)] font-bold leading-tight mb-4"
+      >
+        Blog
+      </h1>
+      <p class="text-[var(--color-text-muted)] text-lg mb-12">
+        Notes on AI tools, automation, dev tips, and product thinking.
+      </p>
+
+      <div class="space-y-0 divide-y divide-[var(--color-border)]">
+        {posts.map((post) => (
+          <article class="py-8 first:pt-0 group" data-reveal>
+            <div class="flex items-center gap-3 mb-3">
+              <time class="text-xs text-[var(--color-text-faint)]">{formatDate(post.date)}</time>
+              <span class="text-[var(--color-text-faint)]">/</span>
+              <span class="text-xs text-[var(--color-text-faint)]">{post.readTime} read</span>
+            </div>
+            <h2 class="font-[var(--font-display)] text-xl md:text-2xl font-bold mb-2 group-hover:text-[var(--color-primary)] transition-colors cursor-pointer">
+              {post.title}
+            </h2>
+            <p class="text-[var(--color-text-muted)] leading-relaxed mb-4">{post.excerpt}</p>
+            <div class="flex flex-wrap gap-2">
+              {post.tags.map((tag) => (
+                <span class="px-2 py-0.5 rounded text-[11px] bg-[var(--color-surface)] text-[var(--color-text-faint)] border border-[var(--color-border)]">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+</Layout>

@@ -1,0 +1,133 @@
+---
+const links = [
+  { href: '/', label: 'Home' },
+  { href: '/projects', label: 'Projects' },
+  { href: '/demos', label: 'Demos' },
+  { href: '/blog', label: 'Blog' },
+  { href: '/uses', label: 'Uses' },
+  { href: '/contact', label: 'Contact' },
+];
+
+const currentPath = Astro.url.pathname;
+---
+
+<nav class="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-[var(--color-bg)]/80 border-b border-[var(--color-border)]">
+  <!-- Scroll progress -->
+  <div
+    data-scroll-progress
+    class="absolute top-0 left-0 h-[2px] w-full bg-[var(--color-primary)] origin-left"
+    style="transform: scaleX(0)"
+  ></div>
+
+  <div class="mx-auto max-w-7xl px-6 flex items-center justify-between h-16">
+    <!-- Logo -->
+    <a href="/" class="flex items-center gap-2 group" aria-label="Home">
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" class="text-[var(--color-primary)]">
+        <rect width="36" height="36" rx="8" fill="currentColor" opacity="0.1" />
+        <text
+          x="50%"
+          y="54%"
+          dominant-baseline="middle"
+          text-anchor="middle"
+          fill="currentColor"
+          font-family="var(--font-display)"
+          font-size="16"
+          font-weight="700"
+        >SM</text>
+      </svg>
+    </a>
+
+    <!-- Desktop links -->
+    <div class="hidden md:flex items-center gap-8">
+      {links.map((link) => (
+        <a
+          href={link.href}
+          class:list={[
+            'text-sm font-medium tracking-wide transition-colors relative',
+            currentPath === link.href
+              ? 'text-[var(--color-primary)]'
+              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]',
+          ]}
+        >
+          {link.label}
+          {currentPath === link.href && (
+            <span class="absolute -bottom-1 left-0 right-0 h-[2px] bg-[var(--color-primary)]" />
+          )}
+        </a>
+      ))}
+    </div>
+
+    <!-- Right side -->
+    <div class="flex items-center gap-4">
+      <!-- Theme toggle -->
+      <button
+        data-theme-toggle
+        class="p-2 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)] transition-colors"
+        aria-label="Toggle theme"
+      >
+        <svg class="w-5 h-5 dark-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5" />
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+        </svg>
+        <svg class="w-5 h-5 light-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+      </button>
+
+      <!-- Mobile hamburger -->
+      <button
+        data-mobile-toggle
+        class="md:hidden p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+        aria-label="Open menu"
+      >
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile menu -->
+  <div data-mobile-menu class="hidden md:hidden bg-[var(--color-surface)] border-t border-[var(--color-border)]">
+    <div class="px-6 py-4 flex flex-col gap-4">
+      {links.map((link) => (
+        <a
+          href={link.href}
+          class:list={[
+            'text-lg font-medium py-2',
+            currentPath === link.href
+              ? 'text-[var(--color-primary)]'
+              : 'text-[var(--color-text-muted)]',
+          ]}
+        >
+          {link.label}
+        </a>
+      ))}
+    </div>
+  </div>
+</nav>
+
+<script>
+  const toggleBtn = document.querySelector('[data-mobile-toggle]');
+  const menu = document.querySelector('[data-mobile-menu]');
+  toggleBtn?.addEventListener('click', () => {
+    menu?.classList.toggle('hidden');
+  });
+
+  // Close menu on link click
+  menu?.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      menu?.classList.add('hidden');
+    });
+  });
+
+  // Theme icon sync
+  function syncIcons() {
+    const isLight = document.documentElement.classList.contains('light');
+    document.querySelectorAll('.dark-icon').forEach(el => el.classList.toggle('hidden', isLight));
+    document.querySelectorAll('.light-icon').forEach(el => el.classList.toggle('hidden', !isLight));
+  }
+  syncIcons();
+  const observer = new MutationObserver(syncIcons);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+</script>

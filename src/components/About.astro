@@ -1,0 +1,93 @@
+---
+const stats = [
+  { value: 5, label: 'Years Experience' },
+  { value: 44, label: 'GitHub Repos' },
+  { value: 5, label: 'LLMs Mastered' },
+  { value: 140, label: 'Projects Delivered' },
+];
+
+const stackGroups = [
+  {
+    title: 'Frontend',
+    items: ['Next.js', 'React', 'TypeScript', 'Tailwind CSS', 'Shadcn UI'],
+  },
+  {
+    title: 'Backend',
+    items: ['Node.js', 'Python', 'PostgreSQL', 'Supabase', 'FastAPI'],
+  },
+  {
+    title: 'AI / ML',
+    items: ['Claude API', 'Gemini', 'OpenAI', 'LangChain', 'CrewAI', 'n8n'],
+  },
+  {
+    title: 'DevOps',
+    items: ['Docker', 'Traefik', 'Hetzner', 'GitHub Actions', 'Vercel'],
+  },
+];
+---
+
+<section id="about" class="py-24 md:py-32">
+  <div class="mx-auto max-w-7xl px-6">
+    <div class="grid md:grid-cols-2 gap-16 items-start">
+      <!-- Left: Bio -->
+      <div>
+        <h2
+          data-split="words"
+          class="font-[var(--font-display)] text-[length:var(--text-2xl)] font-bold leading-tight mb-8"
+        >
+          Building the future,<br />one automation at a time
+        </h2>
+        <div class="space-y-4 text-[var(--color-text-muted)] leading-relaxed" data-reveal>
+          <p>
+            I'm Sergiy — a full stack developer and AI systems architect based in Dijon, France.
+            I build products that combine clean engineering with intelligent automation.
+          </p>
+          <p>
+            From Next.js frontends to Python ML pipelines, from Docker orchestration to
+            multi-agent LLM systems — I work across the entire stack with a bias toward
+            shipping fast and automating obsessively.
+          </p>
+          <p>
+            When I'm not coding, I'm probably teaching an LLM to do my job so I can
+            play video games.
+          </p>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-6 mt-12">
+          {stats.map((stat) => (
+            <div class="text-center md:text-left">
+              <div
+                data-count={stat.value}
+                class="font-[var(--font-display)] text-3xl md:text-4xl font-bold text-[var(--color-primary)]"
+              >
+                0+
+              </div>
+              <div class="text-xs text-[var(--color-text-muted)] tracking-wider uppercase mt-1">
+                {stat.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Right: Tech Stack -->
+      <div class="space-y-8">
+        {stackGroups.map((group) => (
+          <div>
+            <h3 class="text-xs font-medium tracking-widest uppercase text-[var(--color-text-faint)] mb-3">
+              {group.title}
+            </h3>
+            <div class="flex flex-wrap gap-2" data-scale-reveal>
+              {group.items.map((item) => (
+                <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-primary)]/30 transition-colors">
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>

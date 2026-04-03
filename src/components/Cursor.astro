@@ -1,0 +1,80 @@
+---
+---
+
+<div id="cursor-dot" class="fixed top-0 left-0 w-2 h-2 rounded-full bg-[var(--color-primary)] pointer-events-none z-[100] mix-blend-difference hidden" style="transform: translate(-50%, -50%)" aria-hidden="true"></div>
+<div id="cursor-ring" class="fixed top-0 left-0 w-8 h-8 rounded-full border border-[var(--color-primary)] pointer-events-none z-[100] mix-blend-difference opacity-60 hidden" style="transform: translate(-50%, -50%)" aria-hidden="true"></div>
+
+<script>
+  // Only on desktop with fine pointer AND no reduced motion
+  const isFinePointer = window.matchMedia('(pointer: fine)').matches;
+  const noReducedMotion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (isFinePointer && noReducedMotion) {
+    const dot = document.getElementById('cursor-dot')!;
+    const ring = document.getElementById('cursor-ring')!;
+    dot.classList.remove('hidden');
+    ring.classList.remove('hidden');
+
+    let mouseX = 0;
+    let mouseY = 0;
+    let ringX = 0;
+    let ringY = 0;
+
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      dot.style.left = mouseX + 'px';
+      dot.style.top = mouseY + 'px';
+    });
+
+    function animateRing() {
+      ringX += (mouseX - ringX) * 0.15;
+      ringY += (mouseY - ringY) * 0.15;
+      ring.style.left = ringX + 'px';
+      ring.style.top = ringY + 'px';
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    // Expand ring on interactive elements
+    const interactiveSelectors = 'a, button, input, textarea, select, [role="button"]';
+
+    document.addEventListener('mouseover', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.closest(interactiveSelectors)) {
+        ring.style.width = '48px';
+        ring.style.height = '48px';
+        ring.style.opacity = '1';
+        dot.style.transform = 'translate(-50%, -50%) scale(1.5)';
+      }
+    });
+
+    document.addEventListener('mouseout', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.closest(interactiveSelectors)) {
+        ring.style.width = '32px';
+        ring.style.height = '32px';
+        ring.style.opacity = '0.6';
+        dot.style.transform = 'translate(-50%, -50%) scale(1)';
+      }
+    });
+
+    // Use CSS class instead of inline styles — preserves focus-visible cursor
+    const style = document.createElement('style');
+    style.textContent = `
+      html.custom-cursor, html.custom-cursor * { cursor: none; }
+      html.custom-cursor *:focus-visible { cursor: auto; outline: 2px solid var(--color-primary); outline-offset: 2px; }
+    `;
+    document.head.appendChild(style);
+    document.documentElement.classList.add('custom-cursor');
+  } else {
+    document.getElementById('cursor-dot')?.remove();
+    document.getElementById('cursor-ring')?.remove();
+  }
+</script>
+
+<style>
+  #cursor-dot, #cursor-ring {
+    transition: width 0.3s ease, height 0.3s ease, opacity 0.3s ease;
+  }
+</style>

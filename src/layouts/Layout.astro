@@ -1,0 +1,88 @@
+---
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import Cursor from '../components/Cursor.astro';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+}
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const { title, description = 'Sergiy Mirochnyk — Full Stack Developer & AI Systems Architect based in Dijon, France.', ogImage = '/og-default.png' } = Astro.props;
+const fullTitle = `${title} | smiro.dev`;
+---
+
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="author" content="Sergiy Mirochnyk" />
+    <link rel="canonical" href={canonicalURL} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL(ogImage, Astro.site)} />
+    <meta property="og:site_name" content="smiro.dev" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={new URL(ogImage, Astro.site)} />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Sergiy Mirochnyk",
+      "url": "https://smiro.dev",
+      "jobTitle": "Full Stack Developer & AI Systems Architect",
+      "sameAs": [
+        "https://github.com/SergeMiro",
+        "https://linkedin.com/in/sergemiro"
+      ],
+      "knowsAbout": ["Web Development", "AI", "Automation", "Next.js", "Python", "LLMs"]
+    })} />
+
+    <!-- Fonts (preload critical, then stylesheet) -->
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+    <link
+      href="https://api.fontshare.com/v2/css?f[]=boska@400,500,700&f[]=satoshi@300,400,500,700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- RSS -->
+    <link rel="alternate" type="application/rss+xml" title="smiro.dev blog" href="/feed.xml" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <title>{fullTitle}</title>
+  </head>
+  <body class="grain bg-[var(--color-bg)] text-[var(--color-text)] antialiased">
+    <!-- Skip to content -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[200] focus:px-4 focus:py-2 focus:bg-[var(--color-primary)] focus:text-[var(--color-bg)] focus:rounded-lg focus:outline-none">
+      Skip to content
+    </a>
+
+    <Cursor />
+    <Nav />
+    <main id="main-content">
+      <slot />
+    </main>
+    <Footer />
+
+    <script>
+      import '../scripts/animations';
+    </script>
+  </body>
+</html>

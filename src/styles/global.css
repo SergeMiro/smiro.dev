@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+/* ===== FONTS ===== */
+@font-face {
+  font-family: 'Boska';
+  src: url('https://api.fontshare.com/v2/css?f[]=boska@400,500,700&display=swap');
+}
+
+/* ===== CUSTOM PROPERTIES ===== */
+@theme {
+  --font-display: 'Boska', Georgia, serif;
+  --font-body: 'Satoshi', 'Inter', sans-serif;
+
+  --color-bg: #0f0e0c;
+  --color-surface: #141310;
+  --color-surface-2: #1a1917;
+  --color-surface-offset: #211f1d;
+  --color-border: oklch(from white l c h / 0.08);
+  --color-text: #e8e6e2;
+  --color-text-muted: #7a7874;
+  --color-text-faint: #3d3c3a;
+  --color-primary: oklch(0.75 0.14 192);
+  --color-primary-hover: oklch(0.68 0.14 192);
+
+  --text-hero: clamp(3rem, 8vw, 8rem);
+  --text-2xl: clamp(2rem, 4vw, 3.5rem);
+  --text-xl: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+/* ===== BASE ===== */
+html {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  scroll-behavior: auto; /* Lenis handles smooth scroll */
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* ===== LIGHT MODE ===== */
+html.light {
+  --color-bg: #f7f6f2;
+  --color-surface: #f9f8f5;
+  --color-surface-2: #efeeea;
+  --color-surface-offset: #e5e4e0;
+  --color-border: oklch(from black l c h / 0.08);
+  --color-text: #1a1917;
+  --color-text-muted: #5a5854;
+  --color-text-faint: #9a9894;
+  --color-primary: oklch(0.42 0.12 192);
+  --color-primary-hover: oklch(0.36 0.12 192);
+}
+
+/* ===== SELECTION ===== */
+::selection {
+  background-color: var(--color-primary);
+  color: var(--color-bg);
+}
+
+/* ===== SCROLL BAR ===== */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-text-faint);
+  border-radius: 3px;
+}
+
+/* ===== REDUCED MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== GRAIN OVERLAY ===== */
+.grain::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ===== UTILITIES ===== */
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-text));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
