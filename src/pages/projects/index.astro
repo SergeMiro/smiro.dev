@@ -1,0 +1,275 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const hardcodedProjects = [
+  {
+    name: 'Vistalid',
+    repoName: 'Vistalid',
+    description: 'AI-powered back-office automation for French companies. Smart email parsing, ticket routing, URSSAF integration.',
+    stack: ['Next.js', 'Claude API', 'PostgreSQL', 'n8n', 'Docker'],
+    category: 'ai',
+    status: 'Production',
+    highlight: 'Reduces manual work by 80%',
+  },
+  {
+    name: 'SimplifyEU',
+    repoName: 'SimplifyEU',
+    description: 'AI solutions for EU business compliance and workflow automation. Multi-language support.',
+    stack: ['Python', 'LangChain', 'Supabase', 'FastAPI'],
+    category: 'ai',
+    status: 'Active',
+    github: 'https://github.com/SergeMiro/SimplifyEU',
+  },
+  {
+    name: 'API Téléphonie SDA',
+    repoName: 'API-Telephonie-SDA',
+    description: 'Telephony API integration with real-time call data processing and T-SQL analytics.',
+    stack: ['T-SQL', 'SQL Server', 'JavaScript', 'REST API'],
+    category: 'web',
+    status: 'Production',
+    github: 'https://github.com/SergeMiro/API-Telephonie-SDA',
+  },
+  {
+    name: 'Parser AI',
+    repoName: 'Parser-AI',
+    description: 'Intelligent document and email parser. Extracts structured data from unstructured content.',
+    stack: ['Python', 'OpenAI', 'n8n', 'PostgreSQL'],
+    category: 'ai',
+    status: 'Production',
+  },
+  {
+    name: 'Charte Graphique Fimainfo',
+    repoName: 'Charte-Graphique-Fimainfo',
+    description: 'Design system and brand guidelines platform for Fimainfo One.',
+    stack: ['TypeScript', 'Next.js', 'Tailwind'],
+    category: 'web',
+    github: 'https://github.com/SergeMiro/Charte-Graphique-Fimainfo',
+  },
+  {
+    name: 'Trading Automation',
+    repoName: 'Trading-Automation',
+    description: 'Multi-exchange crypto trading bot with signal generation and risk management.',
+    stack: ['Python', 'WebSocket APIs', 'PostgreSQL'],
+    category: 'devops',
+    status: 'Testing',
+  },
+];
+
+const filters = [
+  { label: 'All', value: 'all' },
+  { label: 'AI & Automation', value: 'ai' },
+  { label: 'Web Apps', value: 'web' },
+  { label: 'DevOps', value: 'devops' },
+  { label: 'Open Source', value: 'oss' },
+];
+---
+
+<Layout title="Projects" description="Things I've built — AI automation, web apps, and open source tools.">
+  <section class="pt-32 pb-24 md:pb-32">
+    <div class="mx-auto max-w-7xl px-6">
+      <h1
+        data-split="words"
+        class="font-[var(--font-display)] text-[length:var(--text-2xl)] font-bold leading-tight mb-4"
+      >
+        Things I've built
+      </h1>
+      <p class="text-[var(--color-text-muted)] text-lg mb-12 max-w-2xl">
+        A collection of projects spanning AI automation, web applications, and developer tooling.
+        <span id="admin-note" class="hidden text-xs text-[var(--color-primary)] block mt-2">
+          Showing curated selection from admin panel.
+          <a href="/admin" class="underline">Manage &rarr;</a>
+        </span>
+      </p>
+
+      <!-- Filter bar -->
+      <div class="flex flex-wrap gap-2 mb-12" id="filter-bar">
+        {filters.map((f) => (
+          <button
+            data-filter={f.value}
+            class:list={[
+              'px-4 py-2 rounded-full text-sm font-medium transition-all border',
+              f.value === 'all'
+                ? 'bg-[var(--color-primary)] text-[var(--color-bg)] border-[var(--color-primary)]'
+                : 'bg-transparent text-[var(--color-text-muted)] border-[var(--color-border)] hover:border-[var(--color-primary)] hover:text-[var(--color-text)]',
+            ]}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <!-- Static project grid (SSG fallback) -->
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="project-grid">
+        {hardcodedProjects.map((project) => (
+          <div
+            data-category={project.category}
+            data-name={project.repoName}
+            class="project-card group rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 md:p-8 hover:border-[var(--color-primary)]/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-[var(--color-primary)]/5"
+          >
+            <div class="flex items-center justify-between mb-4">
+              {project.status && (
+                <span class:list={[
+                  'px-2 py-0.5 rounded text-[10px] font-medium tracking-wider uppercase border',
+                  project.status === 'Production' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                  project.status === 'Active' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                  'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                ]}>
+                  {project.status}
+                </span>
+              )}
+              {project.github && (
+                <a
+                  href={project.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-[var(--color-text-faint)] hover:text-[var(--color-primary)] transition-colors"
+                  aria-label={`${project.name} source code`}
+                >
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.84 2.81 1.31 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6.02 0c2.28-1.55 3.28-1.23 3.28-1.23.66 1.66.25 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.82.58C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z" />
+                  </svg>
+                </a>
+              )}
+            </div>
+            <h3 class="font-[var(--font-display)] text-xl font-bold mb-2">{project.name}</h3>
+            <p class="text-sm text-[var(--color-text-muted)] leading-relaxed mb-4">{project.description}</p>
+            {project.highlight && (
+              <p class="text-xs text-[var(--color-primary)] mb-4">{project.highlight}</p>
+            )}
+            <div class="flex flex-wrap gap-1.5 mt-auto">
+              {project.stack.map((tech) => (
+                <span class="px-2 py-0.5 rounded text-[11px] bg-[var(--color-surface-2)] text-[var(--color-text-faint)] border border-[var(--color-border)]">
+                  {tech}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <!-- Dynamic repos loaded from admin config -->
+      <div id="dynamic-projects" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6"></div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  import gsap from 'gsap';
+  import { Flip } from 'gsap/Flip';
+  gsap.registerPlugin(Flip);
+
+  const GH_USER = 'SergeMiro';
+  const STORAGE_KEY = 'smiro-admin-config';
+
+  interface AdminConfig {
+    visible: string[];
+    labels: Record<string, string>;
+    categories: Record<string, string>;
+  }
+
+  // Load admin-curated repos
+  async function loadDynamicProjects() {
+    const configRaw = localStorage.getItem(STORAGE_KEY);
+    if (!configRaw) return;
+
+    const config: AdminConfig = JSON.parse(configRaw);
+    if (!config.visible.length) return;
+
+    // Show admin note
+    document.getElementById('admin-note')?.classList.remove('hidden');
+
+    // Get names of hardcoded projects to avoid duplicates
+    const hardcoded = new Set(
+      Array.from(document.querySelectorAll('[data-name]')).map(el => (el as HTMLElement).dataset.name)
+    );
+
+    const newRepos = config.visible.filter(name => !hardcoded.has(name));
+    if (!newRepos.length) return;
+
+    // Fetch repo data from GitHub
+    try {
+      const res = await fetch(`https://api.github.com/users/${GH_USER}/repos?per_page=100&sort=updated`);
+      if (!res.ok) return;
+      const repos = await res.json();
+
+      const container = document.getElementById('dynamic-projects')!;
+      const cards = newRepos.map(name => {
+        const repo = repos.find((r: any) => r.name === name);
+        if (!repo) return '';
+        const category = config.categories[name] || 'web';
+
+        return `
+          <div
+            data-category="${category}"
+            data-name="${repo.name}"
+            data-dynamic="true"
+            class="project-card group rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 md:p-8 hover:border-[var(--color-primary)]/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-[var(--color-primary)]/5"
+          >
+            <div class="flex items-center justify-between mb-4">
+              <span class="px-2 py-0.5 rounded text-[10px] font-medium tracking-wider uppercase border bg-[var(--color-primary)]/10 text-[var(--color-primary)] border-[var(--color-primary)]/20">
+                ${repo.language || 'Project'}
+              </span>
+              <a href="${repo.html_url}" target="_blank" rel="noopener noreferrer"
+                 class="text-[var(--color-text-faint)] hover:text-[var(--color-primary)] transition-colors">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.84 2.81 1.31 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6.02 0c2.28-1.55 3.28-1.23 3.28-1.23.66 1.66.25 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.82.58C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/>
+                </svg>
+              </a>
+            </div>
+            <h3 class="font-[var(--font-display)] text-xl font-bold mb-2">${repo.name.replace(/-/g, ' ')}</h3>
+            <p class="text-sm text-[var(--color-text-muted)] leading-relaxed mb-4">${repo.description || 'No description'}</p>
+            <div class="flex flex-wrap gap-1.5 mt-auto">
+              ${repo.topics?.map((t: string) => `<span class="px-2 py-0.5 rounded text-[11px] bg-[var(--color-surface-2)] text-[var(--color-text-faint)] border border-[var(--color-border)]">${t}</span>`).join('') || ''}
+              ${repo.language ? `<span class="px-2 py-0.5 rounded text-[11px] bg-[var(--color-surface-2)] text-[var(--color-text-faint)] border border-[var(--color-border)]">${repo.language}</span>` : ''}
+            </div>
+          </div>
+        `;
+      }).filter(Boolean);
+
+      container.innerHTML = cards.join('');
+    } catch {}
+  }
+
+  loadDynamicProjects();
+
+  // Filter logic (works on both static and dynamic cards)
+  const filterBar = document.getElementById('filter-bar');
+  const buttons = filterBar?.querySelectorAll('button');
+
+  buttons?.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const filter = btn.dataset.filter;
+      const allCards = document.querySelectorAll('.project-card');
+
+      buttons.forEach((b) => {
+        const isActive = b === btn;
+        b.classList.toggle('bg-[var(--color-primary)]', isActive);
+        b.classList.toggle('text-[var(--color-bg)]', isActive);
+        b.classList.toggle('border-[var(--color-primary)]', isActive);
+        b.classList.toggle('bg-transparent', !isActive);
+        b.classList.toggle('text-[var(--color-text-muted)]', !isActive);
+        b.classList.toggle('border-[var(--color-border)]', !isActive);
+      });
+
+      const state = Flip.getState(allCards);
+
+      allCards.forEach((card) => {
+        const cat = (card as HTMLElement).dataset.category;
+        if (filter === 'all' || cat === filter) {
+          (card as HTMLElement).style.display = '';
+        } else {
+          (card as HTMLElement).style.display = 'none';
+        }
+      });
+
+      Flip.from(state, {
+        duration: 0.5,
+        ease: 'power2.inOut',
+        stagger: 0.04,
+        absolute: true,
+        onEnter: (elements) => gsap.fromTo(elements, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.5 }),
+        onLeave: (elements) => gsap.to(elements, { opacity: 0, scale: 0.9, duration: 0.3 }),
+      });
+    });
+  });
+</script>

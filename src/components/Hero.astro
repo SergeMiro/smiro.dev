@@ -1,0 +1,82 @@
+---
+
+---
+
+<section class="relative min-h-screen flex items-center pt-16 overflow-hidden">
+  <!-- Mesh gradient background -->
+  <div class="absolute inset-0 opacity-30">
+    <div class="absolute top-1/4 -left-1/4 w-[600px] h-[600px] rounded-full bg-[var(--color-primary)] opacity-[0.07] blur-[120px] animate-pulse-slow"></div>
+    <div class="absolute bottom-1/4 -right-1/4 w-[500px] h-[500px] rounded-full bg-[var(--color-primary)] opacity-[0.05] blur-[100px] animate-pulse-slow" style="animation-delay: 2s"></div>
+  </div>
+
+  <div class="relative mx-auto max-w-7xl px-6 py-24 md:py-32">
+    <!-- Label -->
+    <div class="mb-8" data-reveal>
+      <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[var(--color-border)] text-xs font-medium tracking-widest uppercase text-[var(--color-text-muted)]">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        Available for freelance
+      </span>
+    </div>
+
+    <!-- Heading -->
+    <h1
+      data-split="chars"
+      class="font-[var(--font-display)] text-[length:var(--text-hero)] font-bold leading-[0.95] tracking-tight max-w-5xl"
+    >
+      Full Stack Developer.<br />
+      <span class="text-[var(--color-primary)]">AI Whisperer.</span><br />
+      Automation Addict.
+    </h1>
+
+    <!-- Subheading -->
+    <p class="hero-sub mt-8 max-w-2xl text-lg md:text-xl text-[var(--color-text-muted)] leading-relaxed">
+      I build web apps, teach LLMs to work for me, and automate everything else
+      — based in Dijon, France.
+    </p>
+
+    <!-- CTAs -->
+    <div class="hero-ctas mt-10 flex flex-wrap gap-4">
+      <a
+        href="/projects"
+        class="inline-flex items-center gap-2 px-6 py-3 bg-[var(--color-primary)] text-[var(--color-bg)] font-medium rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors"
+      >
+        View Projects
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 12h14M12 5l7 7-7 7" />
+        </svg>
+      </a>
+      <a
+        href="/contact"
+        class="inline-flex items-center gap-2 px-6 py-3 border border-[var(--color-border)] text-[var(--color-text)] font-medium rounded-lg hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
+      >
+        Contact Me
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Scroll indicator -->
+  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2" data-reveal>
+      <span class="text-xs text-[var(--color-text-faint)] tracking-widest uppercase">Scroll</span>
+      <div class="w-px h-12 bg-gradient-to-b from-[var(--color-text-faint)] to-transparent animate-scroll-line"></div>
+    </div>
+</section>
+
+<style>
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 0.07; transform: scale(1); }
+    50% { opacity: 0.12; transform: scale(1.05); }
+  }
+  .animate-pulse-slow {
+    animation: pulse-slow 8s ease-in-out infinite;
+  }
+  @keyframes scroll-line {
+    0% { transform: scaleY(0); transform-origin: top; }
+    50% { transform: scaleY(1); transform-origin: top; }
+    51% { transform: scaleY(1); transform-origin: bottom; }
+    100% { transform: scaleY(0); transform-origin: bottom; }
+  }
+  .animate-scroll-line {
+    animation: scroll-line 2s ease-in-out infinite;
+  }
+</style>

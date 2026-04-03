@@ -1,0 +1,343 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Admin — Preview Manager" description="Manage which projects and deployments are shown to visitors.">
+  <section class="pt-32 pb-24">
+    <div class="mx-auto max-w-5xl px-6">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h1 class="font-[var(--font-display)] text-[length:var(--text-2xl)] font-bold">
+            Preview Manager
+          </h1>
+          <p class="text-[var(--color-text-muted)] mt-2">
+            Choose which projects and deployments to show visitors.
+          </p>
+        </div>
+        <div class="flex gap-3">
+          <button
+            id="btn-refresh"
+            class="px-4 py-2 text-sm rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors"
+          >
+            Refresh
+          </button>
+          <button
+            id="btn-export"
+            class="px-4 py-2 text-sm rounded-lg bg-[var(--color-primary)] text-[var(--color-bg)] font-medium hover:bg-[var(--color-primary-hover)] transition-colors"
+          >
+            Export Config
+          </button>
+        </div>
+      </div>
+
+      <!-- GitHub Token Input -->
+      <div class="mb-8 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+        <label class="block text-xs font-medium tracking-wider uppercase text-[var(--color-text-muted)] mb-2">
+          GitHub Token <span class="text-[var(--color-text-faint)]">(optional, for private repos)</span>
+        </label>
+        <div class="flex gap-3">
+          <input
+            id="gh-token"
+            type="password"
+            placeholder="ghp_xxxxxxxxxxxx"
+            class="flex-1 px-4 py-2 rounded-lg bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text)] text-sm placeholder:text-[var(--color-text-faint)] focus:outline-none focus:border-[var(--color-primary)]"
+          />
+          <button
+            id="btn-fetch"
+            class="px-4 py-2 text-sm rounded-lg bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors"
+          >
+            Fetch Repos
+          </button>
+        </div>
+        <p class="text-xs text-[var(--color-text-faint)] mt-2">
+          Token is stored in localStorage only. Public repos load without a token.
+        </p>
+      </div>
+
+      <!-- Stats bar -->
+      <div class="flex gap-6 mb-8">
+        <div class="px-4 py-3 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)]">
+          <div id="stat-total" class="text-xl font-bold text-[var(--color-primary)]">0</div>
+          <div class="text-xs text-[var(--color-text-muted)]">Total Repos</div>
+        </div>
+        <div class="px-4 py-3 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)]">
+          <div id="stat-visible" class="text-xl font-bold text-emerald-400">0</div>
+          <div class="text-xs text-[var(--color-text-muted)]">Visible</div>
+        </div>
+        <div class="px-4 py-3 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)]">
+          <div id="stat-hidden" class="text-xl font-bold text-[var(--color-text-faint)]">0</div>
+          <div class="text-xs text-[var(--color-text-muted)]">Hidden</div>
+        </div>
+      </div>
+
+      <!-- Filter tabs -->
+      <div class="flex gap-2 mb-6">
+        <button data-tab="all" class="tab-btn px-3 py-1.5 rounded-full text-xs font-medium border border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-bg)]">All</button>
+        <button data-tab="visible" class="tab-btn px-3 py-1.5 rounded-full text-xs font-medium border border-[var(--color-border)] text-[var(--color-text-muted)]">Visible</button>
+        <button data-tab="hidden" class="tab-btn px-3 py-1.5 rounded-full text-xs font-medium border border-[var(--color-border)] text-[var(--color-text-muted)]">Hidden</button>
+      </div>
+
+      <!-- Repos grid -->
+      <div id="repos-grid" class="grid md:grid-cols-2 gap-4">
+        <div class="col-span-full py-12 text-center text-[var(--color-text-muted)]">
+          Click "Fetch Repos" to load your GitHub repositories
+        </div>
+      </div>
+
+      <!-- Export modal -->
+      <div id="export-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-auto">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-[var(--font-display)] text-xl font-bold">Export Configuration</h3>
+            <button id="btn-close-modal" class="text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <p class="text-sm text-[var(--color-text-muted)] mb-4">
+            Copy this JSON and paste it into <code class="text-[var(--color-primary)]">src/content/config.ts</code> to update your visible projects.
+          </p>
+          <pre id="export-json" class="p-4 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)] text-sm font-mono overflow-auto max-h-[40vh] text-[var(--color-text)]"></pre>
+          <button
+            id="btn-copy"
+            class="mt-4 px-4 py-2 text-sm rounded-lg bg-[var(--color-primary)] text-[var(--color-bg)] font-medium hover:bg-[var(--color-primary-hover)] transition-colors"
+          >
+            Copy to Clipboard
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  const GH_USER = 'SergeMiro';
+  const STORAGE_KEY = 'smiro-admin-config';
+  const TOKEN_KEY = 'smiro-gh-token';
+
+  interface RepoData {
+    name: string;
+    description: string | null;
+    html_url: string;
+    homepage: string | null;
+    language: string | null;
+    topics: string[];
+    stargazers_count: number;
+    updated_at: string;
+    fork: boolean;
+    private: boolean;
+  }
+
+  interface AdminConfig {
+    visible: string[];
+    labels: Record<string, string>;
+    categories: Record<string, string>;
+  }
+
+  let allRepos: RepoData[] = [];
+  let config: AdminConfig = loadConfig();
+
+  function loadConfig(): AdminConfig {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return { visible: [], labels: {}, categories: {} };
+  }
+
+  function saveConfig() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    updateStats();
+  }
+
+  function updateStats() {
+    const total = allRepos.length;
+    const visible = allRepos.filter(r => config.visible.includes(r.name)).length;
+    document.getElementById('stat-total')!.textContent = String(total);
+    document.getElementById('stat-visible')!.textContent = String(visible);
+    document.getElementById('stat-hidden')!.textContent = String(total - visible);
+  }
+
+  async function fetchRepos() {
+    const token = (document.getElementById('gh-token') as HTMLInputElement).value;
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+
+    const grid = document.getElementById('repos-grid')!;
+    grid.innerHTML = '<div class="col-span-full py-12 text-center text-[var(--color-text-muted)]">Loading repos...</div>';
+
+    const headers: Record<string, string> = { 'Accept': 'application/vnd.github+json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    try {
+      const res = await fetch(`https://api.github.com/users/${GH_USER}/repos?per_page=100&sort=updated`, { headers });
+      if (!res.ok) throw new Error(`GitHub API: ${res.status}`);
+      allRepos = await res.json();
+      allRepos = allRepos.filter(r => !r.fork);
+      renderRepos('all');
+    } catch (err: any) {
+      grid.innerHTML = `<div class="col-span-full py-12 text-center text-red-400">${err.message}</div>`;
+    }
+  }
+
+  function renderRepos(filter: string) {
+    const grid = document.getElementById('repos-grid')!;
+    let repos = allRepos;
+
+    if (filter === 'visible') repos = repos.filter(r => config.visible.includes(r.name));
+    if (filter === 'hidden') repos = repos.filter(r => !config.visible.includes(r.name));
+
+    if (repos.length === 0) {
+      grid.innerHTML = '<div class="col-span-full py-12 text-center text-[var(--color-text-muted)]">No repos in this filter</div>';
+      return;
+    }
+
+    grid.innerHTML = repos.map(repo => {
+      const isVisible = config.visible.includes(repo.name);
+      const category = config.categories[repo.name] || 'web';
+      const updated = new Date(repo.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      return `
+        <div class="repo-card group rounded-xl border ${isVisible ? 'border-[var(--color-primary)]/40 bg-[var(--color-primary)]/5' : 'border-[var(--color-border)] bg-[var(--color-surface)]'} p-5 transition-all" data-repo="${repo.name}">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <button
+                data-toggle="${repo.name}"
+                class="w-10 h-6 rounded-full relative transition-colors ${isVisible ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-surface-offset)]'}"
+                title="${isVisible ? 'Hide' : 'Show'} this project"
+              >
+                <span class="absolute top-1 ${isVisible ? 'left-5' : 'left-1'} w-4 h-4 rounded-full bg-white transition-all shadow-sm"></span>
+              </button>
+              <span class="text-[10px] font-medium tracking-wider uppercase ${isVisible ? 'text-emerald-400' : 'text-[var(--color-text-faint)]'}">
+                ${isVisible ? 'Visible' : 'Hidden'}
+              </span>
+            </div>
+            ${repo.private ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">Private</span>' : ''}
+          </div>
+
+          <h3 class="font-[var(--font-display)] text-lg font-bold mb-1">${repo.name}</h3>
+          <p class="text-sm text-[var(--color-text-muted)] leading-relaxed mb-3 line-clamp-2">
+            ${repo.description || 'No description'}
+          </p>
+
+          <div class="flex items-center gap-3 text-xs text-[var(--color-text-faint)] mb-3">
+            ${repo.language ? `<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[var(--color-primary)]"></span>${repo.language}</span>` : ''}
+            ${repo.stargazers_count > 0 ? `<span>${repo.stargazers_count} stars</span>` : ''}
+            <span>${updated}</span>
+          </div>
+
+          ${repo.topics?.length ? `
+            <div class="flex flex-wrap gap-1 mb-3">
+              ${repo.topics.map((t: string) => `<span class="px-1.5 py-0.5 rounded text-[10px] bg-[var(--color-surface-2)] text-[var(--color-text-faint)]">${t}</span>`).join('')}
+            </div>
+          ` : ''}
+
+          <div class="flex items-center gap-3 mt-auto">
+            <select
+              data-category="${repo.name}"
+              class="text-xs px-2 py-1 rounded bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text-muted)]"
+            >
+              <option value="ai" ${category === 'ai' ? 'selected' : ''}>AI & Automation</option>
+              <option value="web" ${category === 'web' ? 'selected' : ''}>Web Apps</option>
+              <option value="devops" ${category === 'devops' ? 'selected' : ''}>DevOps</option>
+              <option value="oss" ${category === 'oss' ? 'selected' : ''}>Open Source</option>
+            </select>
+            <a href="${repo.html_url}" target="_blank" rel="noopener" class="text-xs text-[var(--color-text-faint)] hover:text-[var(--color-primary)] transition-colors">
+              GitHub &rarr;
+            </a>
+            ${repo.homepage ? `<a href="${repo.homepage}" target="_blank" rel="noopener" class="text-xs text-[var(--color-text-faint)] hover:text-[var(--color-primary)] transition-colors">Live &rarr;</a>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Attach toggle handlers
+    grid.querySelectorAll('[data-toggle]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const name = (btn as HTMLElement).dataset.toggle!;
+        if (config.visible.includes(name)) {
+          config.visible = config.visible.filter(n => n !== name);
+        } else {
+          config.visible.push(name);
+        }
+        saveConfig();
+        renderRepos(currentTab);
+      });
+    });
+
+    // Attach category handlers
+    grid.querySelectorAll('[data-category]').forEach(sel => {
+      sel.addEventListener('change', (e) => {
+        const name = (sel as HTMLSelectElement).dataset.category!;
+        config.categories[name] = (e.target as HTMLSelectElement).value;
+        saveConfig();
+      });
+    });
+
+    updateStats();
+  }
+
+  // Tab filter
+  let currentTab = 'all';
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentTab = (btn as HTMLElement).dataset.tab!;
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        const isActive = b === btn;
+        b.classList.toggle('bg-[var(--color-primary)]', isActive);
+        b.classList.toggle('text-[var(--color-bg)]', isActive);
+        b.classList.toggle('border-[var(--color-primary)]', isActive);
+        b.classList.toggle('text-[var(--color-text-muted)]', !isActive);
+        b.classList.toggle('border-[var(--color-border)]', !isActive);
+      });
+      renderRepos(currentTab);
+    });
+  });
+
+  // Export
+  document.getElementById('btn-export')?.addEventListener('click', () => {
+    const exported = config.visible.map(name => {
+      const repo = allRepos.find(r => r.name === name);
+      return {
+        name,
+        description: repo?.description || '',
+        github: repo?.html_url || '',
+        homepage: repo?.homepage || null,
+        language: repo?.language || null,
+        category: config.categories[name] || 'web',
+        topics: repo?.topics || [],
+      };
+    });
+    document.getElementById('export-json')!.textContent = JSON.stringify(exported, null, 2);
+    document.getElementById('export-modal')!.classList.remove('hidden');
+  });
+
+  document.getElementById('btn-close-modal')?.addEventListener('click', () => {
+    document.getElementById('export-modal')!.classList.add('hidden');
+  });
+
+  document.getElementById('btn-copy')?.addEventListener('click', () => {
+    const json = document.getElementById('export-json')!.textContent || '';
+    navigator.clipboard.writeText(json);
+    const btn = document.getElementById('btn-copy')!;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy to Clipboard', 2000);
+  });
+
+  // Fetch button
+  document.getElementById('btn-fetch')?.addEventListener('click', fetchRepos);
+  document.getElementById('btn-refresh')?.addEventListener('click', fetchRepos);
+
+  // Auto-load saved token
+  const savedToken = localStorage.getItem(TOKEN_KEY);
+  if (savedToken) {
+    (document.getElementById('gh-token') as HTMLInputElement).value = savedToken;
+  }
+</script>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

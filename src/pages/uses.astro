@@ -1,0 +1,78 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const sections = [
+  {
+    title: 'Editor & Terminal',
+    items: [
+      { name: 'VS Code', note: 'With Vim keybindings' },
+      { name: 'Claude Code CLI', note: 'AI pair programming' },
+      { name: 'Warp Terminal', note: 'Modern terminal with AI' },
+      { name: 'Zsh + Oh My Zsh', note: 'Shell customization' },
+    ],
+  },
+  {
+    title: 'AI Tools',
+    items: [
+      { name: 'Claude (Anthropic)', note: 'Primary LLM for coding & reasoning' },
+      { name: 'Gemini (Google)', note: 'Long context analysis' },
+      { name: 'OpenAI GPT-4', note: 'Multi-modal tasks' },
+      { name: 'n8n', note: 'AI workflow automation' },
+      { name: 'CrewAI', note: 'Multi-agent orchestration' },
+    ],
+  },
+  {
+    title: 'Infrastructure',
+    items: [
+      { name: 'Hetzner VPS', note: 'Primary server hosting' },
+      { name: 'Docker + Traefik', note: 'Container orchestration' },
+      { name: 'Vercel', note: 'Frontend deployments' },
+      { name: 'Supabase', note: 'Database & auth' },
+      { name: 'GitHub Actions', note: 'CI/CD pipelines' },
+    ],
+  },
+  {
+    title: 'Design & Productivity',
+    items: [
+      { name: 'Figma', note: 'UI design' },
+      { name: 'Linear', note: 'Project management' },
+      { name: 'Notion', note: 'Documentation' },
+      { name: 'Arc Browser', note: 'Daily driver' },
+    ],
+  },
+];
+---
+
+<Layout title="Uses" description="Tools, software, and hardware that SergeMiro uses daily.">
+  <section class="pt-32 pb-24 md:pb-32">
+    <div class="mx-auto max-w-3xl px-6">
+      <h1
+        data-split="words"
+        class="font-[var(--font-display)] text-[length:var(--text-2xl)] font-bold leading-tight mb-4"
+      >
+        My toolkit
+      </h1>
+      <p class="text-[var(--color-text-muted)] text-lg mb-12">
+        The tools I use daily to build, automate, and ship.
+      </p>
+
+      <div class="space-y-12">
+        {sections.map((section) => (
+          <div data-reveal>
+            <h2 class="text-xs font-medium tracking-widest uppercase text-[var(--color-primary)] mb-4">
+              {section.title}
+            </h2>
+            <div class="space-y-0 divide-y divide-[var(--color-border)]">
+              {section.items.map((item) => (
+                <div class="flex items-center justify-between py-3">
+                  <span class="font-medium">{item.name}</span>
+                  <span class="text-sm text-[var(--color-text-muted)]">{item.note}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+</Layout>
