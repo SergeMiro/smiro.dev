@@ -1,28 +1,5 @@
 ---
-const projects = [
-  {
-    name: 'Vistalid',
-    description: 'AI-powered back-office automation for French companies. Smart email parsing, ticket routing, URSSAF integration.',
-    stack: ['Next.js', 'Claude API', 'PostgreSQL', 'n8n', 'Docker'],
-    highlight: 'Reduces manual work by 80%',
-    status: 'Production',
-    featured: true,
-  },
-  {
-    name: 'SimplifyEU',
-    description: 'AI solutions for EU business compliance and workflow automation. Multi-language support.',
-    stack: ['Python', 'LangChain', 'Supabase', 'FastAPI'],
-    status: 'Active',
-    github: 'https://github.com/SergeMiro/SimplifyEU',
-  },
-  {
-    name: 'API Téléphonie SDA',
-    description: 'Telephony API integration with real-time call data processing and T-SQL analytics.',
-    stack: ['T-SQL', 'SQL Server', 'JavaScript', 'REST API'],
-    status: 'Production',
-    github: 'https://github.com/SergeMiro/API-Telephonie-SDA',
-  },
-];
+import { featuredProjects as projects } from '../data/projects';
 ---
 
 <section id="projects" class="py-24 md:py-32 bg-[var(--color-surface)]">

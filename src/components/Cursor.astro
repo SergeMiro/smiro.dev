@@ -1,14 +1,19 @@
 ---
 ---
 
-<div id="cursor-dot" class="fixed top-0 left-0 w-2 h-2 rounded-full bg-[var(--color-primary)] pointer-events-none z-[100] mix-blend-difference" style="transform: translate(-50%, -50%)"></div>
-<div id="cursor-ring" class="fixed top-0 left-0 w-8 h-8 rounded-full border border-[var(--color-primary)] pointer-events-none z-[100] mix-blend-difference opacity-60" style="transform: translate(-50%, -50%)"></div>
+<div id="cursor-dot" class="fixed top-0 left-0 w-2 h-2 rounded-full bg-[var(--color-primary)] pointer-events-none z-[100] mix-blend-difference hidden" style="transform: translate(-50%, -50%)" aria-hidden="true"></div>
+<div id="cursor-ring" class="fixed top-0 left-0 w-8 h-8 rounded-full border border-[var(--color-primary)] pointer-events-none z-[100] mix-blend-difference opacity-60 hidden" style="transform: translate(-50%, -50%)" aria-hidden="true"></div>
 
 <script>
-  // Only on desktop with fine pointer
-  if (window.matchMedia('(pointer: fine)').matches && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  // Only on desktop with fine pointer AND no reduced motion
+  const isFinePointer = window.matchMedia('(pointer: fine)').matches;
+  const noReducedMotion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (isFinePointer && noReducedMotion) {
     const dot = document.getElementById('cursor-dot')!;
     const ring = document.getElementById('cursor-ring')!;
+    dot.classList.remove('hidden');
+    ring.classList.remove('hidden');
 
     let mouseX = 0;
     let mouseY = 0;
@@ -22,7 +27,6 @@
       dot.style.top = mouseY + 'px';
     });
 
-    // Ring follows with lerp
     function animateRing() {
       ringX += (mouseX - ringX) * 0.15;
       ringY += (mouseY - ringY) * 0.15;
@@ -55,13 +59,15 @@
       }
     });
 
-    // Hide default cursor
-    document.documentElement.style.cursor = 'none';
-    document.querySelectorAll(interactiveSelectors).forEach(el => {
-      (el as HTMLElement).style.cursor = 'none';
-    });
+    // Use CSS class instead of inline styles — preserves focus-visible cursor
+    const style = document.createElement('style');
+    style.textContent = `
+      html.custom-cursor, html.custom-cursor * { cursor: none; }
+      html.custom-cursor *:focus-visible { cursor: auto; outline: 2px solid var(--color-primary); outline-offset: 2px; }
+    `;
+    document.head.appendChild(style);
+    document.documentElement.classList.add('custom-cursor');
   } else {
-    // Remove cursor elements on touch/reduced motion
     document.getElementById('cursor-dot')?.remove();
     document.getElementById('cursor-ring')?.remove();
   }
