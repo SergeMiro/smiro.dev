@@ -96,30 +96,23 @@ html.light {
 }
 
 /* ===== 3D MODE ===== */
-html[data-view="3d"] section {
-  transform-style: preserve-3d;
+html[data-view="3d"] body {
+  overflow-x: hidden;
 }
 
-html[data-view="3d"] .hero-sub,
-html[data-view="3d"] .hero-ctas,
-html[data-view="3d"] [data-split="chars"],
-html[data-view="3d"] [data-split="words"] {
-  transform-style: preserve-3d;
+html[data-view="3d"] .hero-3d__sticky,
+html[data-view="3d"] .about-3d__sticky,
+html[data-view="3d"] .proj-3d__sticky {
   will-change: transform;
 }
 
-html[data-view="3d"] [class*="rounded-2xl"] {
+html[data-view="3d"] .proj-3d__cards {
   transform-style: preserve-3d;
-  will-change: transform;
 }
 
-/* Floating shapes only visible in 3D mode */
-.floating-shapes-3d {
-  display: none;
-}
-
-html[data-view="3d"] .floating-shapes-3d {
-  display: block;
+html[data-view="3d"] .proj-3d__card {
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
 }
 
 /* ===== UTILITIES ===== */
