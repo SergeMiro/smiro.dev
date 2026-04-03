@@ -33,7 +33,7 @@ const demos = [
 ];
 ---
 
-<Layout title="Demos" description="Live AI & automation experiments by SergeMiro.">
+<Layout title="Demos" description="Live AI & automation experiments by SergeMiro." pageColor="demos">
   <section class="pt-32 pb-24 md:pb-32">
     <div class="mx-auto max-w-7xl px-6">
       <h1
@@ -51,26 +51,30 @@ const demos = [
 
       <div class="grid md:grid-cols-2 gap-6" data-stagger>
         {demos.map((demo) => (
-          <div class="group rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 hover:border-[var(--color-primary)]/30 transition-all duration-300 hover:-translate-y-1">
-            <div class="flex items-start justify-between mb-4">
-              <span class="text-3xl">{demo.icon}</span>
-              <span class:list={[
-                'px-2 py-0.5 rounded text-[10px] font-medium tracking-wider uppercase border',
-                demo.status === 'Live' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                demo.status === 'Beta' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                'bg-[var(--color-surface-2)] text-[var(--color-text-faint)] border-[var(--color-border)]'
-              ]}>
-                {demo.status}
-              </span>
-            </div>
-            <h3 class="font-[var(--font-display)] text-xl font-bold mb-2">{demo.name}</h3>
-            <p class="text-sm text-[var(--color-text-muted)] leading-relaxed mb-4">{demo.description}</p>
-            <div class="flex flex-wrap gap-1.5">
-              {demo.tags.map((tag) => (
-                <span class="px-2 py-0.5 rounded text-[11px] bg-[var(--color-surface-2)] text-[var(--color-text-faint)]">
-                  {tag}
-                </span>
-              ))}
+          <div class="group perspective-[1000px]">
+            <div class="card-3d rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 hover:border-[var(--color-primary)]/30 transition-all duration-300" data-tilt>
+              <div class="card-3d-content">
+                <div class="flex items-start justify-between mb-4">
+                  <span class="text-3xl">{demo.icon}</span>
+                  <span class:list={[
+                    'px-2 py-0.5 rounded text-[10px] font-medium tracking-wider uppercase border',
+                    demo.status === 'Live' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                    demo.status === 'Beta' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                    'bg-[var(--color-surface-2)] text-[var(--color-text-faint)] border-[var(--color-border)]'
+                  ]}>
+                    {demo.status}
+                  </span>
+                </div>
+                <h3 class="font-[var(--font-display)] text-xl font-bold mb-2">{demo.name}</h3>
+                <p class="text-sm text-[var(--color-text-muted)] leading-relaxed mb-4">{demo.description}</p>
+                <div class="flex flex-wrap gap-1.5">
+                  {demo.tags.map((tag) => (
+                    <span class="px-2 py-0.5 rounded text-[11px] bg-[var(--color-surface-2)] text-[var(--color-text-faint)]">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         ))}

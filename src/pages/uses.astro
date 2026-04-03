@@ -43,7 +43,7 @@ const sections = [
 ];
 ---
 
-<Layout title="Uses" description="Tools, software, and hardware that SergeMiro uses daily.">
+<Layout title="Uses" description="Tools, software, and hardware that SergeMiro uses daily." pageColor="uses">
   <section class="pt-32 pb-24 md:pb-32">
     <div class="mx-auto max-w-3xl px-6">
       <h1
@@ -64,7 +64,7 @@ const sections = [
             </h2>
             <div class="space-y-0 divide-y divide-[var(--color-border)]">
               {section.items.map((item) => (
-                <div class="flex items-center justify-between py-3">
+                <div class="flex items-center justify-between py-3 hover:bg-[var(--color-surface)]/50 px-3 -mx-3 rounded-lg transition-colors">
                   <span class="font-medium">{item.name}</span>
                   <span class="text-sm text-[var(--color-text-muted)]">{item.note}</span>
                 </div>
