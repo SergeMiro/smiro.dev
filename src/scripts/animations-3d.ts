@@ -390,7 +390,7 @@ export function init3DAnimations() {
   );
 
   // ═══════════════════════════════════════════════
-  // PHASE 3: Horizontal Project Cards (0.44 → 0.74)
+  // PHASE 3: 3D Perspective Conveyor (0.44 → 0.74)
   // ═══════════════════════════════════════════════
 
   // Cards label appears with tracking spread
@@ -402,19 +402,42 @@ export function init3DAnimations() {
   );
   master.to('[data-cards-label]', { opacity: 0, y: -20, duration: 0.03, ease: 'none' }, 0.52);
 
-  // Horizontal scroll of card track
-  const track = section.querySelector('[data-cards-track]') as HTMLElement;
-  if (track) {
+  // 3D Conveyor: cards scroll vertically through perspective space
+  const scene = section.querySelector('[data-scene3d]') as HTMLElement;
+  const track = section.querySelector('[data-scene3d-track]') as HTMLElement;
+  const cards = section.querySelectorAll('.scene3d__card');
+
+  if (track && scene) {
+    // Fade in the scene
+    master.fromTo(
+      scene,
+      { opacity: 0 },
+      { opacity: 1, duration: 0.04, ease: 'none' },
+      0.43
+    );
+
+    // The conveyor scrolls cards upward through the 3D viewport
+    // Calculate total distance: all cards + gaps need to scroll through
     master.fromTo(
       track,
-      { x: () => window.innerWidth * 1.1 },
+      { y: () => window.innerHeight * 0.8 },
       {
-        x: () => -(track.scrollWidth - window.innerWidth + 80),
+        y: () => -(track.scrollHeight - window.innerHeight * 0.3),
         duration: 0.30,
         ease: 'none',
       },
       0.44
     );
+
+    // Individual card depth stagger — each card has slightly different z
+    cards.forEach((card, i) => {
+      const zOffset = (i % 2 === 0) ? 20 : -15;
+      const xOffset = (i % 2 === 0) ? -10 : 15;
+      gsap.set(card, {
+        z: zOffset,
+        x: xOffset,
+      });
+    });
   }
 
   // Ambient orbs shift during card phase
@@ -429,8 +452,8 @@ export function init3DAnimations() {
   // PHASE 3→4 Transition: Cards exit with blur
   // ═══════════════════════════════════════════════
 
-  if (track) {
-    master.to(track, { opacity: 0, filter: 'blur(6px)', duration: 0.05, ease: 'none' }, 0.74);
+  if (scene) {
+    master.to(scene, { opacity: 0, filter: 'blur(6px)', duration: 0.05, ease: 'none' }, 0.74);
   }
   master.to('[data-bg-group="A"]', { opacity: 0, duration: 0.05, ease: 'none' }, 0.74);
 

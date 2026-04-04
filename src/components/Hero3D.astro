@@ -180,44 +180,46 @@ import { projects } from '../data/projects';
         </div>
       </div>
 
-      <!-- Phase 3: Horizontal project cards -->
+      <!-- Phase 3: 3D Perspective Conveyor -->
       <div class="cinematic__cards-section">
         <h2 class="cinematic__cards-label" data-cards-label>FEATURED WORK</h2>
-        <div class="cinematic__cards-track" data-cards-track>
-          {projects.map((project, i) => (
-            <div class="cinematic__card" data-card={i} data-tilt-card>
-              <div class="card__glow"></div>
-              <div class="card__inner">
-                <div class="card__header">
-                  <div class="card__status">
-                    {project.status && <span class="card__status-dot"></span>}
-                    {project.status || project.category.toUpperCase()}
+        <div class="scene3d" data-scene3d>
+          <div class="scene3d__track" data-scene3d-track>
+            {projects.map((project, i) => (
+              <div class="scene3d__card" data-card={i} data-tilt-card>
+                <div class="card__glow"></div>
+                <div class="card__inner">
+                  <div class="card__header">
+                    <div class="card__status">
+                      {project.status && <span class="card__status-dot"></span>}
+                      {project.status || project.category.toUpperCase()}
+                    </div>
+                    <span class="card__number">{'0'}{i + 1}</span>
                   </div>
-                  <span class="card__number">{'0'}{i + 1}</span>
-                </div>
-                <h3 class="card__title">{project.name}</h3>
-                <p class="card__desc">{project.description}</p>
-                <div class="card__stack">
-                  {project.stack.map((tech) => (
-                    <span class="card__tech">{tech}</span>
-                  ))}
-                </div>
-                {project.highlight && (
-                  <div class="card__highlight">
-                    <span class="card__highlight-icon">*</span>
-                    {project.highlight}
+                  <h3 class="card__title">{project.name}</h3>
+                  <p class="card__desc">{project.description}</p>
+                  <div class="card__stack">
+                    {project.stack.map((tech) => (
+                      <span class="card__tech">{tech}</span>
+                    ))}
                   </div>
-                )}
-                <div class="card__links">
-                  {project.github && (
-                    <a href={project.github} target="_blank" rel="noopener noreferrer" class="card__link">
-                      View on GitHub &rarr;
-                    </a>
+                  {project.highlight && (
+                    <div class="card__highlight">
+                      <span class="card__highlight-icon">*</span>
+                      {project.highlight}
+                    </div>
                   )}
+                  <div class="card__links">
+                    {project.github && (
+                      <a href={project.github} target="_blank" rel="noopener noreferrer" class="card__link">
+                        View on GitHub &rarr;
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 

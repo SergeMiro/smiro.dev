@@ -716,12 +716,13 @@ html[data-view="3d"] body {
   inset: 0;
   display: flex;
   align-items: center;
-  overflow: visible;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .cinematic__cards-label {
   position: absolute;
-  top: 6vh;
+  top: 5vh;
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--font-display);
@@ -730,27 +731,41 @@ html[data-view="3d"] body {
   letter-spacing: 0.25em;
   color: var(--color-text-faint);
   opacity: 0;
+  z-index: 2;
 }
 
-.cinematic__cards-track {
-  display: flex;
-  gap: 2.5rem;
-  padding: 0 6rem;
+/* 3D Perspective Scene (wodniack-style conveyor) */
+.scene3d {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  inset: 0;
+  perspective: 800px;
+  perspective-origin: 55% 50%;
+  overflow: hidden;
+}
+
+.scene3d__track {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform-style: preserve-3d;
+  transform: translateX(-50%) rotateY(-18deg) rotateX(2deg);
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  padding: 4rem 0;
   will-change: transform;
 }
 
-/* 3D tilt cards */
-.cinematic__card {
-  flex-shrink: 0;
-  width: clamp(300px, 35vw, 400px);
+/* 3D conveyor cards */
+.scene3d__card {
+  width: clamp(320px, 40vw, 480px);
   position: relative;
   border-radius: 20px;
   transform-style: preserve-3d;
-  will-change: transform;
+  will-change: transform, opacity;
   transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  /* Each card slightly offset for depth stagger */
+  transform: translateZ(0);
 }
 
 .card__glow {
@@ -764,7 +779,7 @@ html[data-view="3d"] body {
   filter: blur(1px);
 }
 
-.cinematic__card:hover .card__glow {
+.scene3d__card:hover .card__glow {
   opacity: 1;
 }
 
@@ -781,7 +796,7 @@ html[data-view="3d"] body {
   transition: border-color 0.4s ease, box-shadow 0.4s ease;
 }
 
-.cinematic__card:hover .card__inner {
+.scene3d__card:hover .card__inner {
   border-color: color-mix(in oklch, var(--color-primary) 25%, transparent);
   box-shadow:
     0 20px 60px rgba(0, 0, 0, 0.4),
@@ -851,7 +866,7 @@ html[data-view="3d"] body {
   transition: border-color 0.2s, color 0.2s;
 }
 
-.cinematic__card:hover .card__tech {
+.scene3d__card:hover .card__tech {
   border-color: color-mix(in oklch, var(--color-primary) 15%, transparent);
   color: var(--color-text);
 }
@@ -967,12 +982,17 @@ html[data-view="3d"] body {
     display: none;
   }
 
-  .cinematic__card {
+  .scene3d__card {
     width: 82vw;
   }
 
-  .cinematic__cards-track {
-    padding: 0 2rem;
+  .scene3d {
+    perspective: 500px;
+    perspective-origin: 50% 50%;
+  }
+
+  .scene3d__track {
+    transform: translateX(-50%) rotateY(-8deg);
     gap: 1.5rem;
   }
 
