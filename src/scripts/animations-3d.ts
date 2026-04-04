@@ -5,364 +5,483 @@ import Lenis from 'lenis';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
-// ── Easing map (wodniack-style named curves) ──
-const ease = {
-  expo: 'expo.inOut',
-  expoOut: 'expo.out',
-  expoIn: 'expo.in',
-  smooth: 'power3.out',
-  smooth2: 'power4.out',
-  bounce: 'back.out(1.4)',
-};
+const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-export function init3DAnimations() {
-  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (prefersReduced) return;
+// ─── Matrix Rain Canvas ───
+function initMatrixCanvas() {
+  const canvas = document.getElementById('matrixCanvas') as HTMLCanvasElement;
+  const mask = document.getElementById('matrixMask') as HTMLElement;
+  if (!canvas || !mask) return;
 
-  // ── Smooth scroll ──
-  const lenis = new Lenis({ lerp: 0.06, smoothWheel: true });
-  lenis.on('scroll', ScrollTrigger.update);
-  gsap.ticker.add((time) => lenis.raf(time * 1000));
-  gsap.ticker.lagSmoothing(0);
-  (window as any).__lenis = lenis;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
 
-  // ── Nav entrance ──
-  gsap.from('nav', { y: -30, opacity: 0, duration: 0.8, ease: ease.smooth });
+  const chars = 'アイウエオカキクケコサシスセソタチツテト01{}[]<>/=;:.()#$%&*+-~^|\\!?@ABCDEFabcdef';
+  const fontSize = 14;
+  let columns: number[] = [];
+  let w = 0, h = 0;
+  let animId = 0;
+  let isActive = false;
 
-  // ── Scroll progress bar ──
-  const progressBar = document.querySelector('[data-scroll-progress]');
-  if (progressBar) {
-    gsap.to(progressBar, {
-      scaleX: 1, ease: 'none',
-      scrollTrigger: { trigger: document.body, start: 'top top', end: 'bottom bottom', scrub: 0.3 },
-    });
+  function resize() {
+    w = canvas.width = canvas.offsetWidth;
+    h = canvas.height = canvas.offsetHeight;
+    const colCount = Math.floor(w / fontSize);
+    columns = Array(colCount).fill(0).map(() => Math.floor(Math.random() * h / fontSize));
   }
 
-  // ── Sections ──
-  initHero();
-  initAbout();
-  initProjects();
-  initContact();
+  function draw() {
+    ctx!.fillStyle = 'rgba(15, 14, 12, 0.06)';
+    ctx!.fillRect(0, 0, w, h);
+
+    const style = getComputedStyle(document.documentElement);
+    const primary = style.getPropertyValue('--color-primary').trim() || '#00c8a0';
+
+    ctx!.font = `${fontSize}px 'Courier New', monospace`;
+
+    for (let i = 0; i < columns.length; i++) {
+      const char = chars[Math.floor(Math.random() * chars.length)];
+      const x = i * fontSize;
+      const y = columns[i] * fontSize;
+
+      const brightness = 0.15 + Math.random() * 0.25;
+      ctx!.fillStyle = `color-mix(in srgb, ${primary} ${Math.floor(brightness * 100)}%, transparent)`;
+      ctx!.fillText(char, x, y);
+
+      if (y > h && Math.random() > 0.975) {
+        columns[i] = 0;
+      }
+      columns[i]++;
+    }
+
+    if (isActive) animId = requestAnimationFrame(draw);
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Press-to-reveal: show matrix rain under a circular mask
+  let pressTimer: number;
+  const sticky = document.querySelector('.cinematic__sticky') as HTMLElement;
+  if (!sticky) return;
+
+  function startPress(x: number, y: number) {
+    isActive = true;
+    canvas.style.opacity = '1';
+    mask.style.opacity = '1';
+
+    // Clear canvas for fresh rain
+    ctx!.fillStyle = 'rgba(15, 14, 12, 1)';
+    ctx!.fillRect(0, 0, w, h);
+
+    draw();
+    expandMask(x, y);
+  }
+
+  function expandMask(x: number, y: number) {
+    const rect = sticky.getBoundingClientRect();
+    const px = x - rect.left;
+    const py = y - rect.top;
+
+    gsap.to(mask, {
+      '--mask-size': '250px',
+      duration: 0.6,
+      ease: 'power2.out',
+      onUpdate() {
+        const size = getComputedStyle(mask).getPropertyValue('--mask-size') || '0px';
+        mask.style.maskImage = `radial-gradient(circle ${size} at ${px}px ${py}px, transparent 0%, black 100%)`;
+        mask.style.webkitMaskImage = `radial-gradient(circle ${size} at ${px}px ${py}px, transparent 0%, black 100%)`;
+      },
+    });
+    gsap.set(mask, { '--mask-size': '0px' });
+  }
+
+  function endPress() {
+    isActive = false;
+    cancelAnimationFrame(animId);
+    gsap.to(canvas, { opacity: 0, duration: 0.4 });
+    gsap.to(mask, { opacity: 0, duration: 0.3 });
+  }
+
+  sticky.addEventListener('mousedown', (e) => {
+    startPress(e.clientX, e.clientY);
+    spawnRipple(e.clientX, e.clientY);
+  });
+  sticky.addEventListener('mouseup', endPress);
+  sticky.addEventListener('mouseleave', endPress);
+
+  sticky.addEventListener('touchstart', (e) => {
+    const t = e.touches[0];
+    startPress(t.clientX, t.clientY);
+    spawnRipple(t.clientX, t.clientY);
+  }, { passive: true });
+  sticky.addEventListener('touchend', endPress);
 }
 
-// ═══════════════════════════════════════
-// HERO — pinned, scroll-driven typography
-// ═══════════════════════════════════════
-function initHero() {
-  const section = document.getElementById('hero-3d');
-  if (!section) return;
+// ─── Click Ripple Effect ───
+function spawnRipple(x: number, y: number) {
+  const container = document.getElementById('rippleContainer');
+  if (!container) return;
 
-  const sticky = section.querySelector('.hero-3d__sticky') as HTMLElement;
-  const lines = section.querySelectorAll('[data-hero-line]');
-  const badge = section.querySelector('[data-hero-badge]');
-  const sub = section.querySelector('[data-hero-sub]');
-  const scroll = section.querySelector('[data-hero-scroll]');
-  const ticker = section.querySelector('[data-hero-ticker]');
-  const grid = section.querySelector('.hero-3d__grid');
-  const crosses = section.querySelectorAll('.hero-3d__cross');
+  const sticky = document.querySelector('.cinematic__sticky') as HTMLElement;
+  const rect = sticky.getBoundingClientRect();
 
-  // ── Entrance timeline (plays once) ──
-  const entrance = gsap.timeline({ delay: 0.2 });
+  const ripple = document.createElement('div');
+  ripple.className = 'click-ripple';
+  ripple.style.left = (x - rect.left) + 'px';
+  ripple.style.top = (y - rect.top) + 'px';
+  ripple.style.width = '300px';
+  ripple.style.height = '300px';
+  container.appendChild(ripple);
 
-  // Grid fades in
-  entrance.from(grid, { opacity: 0, duration: 1.2, ease: ease.smooth });
+  // Second wider ripple
+  setTimeout(() => {
+    const r2 = document.createElement('div');
+    r2.className = 'click-ripple';
+    r2.style.left = (x - rect.left) + 'px';
+    r2.style.top = (y - rect.top) + 'px';
+    r2.style.width = '500px';
+    r2.style.height = '500px';
+    r2.style.borderColor = 'var(--color-accent)';
+    container.appendChild(r2);
+    setTimeout(() => r2.remove(), 900);
+  }, 100);
 
-  // Crosses
-  entrance.from(crosses, { opacity: 0, scale: 0, duration: 0.6, stagger: 0.1, ease: ease.bounce }, 0.3);
-
-  // Lines appear one by one with stagger
-  lines.forEach((line, i) => {
-    const split = new SplitText(line, { type: 'chars' });
-    entrance.to(line, { opacity: 1, duration: 0.01 }, 0.3 + i * 0.2);
-    entrance.from(split.chars, {
-      y: 120,
-      rotateX: -80,
-      opacity: 0,
-      stagger: 0.02,
-      duration: 0.8,
-      ease: ease.smooth2,
-    }, 0.3 + i * 0.2);
-  });
-
-  // Badge
-  entrance.to(badge, { opacity: 1, duration: 0.6, ease: ease.smooth }, 0.9);
-
-  // Ticker
-  entrance.to(ticker, { opacity: 1, duration: 0.8, ease: ease.smooth }, 1.0);
-
-  // Sub text
-  entrance.to(sub, { opacity: 1, duration: 0.6, ease: ease.smooth }, 1.1);
-
-  // Scroll indicator
-  entrance.to(scroll, { opacity: 1, duration: 0.6, ease: ease.smooth }, 1.3);
-
-  // ── Scroll-driven exit timeline (pinned) ──
-  const scrollTl = gsap.timeline({
-    scrollTrigger: {
-      trigger: section,
-      start: 'top top',
-      end: '+=200%',
-      scrub: 1,
-      pin: sticky,
-      pinSpacing: false,
-    },
-  });
-
-  // Lines spread apart and scale
-  scrollTl.to(lines[0], { y: '-30vh', scale: 1.3, opacity: 0.2, ease: 'none' }, 0);
-  scrollTl.to(lines[1], { scale: 1.5, opacity: 0.15, ease: 'none' }, 0);
-  scrollTl.to(lines[2], { y: '30vh', scale: 1.3, opacity: 0.2, ease: 'none' }, 0);
-
-  // Grid rotates slightly in 3D
-  scrollTl.to(grid, { rotateX: 15, rotateY: -5, opacity: 0, ease: 'none' }, 0);
-
-  // Badge, sub, scroll fade out
-  scrollTl.to(badge, { y: -100, opacity: 0, ease: 'none' }, 0);
-  scrollTl.to(sub, { y: 100, opacity: 0, ease: 'none' }, 0);
-  scrollTl.to(scroll, { y: 50, opacity: 0, ease: 'none' }, 0);
-  scrollTl.to(ticker, { opacity: 0, ease: 'none' }, 0);
-
-  // Crosses fly out
-  scrollTl.to(crosses, { scale: 3, opacity: 0, ease: 'none' }, 0);
+  setTimeout(() => ripple.remove(), 900);
 }
 
-// ═══════════════════════════════════════
-// ABOUT — pinned, phased reveal
-// ═══════════════════════════════════════
-function initAbout() {
-  const section = document.getElementById('about-3d');
-  if (!section) return;
+// ─── Cursor Glow ───
+function initCursorGlow() {
+  const glow = document.getElementById('cursorGlow');
+  if (!glow) return;
 
-  const sticky = section.querySelector('.about-3d__sticky') as HTMLElement;
-  const bio = section.querySelector('[data-about-bio]') as HTMLElement;
-  const bioText = section.querySelector('[data-about-text]') as HTMLElement;
-  const bioText2 = section.querySelector('[data-about-text-2]') as HTMLElement;
-  const stats = section.querySelector('[data-about-stats]') as HTMLElement;
-  const statItems = section.querySelectorAll('[data-about-stat]');
-  const stack = section.querySelector('[data-about-stack]') as HTMLElement;
-  const label = section.querySelector('[data-about-label]') as HTMLElement;
+  const sticky = document.querySelector('.cinematic__sticky') as HTMLElement;
+  if (!sticky) return;
 
-  // Split bio text into words for reveal
-  const split1 = new SplitText(bioText, { type: 'words' });
-  const split2 = new SplitText(bioText2, { type: 'words' });
-
-  // Set initial state
-  gsap.set(split1.words, { opacity: 0.1 });
-  gsap.set(split2.words, { opacity: 0.1 });
-
-  const tl = gsap.timeline({
-    scrollTrigger: {
-      trigger: section,
-      start: 'top top',
-      end: '+=350%',
-      scrub: 1,
-      pin: sticky,
-      pinSpacing: false,
-    },
+  sticky.addEventListener('mouseenter', () => {
+    gsap.to(glow, { opacity: 1, duration: 0.3 });
   });
 
-  // Phase 0: Section label flashes and fades
-  tl.fromTo(label, { opacity: 0, scale: 0.8 }, { opacity: 0.04, scale: 1, duration: 0.1, ease: 'none' }, 0);
-  tl.to(label, { opacity: 0.02, scale: 1.2, duration: 0.9, ease: 'none' }, 0.1);
+  sticky.addEventListener('mouseleave', () => {
+    gsap.to(glow, { opacity: 0, duration: 0.3 });
+  });
 
-  // Phase 1: Bio text reveals word by word (0 → 0.4)
-  tl.to(split1.words, {
-    opacity: 1,
-    stagger: 0.01,
-    duration: 0.3,
-    ease: 'none',
-  }, 0.02);
-
-  tl.to(split2.words, {
-    opacity: 1,
-    stagger: 0.01,
-    duration: 0.2,
-    ease: 'none',
-  }, 0.15);
-
-  // Phase 2: Bio exits, stats enter (0.4 → 0.7)
-  tl.to(bio, { y: -100, opacity: 0, duration: 0.15, ease: 'none' }, 0.4);
-
-  tl.to(stats, { opacity: 1, duration: 0.05, ease: 'none' }, 0.45);
-  tl.from(statItems, {
-    y: 80,
-    rotateX: -40,
-    opacity: 0,
-    stagger: 0.03,
-    duration: 0.15,
-    ease: 'none',
-  }, 0.45);
-
-  // Phase 3: Stack ticker enters (0.65 → 0.8)
-  tl.to(stack, { opacity: 1, duration: 0.1, ease: 'none' }, 0.65);
-
-  // Phase 4: Everything exits (0.8 → 1)
-  tl.to(stats, { y: -80, opacity: 0, duration: 0.15, ease: 'none' }, 0.8);
-  tl.to(stack, { y: -40, opacity: 0, duration: 0.1, ease: 'none' }, 0.85);
-  tl.to(label, { opacity: 0, duration: 0.1, ease: 'none' }, 0.85);
+  sticky.addEventListener('mousemove', (e) => {
+    const rect = sticky.getBoundingClientRect();
+    gsap.to(glow, {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      duration: 0.4,
+      ease: 'power2.out',
+    });
+  });
 }
 
-// ═══════════════════════════════════════
-// PROJECTS — cards in 3D space with parallax
-// ═══════════════════════════════════════
-function initProjects() {
-  const section = document.getElementById('projects-3d');
-  if (!section) return;
+// ─── 3D Card Tilt on Hover ───
+function initCardTilt() {
+  document.querySelectorAll('[data-tilt-card]').forEach((card) => {
+    const el = card as HTMLElement;
+    const maxTilt = 8;
 
-  const sticky = section.querySelector('.proj-3d__sticky') as HTMLElement;
-  const titleEl = section.querySelector('[data-proj-title]') as HTMLElement;
-  const cards = section.querySelectorAll('[data-proj-card]');
-  const cta = section.querySelector('[data-proj-cta]') as HTMLElement;
-
-  // Card layout positions (spread in 3D space)
-  const positions = [
-    { x: '-30%', y: '-15%', z: -100, rotate: -3 },
-    { x: '25%',  y: '-20%', z: -200, rotate: 4 },
-    { x: '-25%', y: '15%',  z: -150, rotate: 2 },
-    { x: '30%',  y: '10%',  z: -50,  rotate: -2 },
-    { x: '-10%', y: '25%',  z: -250, rotate: 5 },
-    { x: '15%',  y: '-5%',  z: -300, rotate: -4 },
-  ];
-
-  const tl = gsap.timeline({
-    scrollTrigger: {
-      trigger: section,
-      start: 'top top',
-      end: '+=450%',
-      scrub: 1,
-      pin: sticky,
-      pinSpacing: false,
-    },
-  });
-
-  // Phase 0: Title zooms in and fades (0 → 0.15)
-  tl.fromTo(titleEl,
-    { scale: 0.3, opacity: 0 },
-    { scale: 1, opacity: 1, duration: 0.1, ease: 'none' },
-    0
-  );
-  tl.to(titleEl, { scale: 3, opacity: 0, duration: 0.15, ease: 'none' }, 0.1);
-
-  // Phase 1: Cards fly in from far Z (0.15 → 0.5)
-  cards.forEach((card, i) => {
-    const pos = positions[i] || positions[0];
-    const startTime = 0.15 + i * 0.04;
-
-    // Initial state: far away, invisible
-    gsap.set(card, {
-      xPercent: parseFloat(pos.x),
-      yPercent: parseFloat(pos.y),
-      z: -800,
-      rotateY: pos.rotate * 3,
-      rotateX: 10,
-      opacity: 0,
+    el.addEventListener('mousemove', (e: MouseEvent) => {
+      const rect = el.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      gsap.to(el, {
+        rotateY: x * maxTilt,
+        rotateX: -y * maxTilt,
+        scale: 1.02,
+        duration: 0.4,
+        ease: 'power2.out',
+      });
     });
 
-    // Fly in to position
-    tl.to(card, {
-      z: pos.z,
-      rotateY: pos.rotate,
-      rotateX: 0,
-      opacity: 1,
-      duration: 0.25,
-      ease: 'none',
-    }, startTime);
-  });
-
-  // Phase 2: Cards drift with parallax (0.5 → 0.85)
-  cards.forEach((card, i) => {
-    const parallaxY = (i % 2 === 0 ? -1 : 1) * (30 + i * 10);
-    const parallaxZ = (i % 2 === 0 ? 1 : -1) * 50;
-
-    tl.to(card, {
-      yPercent: `+=${parallaxY}`,
-      z: `+=${parallaxZ}`,
-      rotateY: `+=${(i % 2 === 0 ? -2 : 2)}`,
-      duration: 0.35,
-      ease: 'none',
-    }, 0.5);
-  });
-
-  // CTA appears
-  tl.to(cta, { opacity: 1, duration: 0.1, ease: 'none' }, 0.6);
-
-  // Phase 3: Everything exits (0.85 → 1)
-  cards.forEach((card, i) => {
-    tl.to(card, {
-      z: 500,
-      opacity: 0,
-      duration: 0.15,
-      ease: 'none',
-    }, 0.85 + i * 0.01);
-  });
-
-  tl.to(cta, { opacity: 0, duration: 0.1, ease: 'none' }, 0.9);
-
-  // ── Mouse parallax on cards ──
-  let mouseX = 0;
-  let mouseY = 0;
-
-  sticky.addEventListener('mousemove', (e: MouseEvent) => {
-    const rect = sticky.getBoundingClientRect();
-    mouseX = (e.clientX - rect.left) / rect.width - 0.5;
-    mouseY = (e.clientY - rect.top) / rect.height - 0.5;
-
-    cards.forEach((card, i) => {
-      const depth = 1 + i * 0.3;
-      gsap.to(card, {
-        x: mouseX * 30 * depth,
-        y: mouseY * 20 * depth,
-        duration: 0.8,
-        ease: 'power2.out',
-        overwrite: 'auto',
+    el.addEventListener('mouseleave', () => {
+      gsap.to(el, {
+        rotateY: 0,
+        rotateX: 0,
+        scale: 1,
+        duration: 0.6,
+        ease: 'power3.out',
       });
     });
   });
 }
 
-// ═══════════════════════════════════════
-// CONTACT — entrance animation
-// ═══════════════════════════════════════
-function initContact() {
-  const section = document.getElementById('contact-3d');
+// ─── Particle visibility tied to scroll ───
+function initParticles() {
+  const particles = document.querySelectorAll('.particle');
+  if (!particles.length) return;
+
+  particles.forEach((p, i) => {
+    gsap.to(p, {
+      opacity: 0.12 + Math.random() * 0.08,
+      duration: 2,
+      delay: i * 0.05,
+      ease: 'power2.out',
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// MAIN INIT
+// ═══════════════════════════════════════════════════
+
+export function init3DAnimations() {
+  // ── Smooth Scroll ──
+  if (!prefersReduced) {
+    const lenis = new Lenis({ lerp: 0.06, smoothWheel: true });
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add((time) => lenis.raf(time * 1000));
+    gsap.ticker.lagSmoothing(0);
+    (window as any).__lenis = lenis;
+  }
+
+  // ── Scroll progress bar ──
+  const progressBar = document.querySelector('[data-scroll-progress]');
+  if (progressBar) {
+    gsap.to(progressBar, {
+      scaleX: 1,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: document.body,
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 0.3,
+      },
+    });
+  }
+
+  // ── Nav entrance ──
+  if (!prefersReduced) {
+    gsap.from('nav', { y: -20, opacity: 0, duration: 0.5, ease: 'power3.out' });
+  }
+
+  // ── Interactive effects ──
+  if (!prefersReduced) {
+    initMatrixCanvas();
+    initCursorGlow();
+    initParticles();
+  }
+
+  const section = document.getElementById('hero-3d');
   if (!section) return;
 
-  const title = section.querySelector('[data-contact-title]');
-  const sub = section.querySelector('[data-contact-sub]');
-  const btn = section.querySelector('[data-contact-btn]');
+  const sticky = section.querySelector('.cinematic__sticky') as HTMLElement;
+  if (!sticky) return;
 
-  if (title) {
-    const split = new SplitText(title, { type: 'chars' });
-    gsap.from(split.chars, {
-      scrollTrigger: { trigger: section, start: 'top 80%' },
-      y: 100,
-      rotateX: -60,
-      opacity: 0,
-      stagger: 0.03,
-      duration: 0.8,
-      ease: ease.smooth2,
-    });
+  // ── Master Timeline ──
+  const master = gsap.timeline({
+    scrollTrigger: {
+      trigger: section,
+      start: 'top top',
+      end: 'bottom bottom',
+      scrub: 1.5,
+      pin: sticky,
+      pinSpacing: false,
+    },
+  });
+
+  // ═══════════════════════════════════════════════
+  // PHASE 1: Shutter Opening (0.00 → 0.22)
+  // ═══════════════════════════════════════════════
+
+  // Light leak pulses as shutters begin
+  master.to('.cinematic__light-leak', { opacity: 1, duration: 0.08, ease: 'none' }, 0);
+
+  // Shutters swing open with slight stagger
+  master.to(
+    '.cinematic__shutter--left',
+    { rotateY: -120, duration: 0.18, ease: 'none' },
+    0.02
+  );
+  master.to(
+    '.cinematic__shutter--right',
+    { rotateY: 120, duration: 0.18, ease: 'none' },
+    0.03
+  );
+
+  // Window frame expands and disappears
+  master.to(
+    '.cinematic__window-frame',
+    { scale: 3, opacity: 0, duration: 0.06, ease: 'none' },
+    0.17
+  );
+
+  // Scene content fades in with slight scale
+  master.fromTo(
+    '.cinematic__scene-content',
+    { opacity: 0, scale: 0.95 },
+    { opacity: 1, scale: 1, duration: 0.08, ease: 'none' },
+    0.14
+  );
+
+  // Background Group D (geometric) fades in early
+  master.to('[data-bg-group="D"]', { opacity: 1, duration: 0.12, ease: 'none' }, 0.06);
+
+  // Ambient orbs glow in
+  master.to('.ambient-orb--1', { opacity: 0.06, duration: 0.15, ease: 'none' }, 0.08);
+  master.to('.ambient-orb--2', { opacity: 0.04, duration: 0.15, ease: 'none' }, 0.10);
+  master.to('.ambient-orb--3', { opacity: 0.03, duration: 0.15, ease: 'none' }, 0.12);
+
+  // ═══════════════════════════════════════════════
+  // PHASE 2: Hero Text Reveal (0.22 → 0.42)
+  // ═══════════════════════════════════════════════
+
+  // Hero lines — SplitText char animation with 3D depth
+  const heroLines = section.querySelectorAll('[data-hero-line]');
+  heroLines.forEach((line, i) => {
+    const split = new SplitText(line, { type: 'chars' });
+    master.fromTo(
+      split.chars,
+      { y: 100, rotateX: -80, opacity: 0, scale: 0.8 },
+      {
+        y: 0,
+        rotateX: 0,
+        opacity: 1,
+        scale: 1,
+        stagger: 0.003,
+        duration: 0.06,
+        ease: 'none',
+      },
+      0.22 + i * 0.045
+    );
+  });
+
+  // Badge flies in from above
+  master.fromTo(
+    '[data-hero-badge]',
+    { opacity: 0, y: -30, scale: 0.9 },
+    { opacity: 1, y: 0, scale: 1, duration: 0.04, ease: 'none' },
+    0.32
+  );
+
+  // Subtitle
+  master.fromTo(
+    '[data-hero-sub]',
+    { opacity: 0, y: 20 },
+    { opacity: 1, y: 0, duration: 0.04, ease: 'none' },
+    0.35
+  );
+
+  // Scroll hint
+  master.fromTo(
+    '[data-scroll-hint]',
+    { opacity: 0 },
+    { opacity: 0.6, duration: 0.03, ease: 'none' },
+    0.37
+  );
+  master.to('[data-scroll-hint]', { opacity: 0, duration: 0.02, ease: 'none' }, 0.40);
+
+  // Background Group A (code) fades in
+  master.to('[data-bg-group="A"]', { opacity: 1, duration: 0.08, ease: 'none' }, 0.24);
+
+  // Background Group B (neural) fades in
+  master.to('[data-bg-group="B"]', { opacity: 1, duration: 0.08, ease: 'none' }, 0.28);
+
+  // ═══════════════════════════════════════════════
+  // PHASE 2→3 Transition: Hero exits with depth
+  // ═══════════════════════════════════════════════
+
+  master.to(
+    '.cinematic__hero-content',
+    { scale: 0.6, opacity: 0, y: -100, filter: 'blur(8px)', duration: 0.06, ease: 'none' },
+    0.39
+  );
+
+  // ═══════════════════════════════════════════════
+  // PHASE 3: Horizontal Project Cards (0.44 → 0.74)
+  // ═══════════════════════════════════════════════
+
+  // Cards label appears with tracking spread
+  master.fromTo(
+    '[data-cards-label]',
+    { opacity: 0, letterSpacing: '0.5em' },
+    { opacity: 1, letterSpacing: '0.25em', duration: 0.04, ease: 'none' },
+    0.43
+  );
+  master.to('[data-cards-label]', { opacity: 0, y: -20, duration: 0.03, ease: 'none' }, 0.52);
+
+  // Horizontal scroll of card track
+  const track = section.querySelector('[data-cards-track]') as HTMLElement;
+  if (track) {
+    master.fromTo(
+      track,
+      { x: () => window.innerWidth * 1.1 },
+      {
+        x: () => -(track.scrollWidth - window.innerWidth + 80),
+        duration: 0.30,
+        ease: 'none',
+      },
+      0.44
+    );
   }
 
-  if (sub) {
-    gsap.from(sub, {
-      scrollTrigger: { trigger: section, start: 'top 75%' },
-      y: 30,
-      opacity: 0,
-      duration: 0.6,
-      delay: 0.3,
-      ease: ease.smooth,
-    });
+  // Ambient orbs shift during card phase
+  master.to('.ambient-orb--1', { x: '20vw', opacity: 0.08, duration: 0.20, ease: 'none' }, 0.44);
+  master.to('.ambient-orb--2', { x: '-15vw', opacity: 0.06, duration: 0.20, ease: 'none' }, 0.44);
+
+  // Background transitions during cards
+  master.to('[data-bg-group="B"]', { opacity: 0, duration: 0.06, ease: 'none' }, 0.56);
+  master.to('[data-bg-group="C"]', { opacity: 1, duration: 0.08, ease: 'none' }, 0.56);
+
+  // ═══════════════════════════════════════════════
+  // PHASE 3→4 Transition: Cards exit with blur
+  // ═══════════════════════════════════════════════
+
+  if (track) {
+    master.to(track, { opacity: 0, filter: 'blur(6px)', duration: 0.05, ease: 'none' }, 0.74);
+  }
+  master.to('[data-bg-group="A"]', { opacity: 0, duration: 0.05, ease: 'none' }, 0.74);
+
+  // ═══════════════════════════════════════════════
+  // PHASE 4: Contact CTA (0.78 → 1.00)
+  // ═══════════════════════════════════════════════
+
+  const ctaTitle = section.querySelector('[data-contact-title]');
+  if (ctaTitle) {
+    const split = new SplitText(ctaTitle, { type: 'chars' });
+    master.fromTo(
+      split.chars,
+      { y: 80, rotateX: -60, opacity: 0, scale: 0.7 },
+      {
+        y: 0,
+        rotateX: 0,
+        opacity: 1,
+        scale: 1,
+        stagger: 0.006,
+        duration: 0.08,
+        ease: 'none',
+      },
+      0.80
+    );
   }
 
-  if (btn) {
-    gsap.from(btn, {
-      scrollTrigger: { trigger: section, start: 'top 70%' },
-      y: 20,
-      opacity: 0,
-      duration: 0.5,
-      delay: 0.5,
-      ease: ease.smooth,
-    });
-  }
+  master.fromTo(
+    '[data-contact-sub]',
+    { opacity: 0, y: 30 },
+    { opacity: 1, y: 0, duration: 0.05, ease: 'none' },
+    0.88
+  );
+
+  master.fromTo(
+    '[data-contact-btn]',
+    { opacity: 0, y: 30, scale: 0.9 },
+    { opacity: 1, y: 0, scale: 1, duration: 0.05, ease: 'none' },
+    0.91
+  );
+
+  // Background groups fade out gently
+  master.to('[data-bg-group="C"]', { opacity: 0.02, duration: 0.15, ease: 'none' }, 0.85);
+  master.to('[data-bg-group="D"]', { opacity: 0.1, duration: 0.15, ease: 'none' }, 0.85);
+
+  // Ambient orbs converge for CTA
+  master.to('.ambient-orb--1', { x: '0', y: '0', opacity: 0.08, duration: 0.15, ease: 'none' }, 0.80);
+  master.to('.ambient-orb--2', { x: '0', y: '0', opacity: 0.06, duration: 0.15, ease: 'none' }, 0.80);
+  master.to('.ambient-orb--3', { opacity: 0.05, scale: 1.3, duration: 0.15, ease: 'none' }, 0.80);
+
+  // Init card tilt after DOM is ready
+  requestAnimationFrame(() => {
+    initCardTilt();
+  });
 }

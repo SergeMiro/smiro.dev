@@ -1,260 +1,236 @@
 ---
-
+import { projects } from '../data/projects';
 ---
 
-<section class="hero-3d" id="hero-3d">
-  <div class="hero-3d__sticky">
-    <!-- Grid overlay -->
-    <div class="hero-3d__grid" aria-hidden="true">
-      {Array.from({ length: 8 }).map(() => (
-        <div class="hero-3d__grid-line hero-3d__grid-line--v" />
+<section class="cinematic" id="hero-3d">
+  <div class="cinematic__sticky">
+
+    <!-- ═══ MATRIX CANVAS (press-to-reveal) ═══ -->
+    <canvas class="matrix-canvas" id="matrixCanvas"></canvas>
+    <div class="matrix-mask" id="matrixMask"></div>
+
+    <!-- ═══ CURSOR GLOW ═══ -->
+    <div class="cursor-glow" id="cursorGlow"></div>
+
+    <!-- ═══ CLICK RIPPLES CONTAINER ═══ -->
+    <div class="ripple-container" id="rippleContainer"></div>
+
+    <!-- ═══ FLOATING PARTICLES ═══ -->
+    <div class="particles" id="particles" aria-hidden="true">
+      {Array.from({length: 30}).map((_, i) => (
+        <div class="particle" data-particle={i} style={`--delay: ${(i * 0.3).toFixed(1)}s; --x: ${Math.random() * 100}%; --y: ${Math.random() * 100}%; --size: ${2 + Math.random() * 4}px; --dur: ${10 + Math.random() * 15}s;`}></div>
       ))}
-      {Array.from({ length: 6 }).map(() => (
-        <div class="hero-3d__grid-line hero-3d__grid-line--h" />
-      ))}
     </div>
 
-    <!-- Decorative crosses -->
-    <div class="hero-3d__cross hero-3d__cross--tl" aria-hidden="true">+</div>
-    <div class="hero-3d__cross hero-3d__cross--tr" aria-hidden="true">+</div>
-    <div class="hero-3d__cross hero-3d__cross--bl" aria-hidden="true">+</div>
-    <div class="hero-3d__cross hero-3d__cross--br" aria-hidden="true">+</div>
+    <!-- ═══ BACKGROUND DECORATIONS ═══ -->
+    <div class="cinematic__bg" aria-hidden="true">
 
-    <!-- Badge -->
-    <div class="hero-3d__badge" data-hero-badge>
-      <span class="hero-3d__badge-dot"></span>
-      Available for freelance
+      <!-- Group D: Geometric grid (visible throughout) -->
+      <div class="bg-group bg-group--geo" data-bg-group="D">
+        <div class="bg-dot-grid"></div>
+        <span class="bg-cross" style="top:8%;left:5%">+</span>
+        <span class="bg-cross" style="top:15%;right:8%">+</span>
+        <span class="bg-cross" style="bottom:12%;left:12%">+</span>
+        <span class="bg-cross" style="bottom:20%;right:5%">+</span>
+        <span class="bg-cross" style="top:50%;left:2%">+</span>
+        <span class="bg-cross" style="top:40%;right:3%">+</span>
+        <span class="bg-cross" style="top:75%;left:45%">+</span>
+        <span class="bg-cross" style="top:25%;right:40%">+</span>
+        <div class="bg-line bg-line--h" style="top:25%"></div>
+        <div class="bg-line bg-line--h" style="top:75%"></div>
+        <div class="bg-line bg-line--v" style="left:20%"></div>
+        <div class="bg-line bg-line--v" style="left:80%"></div>
+        <div class="bg-line bg-line--v bg-line--glow" style="left:50%"></div>
+      </div>
+
+      <!-- Group A: Code snippets & brackets (phases 2-3) -->
+      <div class="bg-group bg-group--code" data-bg-group="A">
+        <pre class="bg-snippet bg-snippet--float" style="top:8%;left:2%" set:html={`const ai = await\n  claude.chat({\n    model: "opus",\n    stream: true\n  });`}></pre>
+        <pre class="bg-snippet bg-snippet--float" style="top:55%;right:1%" set:html={`async function deploy() {\n  const build = await ci.run();\n  if (build.ok) {\n    await push("prod");\n  }\n}`}></pre>
+        <pre class="bg-snippet bg-snippet--float" style="bottom:12%;left:6%" set:html={`SELECT p.name, p.status\nFROM projects p\nJOIN deploys d\n  ON p.id = d.project_id\nWHERE d.env = 'prod';`}></pre>
+        <pre class="bg-snippet bg-snippet--float" style="top:30%;right:4%" set:html={`$ git commit -m "ship it"\n$ git push origin main\n\n✓ Deployed to production\n✓ 7 pages built in 2.1s`}></pre>
+        <pre class="bg-snippet bg-snippet--float" style="top:75%;left:40%" set:html={`const model = new Pipeline([\n  tokenize,\n  embed,\n  classify\n]);`}></pre>
+        <span class="bg-bracket bg-bracket--curly" style="top:5%;left:25%">{'{'}</span>
+        <span class="bg-bracket bg-bracket--curly" style="bottom:8%;right:20%">{'}'}</span>
+        <span class="bg-bracket bg-bracket--angle" style="top:18%;right:15%">&lt;/&gt;</span>
+        <span class="bg-bracket bg-bracket--angle" style="bottom:25%;left:18%">&lt;&gt;</span>
+        <span class="bg-bracket bg-bracket--paren" style="top:65%;right:12%">()</span>
+        <span class="bg-bracket bg-bracket--hash" style="bottom:35%;left:5%">#!</span>
+      </div>
+
+      <!-- Group B: Neural network SVG (phases 2-3) -->
+      <div class="bg-group bg-group--neural" data-bg-group="B">
+        <svg class="bg-neural-svg" viewBox="0 0 500 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Animated connection pulses -->
+          <defs>
+            <linearGradient id="pulse-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="0"/>
+              <stop offset="50%" stop-color="currentColor" stop-opacity="0.6"/>
+              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <!-- Connections -->
+          <line x1="60" y1="80" x2="200" y2="50" stroke="currentColor" stroke-dasharray="4 6" opacity="0.2" class="neural-line"/>
+          <line x1="60" y1="80" x2="200" y2="130" stroke="currentColor" stroke-dasharray="4 6" opacity="0.15" class="neural-line"/>
+          <line x1="60" y1="200" x2="200" y2="130" stroke="currentColor" stroke-dasharray="4 6" opacity="0.2" class="neural-line"/>
+          <line x1="60" y1="200" x2="200" y2="210" stroke="currentColor" stroke-dasharray="4 6" opacity="0.15" class="neural-line"/>
+          <line x1="60" y1="320" x2="200" y2="210" stroke="currentColor" stroke-dasharray="4 6" opacity="0.2" class="neural-line"/>
+          <line x1="60" y1="320" x2="200" y2="290" stroke="currentColor" stroke-dasharray="4 6" opacity="0.15" class="neural-line"/>
+          <line x1="200" y1="50" x2="340" y2="100" stroke="currentColor" stroke-dasharray="4 6" opacity="0.2" class="neural-line"/>
+          <line x1="200" y1="130" x2="340" y2="100" stroke="currentColor" stroke-dasharray="4 6" opacity="0.15" class="neural-line"/>
+          <line x1="200" y1="130" x2="340" y2="240" stroke="currentColor" stroke-dasharray="4 6" opacity="0.2" class="neural-line"/>
+          <line x1="200" y1="210" x2="340" y2="240" stroke="currentColor" stroke-dasharray="4 6" opacity="0.15" class="neural-line"/>
+          <line x1="200" y1="290" x2="340" y2="240" stroke="currentColor" stroke-dasharray="4 6" opacity="0.2" class="neural-line"/>
+          <line x1="200" y1="290" x2="340" y2="340" stroke="currentColor" stroke-dasharray="4 6" opacity="0.15" class="neural-line"/>
+          <line x1="340" y1="100" x2="440" y2="170" stroke="currentColor" stroke-dasharray="4 6" opacity="0.2" class="neural-line"/>
+          <line x1="340" y1="240" x2="440" y2="170" stroke="currentColor" stroke-dasharray="4 6" opacity="0.15" class="neural-line"/>
+          <line x1="340" y1="340" x2="440" y2="170" stroke="currentColor" stroke-dasharray="4 6" opacity="0.1" class="neural-line"/>
+          <!-- Input layer -->
+          <circle cx="60" cy="80" r="8" fill="currentColor" opacity="0.12" class="neural-node"/>
+          <circle cx="60" cy="200" r="8" fill="currentColor" opacity="0.12" class="neural-node"/>
+          <circle cx="60" cy="320" r="8" fill="currentColor" opacity="0.12" class="neural-node"/>
+          <!-- Hidden 1 -->
+          <circle cx="200" cy="50" r="6" fill="currentColor" opacity="0.1" class="neural-node"/>
+          <circle cx="200" cy="130" r="6" fill="currentColor" opacity="0.1" class="neural-node"/>
+          <circle cx="200" cy="210" r="6" fill="currentColor" opacity="0.1" class="neural-node"/>
+          <circle cx="200" cy="290" r="6" fill="currentColor" opacity="0.1" class="neural-node"/>
+          <!-- Hidden 2 -->
+          <circle cx="340" cy="100" r="6" fill="currentColor" opacity="0.1" class="neural-node"/>
+          <circle cx="340" cy="240" r="6" fill="currentColor" opacity="0.1" class="neural-node"/>
+          <circle cx="340" cy="340" r="6" fill="currentColor" opacity="0.1" class="neural-node"/>
+          <!-- Output -->
+          <circle cx="440" cy="170" r="10" fill="currentColor" opacity="0.15" class="neural-node neural-node--output"/>
+          <circle cx="440" cy="170" r="16" fill="none" stroke="currentColor" opacity="0.08" stroke-dasharray="3 3" class="neural-ring"/>
+        </svg>
+        <div class="bg-float-dot" style="top:18%;right:22%"></div>
+        <div class="bg-float-dot" style="top:42%;right:28%"></div>
+        <div class="bg-float-dot" style="top:62%;right:18%"></div>
+        <div class="bg-float-dot" style="top:28%;right:35%"></div>
+        <div class="bg-float-dot" style="top:52%;right:12%"></div>
+        <div class="bg-float-dot" style="top:72%;right:25%"></div>
+        <div class="bg-float-dot bg-float-dot--lg" style="top:35%;right:8%"></div>
+        <div class="bg-float-dot bg-float-dot--lg" style="top:58%;right:32%"></div>
+      </div>
+
+      <!-- Group C: Circuit lines & binary (phases 3-4) -->
+      <div class="bg-group bg-group--circuit" data-bg-group="C">
+        <div class="bg-circuit-line bg-circuit-line--1"></div>
+        <div class="bg-circuit-line bg-circuit-line--2"></div>
+        <div class="bg-circuit-line bg-circuit-line--3"></div>
+        <div class="bg-circuit-line bg-circuit-line--4"></div>
+        <div class="bg-circuit-line bg-circuit-line--5"></div>
+        <div class="bg-circuit-node" style="top:30%;left:40%"></div>
+        <div class="bg-circuit-node" style="top:30%;left:60%"></div>
+        <div class="bg-circuit-node" style="top:70%;left:35%"></div>
+        <div class="bg-circuit-node" style="top:70%;left:65%"></div>
+        <div class="bg-circuit-node bg-circuit-node--pulse" style="top:30%;left:20%"></div>
+        <div class="bg-circuit-node bg-circuit-node--pulse" style="top:70%;left:80%"></div>
+        <div class="bg-binary-ticker">01100110 01110101 01101100 01101100 01110011 01110100 01100001 01100011 01101011 00101110 01100100 01100101 01110110 00100000 01100001 01101001 00101110 01100001 01110010 01100011 01101000 01101001 01110100 01100101 01100011 01110100</div>
+        <div class="bg-binary-ticker bg-binary-ticker--2">10101010 11001100 01010101 11110000 00001111 10110100 01001011 11011010 10100101 01011010 11100111 01001100 10011001 01100110 10110011 00110110</div>
+      </div>
     </div>
 
-    <!-- Main typography -->
-    <div class="hero-3d__text">
-      <h1 class="hero-3d__line" data-hero-line="1">FULL STACK</h1>
-      <h1 class="hero-3d__line hero-3d__line--accent" data-hero-line="2">AI WHISPERER</h1>
-      <h1 class="hero-3d__line" data-hero-line="3">DEVELOPER.</h1>
+    <!-- ═══ AMBIENT GLOW ORBS ═══ -->
+    <div class="ambient-orbs" aria-hidden="true">
+      <div class="ambient-orb ambient-orb--1"></div>
+      <div class="ambient-orb ambient-orb--2"></div>
+      <div class="ambient-orb ambient-orb--3"></div>
     </div>
 
-    <!-- Subtext -->
-    <p class="hero-3d__sub" data-hero-sub>
-      Building the web & teaching machines — Dijon, France
-    </p>
-
-    <!-- Scroll indicator -->
-    <div class="hero-3d__scroll" data-hero-scroll>
-      <span>SCROLL</span>
-      <div class="hero-3d__scroll-line"></div>
+    <!-- ═══ WINDOW / SHUTTERS ═══ -->
+    <div class="cinematic__window-frame">
+      <div class="cinematic__light-leak"></div>
+      <div class="cinematic__shutter cinematic__shutter--left">
+        <div class="shutter__slat"></div>
+        <div class="shutter__slat"></div>
+        <div class="shutter__slat"></div>
+        <div class="shutter__slat"></div>
+        <div class="shutter__slat"></div>
+        <div class="shutter__handle"></div>
+      </div>
+      <div class="cinematic__shutter cinematic__shutter--right">
+        <div class="shutter__slat"></div>
+        <div class="shutter__slat"></div>
+        <div class="shutter__slat"></div>
+        <div class="shutter__slat"></div>
+        <div class="shutter__slat"></div>
+        <div class="shutter__handle"></div>
+      </div>
     </div>
 
-    <!-- Binary ticker -->
-    <div class="hero-3d__ticker" aria-hidden="true" data-hero-ticker>
-      <span>01100110 //// 01110101 //// 01101100 //// 01101100 //// 01110011 //// 01110100 //// 01100001 //// 01100011 //// 01101011 //// 00101110 //// 01100100 //// 01100101 //// 01110110</span>
-      <span>01100110 //// 01110101 //// 01101100 //// 01101100 //// 01110011 //// 01110100 //// 01100001 //// 01100011 //// 01101011 //// 00101110 //// 01100100 //// 01100101 //// 01110110</span>
+    <!-- ═══ VIGNETTE ═══ -->
+    <div class="cinematic__vignette"></div>
+
+    <!-- ═══ SCENE CONTENT ═══ -->
+    <div class="cinematic__scene-content">
+
+      <!-- Phase 2: Hero -->
+      <div class="cinematic__hero-content">
+        <div class="cinematic__badge" data-hero-badge>
+          <span class="badge__dot"></span>
+          Available for freelance
+        </div>
+        <h1 class="cinematic__title" data-hero-line="1">FULL STACK</h1>
+        <h1 class="cinematic__title cinematic__title--accent" data-hero-line="2">AI ARCHITECT</h1>
+        <h1 class="cinematic__title" data-hero-line="3">DEVELOPER<span class="cinematic__title--dot">.</span></h1>
+        <p class="cinematic__sub" data-hero-sub>Building intelligent systems from concept to production.<br/>Based in Dijon, France.</p>
+        <div class="cinematic__scroll-hint" data-scroll-hint>
+          <span>Scroll to explore</span>
+          <div class="scroll-hint__line"></div>
+        </div>
+      </div>
+
+      <!-- Phase 3: Horizontal project cards -->
+      <div class="cinematic__cards-section">
+        <h2 class="cinematic__cards-label" data-cards-label>FEATURED WORK</h2>
+        <div class="cinematic__cards-track" data-cards-track>
+          {projects.map((project, i) => (
+            <div class="cinematic__card" data-card={i} data-tilt-card>
+              <div class="card__glow"></div>
+              <div class="card__inner">
+                <div class="card__header">
+                  <div class="card__status">
+                    {project.status && <span class="card__status-dot"></span>}
+                    {project.status || project.category.toUpperCase()}
+                  </div>
+                  <span class="card__number">{'0'}{i + 1}</span>
+                </div>
+                <h3 class="card__title">{project.name}</h3>
+                <p class="card__desc">{project.description}</p>
+                <div class="card__stack">
+                  {project.stack.map((tech) => (
+                    <span class="card__tech">{tech}</span>
+                  ))}
+                </div>
+                {project.highlight && (
+                  <div class="card__highlight">
+                    <span class="card__highlight-icon">*</span>
+                    {project.highlight}
+                  </div>
+                )}
+                <div class="card__links">
+                  {project.github && (
+                    <a href={project.github} target="_blank" rel="noopener noreferrer" class="card__link">
+                      View on GitHub &rarr;
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Phase 4: Contact CTA -->
+      <div class="cinematic__contact">
+        <h2 class="cinematic__contact-title" data-contact-title>LET'S WORK</h2>
+        <p class="cinematic__contact-sub" data-contact-sub>Got a project in mind? Let's build something extraordinary together.</p>
+        <a href="/contact" class="cinematic__contact-btn" data-contact-btn>
+          <span>Get in Touch</span>
+          <span class="btn__arrow">&rarr;</span>
+        </a>
+      </div>
+
     </div>
   </div>
 </section>
-
-<style>
-  .hero-3d {
-    height: 300vh;
-    position: relative;
-  }
-
-  .hero-3d__sticky {
-    height: 100vh;
-    position: sticky;
-    top: 0;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--color-bg);
-  }
-
-  /* Grid */
-  .hero-3d__grid {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0.06;
-  }
-
-  .hero-3d__grid-line {
-    position: absolute;
-    background: var(--color-text);
-  }
-
-  .hero-3d__grid-line--v {
-    width: 1px;
-    height: 100%;
-    top: 0;
-  }
-
-  .hero-3d__grid-line--v:nth-child(1) { left: 12.5%; }
-  .hero-3d__grid-line--v:nth-child(2) { left: 25%; }
-  .hero-3d__grid-line--v:nth-child(3) { left: 37.5%; }
-  .hero-3d__grid-line--v:nth-child(4) { left: 50%; }
-  .hero-3d__grid-line--v:nth-child(5) { left: 62.5%; }
-  .hero-3d__grid-line--v:nth-child(6) { left: 75%; }
-  .hero-3d__grid-line--v:nth-child(7) { left: 87.5%; }
-  .hero-3d__grid-line--v:nth-child(8) { left: 100%; }
-
-  .hero-3d__grid-line--h {
-    height: 1px;
-    width: 100%;
-    left: 0;
-  }
-
-  .hero-3d__grid-line--h:nth-child(9) { top: 16.6%; }
-  .hero-3d__grid-line--h:nth-child(10) { top: 33.3%; }
-  .hero-3d__grid-line--h:nth-child(11) { top: 50%; }
-  .hero-3d__grid-line--h:nth-child(12) { top: 66.6%; }
-  .hero-3d__grid-line--h:nth-child(13) { top: 83.3%; }
-  .hero-3d__grid-line--h:nth-child(14) { top: 100%; }
-
-  /* Crosses */
-  .hero-3d__cross {
-    position: absolute;
-    font-family: var(--font-body);
-    font-size: 1.5rem;
-    color: var(--color-text);
-    opacity: 0.15;
-    line-height: 1;
-  }
-  .hero-3d__cross--tl { top: 2rem; left: 2rem; }
-  .hero-3d__cross--tr { top: 2rem; right: 2rem; }
-  .hero-3d__cross--bl { bottom: 2rem; left: 2rem; }
-  .hero-3d__cross--br { bottom: 2rem; right: 2rem; }
-
-  /* Badge */
-  .hero-3d__badge {
-    position: absolute;
-    top: 6rem;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.4rem 1rem;
-    border: 1px solid var(--color-border);
-    border-radius: 999px;
-    font-size: 0.7rem;
-    font-weight: 500;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--color-text-muted);
-    opacity: 0;
-  }
-
-  .hero-3d__badge-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #10b981;
-    animation: pulse-dot 2s ease-in-out infinite;
-  }
-
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
-  /* Typography */
-  .hero-3d__text {
-    text-align: center;
-    z-index: 2;
-    position: relative;
-  }
-
-  .hero-3d__line {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: clamp(3.5rem, 12vw, 12rem);
-    line-height: 0.9;
-    letter-spacing: -0.02em;
-    text-transform: uppercase;
-    color: var(--color-text);
-    margin: 0;
-    opacity: 0;
-    white-space: nowrap;
-  }
-
-  .hero-3d__line--accent {
-    color: var(--color-primary);
-  }
-
-  /* Subtext */
-  .hero-3d__sub {
-    position: absolute;
-    bottom: 6rem;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.85rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--color-text-muted);
-    white-space: nowrap;
-    opacity: 0;
-  }
-
-  /* Scroll indicator */
-  .hero-3d__scroll {
-    position: absolute;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    opacity: 0;
-  }
-
-  .hero-3d__scroll span {
-    font-size: 0.6rem;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--color-text-faint);
-  }
-
-  .hero-3d__scroll-line {
-    width: 1px;
-    height: 3rem;
-    background: linear-gradient(to bottom, var(--color-text-faint), transparent);
-    animation: scroll-pulse 2s ease-in-out infinite;
-  }
-
-  @keyframes scroll-pulse {
-    0% { transform: scaleY(0); transform-origin: top; }
-    50% { transform: scaleY(1); transform-origin: top; }
-    51% { transform: scaleY(1); transform-origin: bottom; }
-    100% { transform: scaleY(0); transform-origin: bottom; }
-  }
-
-  /* Binary ticker */
-  .hero-3d__ticker {
-    position: absolute;
-    bottom: 35%;
-    left: 0;
-    width: 100%;
-    overflow: hidden;
-    white-space: nowrap;
-    font-family: monospace;
-    font-size: 0.55rem;
-    letter-spacing: 0.15em;
-    color: var(--color-text-faint);
-    opacity: 0;
-  }
-
-  .hero-3d__ticker span {
-    display: inline-block;
-    animation: ticker-scroll 30s linear infinite;
-  }
-
-  .hero-3d__ticker span:nth-child(2) {
-    animation-delay: -15s;
-  }
-
-  @keyframes ticker-scroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-100%); }
-  }
-</style>
