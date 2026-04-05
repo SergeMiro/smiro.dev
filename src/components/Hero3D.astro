@@ -137,28 +137,28 @@ import { projects } from '../data/projects';
       <div class="ambient-orb ambient-orb--3"></div>
     </div>
 
-    <!-- ═══ WINDOW / SHUTTERS ═══ -->
-    <div class="cinematic__window-frame">
-      <div class="cinematic__light-leak"></div>
-      <div class="cinematic__shutter cinematic__shutter--left">
-        <div class="shutter__slat"></div>
-        <div class="shutter__slat"></div>
-        <div class="shutter__slat"></div>
-        <div class="shutter__slat"></div>
-        <div class="shutter__slat"></div>
-        <div class="shutter__handle"></div>
-      </div>
-      <div class="cinematic__shutter cinematic__shutter--right">
-        <div class="shutter__slat"></div>
-        <div class="shutter__slat"></div>
-        <div class="shutter__slat"></div>
-        <div class="shutter__slat"></div>
-        <div class="shutter__slat"></div>
-        <div class="shutter__handle"></div>
+    <!-- ═══ PORTAL MASK (clip-path reveal) ═══ -->
+    <div class="portal" data-portal>
+      <div class="portal__frame" data-portal-frame>
+        <div class="portal__light-leak"></div>
+        <div class="portal__shutter portal__shutter--left">
+          <div class="shutter__slat"></div>
+          <div class="shutter__slat"></div>
+          <div class="shutter__slat"></div>
+          <div class="shutter__slat"></div>
+          <div class="shutter__handle"></div>
+        </div>
+        <div class="portal__shutter portal__shutter--right">
+          <div class="shutter__slat"></div>
+          <div class="shutter__slat"></div>
+          <div class="shutter__slat"></div>
+          <div class="shutter__slat"></div>
+          <div class="shutter__handle"></div>
+        </div>
       </div>
     </div>
 
-    <!-- ═══ LIGHT RAYS through shutters ═══ -->
+    <!-- ═══ LIGHT RAYS ═══ -->
     <div class="cinematic__lightrays" data-lightrays aria-hidden="true">
       <div class="lightray lightray--1"></div>
       <div class="lightray lightray--2"></div>
@@ -166,6 +166,12 @@ import { projects } from '../data/projects';
       <div class="lightray lightray--4"></div>
       <div class="lightray lightray--5"></div>
     </div>
+
+    <!-- ═══ PERLIN WAVE SEPARATOR ═══ -->
+    <svg class="wave-separator" data-wave aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 1440 200">
+      <path class="wave-path wave-path--1" data-wave-path="1" d="" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <path class="wave-path wave-path--2" data-wave-path="2" d="" fill="none" stroke="currentColor" stroke-width="1"/>
+    </svg>
 
     <!-- ═══ NOISE OVERLAY ═══ -->
     <div class="cinematic__noise" aria-hidden="true"></div>
@@ -215,7 +221,7 @@ import { projects } from '../data/projects';
         <div class="scene3d" data-scene3d>
           <div class="scene3d__track" data-scene3d-track>
             {projects.map((project, i) => (
-              <div class={`scene3d__card scene3d__card--${project.category}`} data-card={i} data-tilt-card>
+              <div class={`scene3d__card scene3d__card--${project.category}`} data-card={i} data-tilt-card progress="0">
                 <div class="card__glow"></div>
                 <div class="card__inner">
                   <div class="card__preview" data-category={project.category}>
