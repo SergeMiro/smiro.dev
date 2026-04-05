@@ -5,6 +5,15 @@ import { projects } from '../data/projects';
 <section class="cinematic" id="hero-3d">
   <div class="cinematic__sticky">
 
+    <!-- ═══ LOADING INTRO ═══ -->
+    <div class="intro-overlay" data-intro>
+      <div class="intro__logo">SM</div>
+      <div class="intro__tagline">Full Stack &middot; AI Architect</div>
+    </div>
+
+    <!-- ═══ SCROLL VELOCITY BLUR ═══ -->
+    <div class="velocity-blur" data-velocity-blur></div>
+
     <!-- ═══ MATRIX CANVAS (press-to-reveal) ═══ -->
     <canvas class="matrix-canvas" id="matrixCanvas"></canvas>
     <div class="matrix-mask" id="matrixMask"></div>
@@ -225,6 +234,7 @@ import { projects } from '../data/projects';
                 <div class="card__glow"></div>
                 <div class="card__inner">
                   <div class="card__preview" data-category={project.category}>
+                    <canvas class="card__canvas" data-card-canvas={project.category} width="480" height="120"></canvas>
                     <span class="card__preview-label">{project.category.toUpperCase()}</span>
                   </div>
                   <div class="card__header">

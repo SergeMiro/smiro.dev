@@ -308,6 +308,141 @@ function initParticles() {
 }
 
 // ═══════════════════════════════════════════════════
+// LOADING INTRO
+// ═══════════════════════════════════════════════════
+
+function playIntro(): Promise<void> {
+  return new Promise((resolve) => {
+    const intro = document.querySelector('[data-intro]') as HTMLElement;
+    if (!intro) { resolve(); return; }
+
+    const logo = intro.querySelector('.intro__logo') as HTMLElement;
+    const tagline = intro.querySelector('.intro__tagline') as HTMLElement;
+
+    const tl = gsap.timeline({
+      onComplete() {
+        gsap.to(intro, {
+          opacity: 0, duration: 0.5, ease: 'power2.inOut',
+          onComplete() { intro.style.display = 'none'; resolve(); }
+        });
+      }
+    });
+
+    tl.to(logo, { opacity: 1, duration: 0.6, ease: 'power2.out' }, 0);
+    tl.fromTo(logo, { scale: 0.8, y: 20 }, { scale: 1, y: 0, duration: 0.6, ease: 'power3.out' }, 0);
+    tl.to(tagline, { opacity: 0.5, duration: 0.4, ease: 'power2.out' }, 0.3);
+    tl.to({}, { duration: 0.4 }); // hold
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// GENERATIVE CANVAS THUMBNAILS
+// ═══════════════════════════════════════════════════
+
+function initCardCanvases() {
+  document.querySelectorAll('[data-card-canvas]').forEach((canvas) => {
+    const el = canvas as HTMLCanvasElement;
+    const cat = el.dataset.cardCanvas || 'ai';
+    const ctx = el.getContext('2d');
+    if (!ctx) return;
+
+    const w = el.width, h = el.height;
+    ctx.clearRect(0, 0, w, h);
+
+    if (cat === 'ai') {
+      // Neural network dots + connections
+      const nodes: [number, number][] = [];
+      for (let layer = 0; layer < 4; layer++) {
+        const count = layer === 0 || layer === 3 ? 3 : 5;
+        for (let j = 0; j < count; j++) {
+          const x = 60 + layer * 120;
+          const y = (h / (count + 1)) * (j + 1);
+          nodes.push([x, y]);
+          ctx.beginPath();
+          ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(0, 200, 160, 0.3)';
+          ctx.fill();
+        }
+      }
+      // Connections
+      ctx.strokeStyle = 'rgba(0, 200, 160, 0.08)';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < Math.min(i + 6, nodes.length); j++) {
+          if (Math.abs(nodes[i][0] - nodes[j][0]) > 0 && Math.abs(nodes[i][0] - nodes[j][0]) < 150) {
+            ctx.beginPath();
+            ctx.moveTo(nodes[i][0], nodes[i][1]);
+            ctx.lineTo(nodes[j][0], nodes[j][1]);
+            ctx.stroke();
+          }
+        }
+      }
+    } else if (cat === 'web') {
+      // Grid of rectangles (layout mockup)
+      ctx.strokeStyle = 'rgba(160, 100, 255, 0.15)';
+      ctx.lineWidth = 0.5;
+      for (let x = 20; x < w - 20; x += 60) {
+        for (let y = 10; y < h - 10; y += 30) {
+          const rw = 40 + Math.random() * 15;
+          const rh = 15 + Math.random() * 10;
+          ctx.strokeRect(x, y, rw, rh);
+        }
+      }
+      // Accent line
+      ctx.fillStyle = 'rgba(160, 100, 255, 0.2)';
+      ctx.fillRect(20, 10, 80, 3);
+    } else if (cat === 'devops') {
+      // Terminal lines
+      ctx.font = '9px Courier New';
+      ctx.fillStyle = 'rgba(0, 200, 160, 0.15)';
+      const lines = ['$ docker compose up -d', '  ✓ network created', '  ✓ container started', '$ kubectl apply -f deploy.yml', '  deployment.apps/api configured', '$ echo "healthy"'];
+      lines.forEach((line, i) => {
+        ctx.fillText(line, 12, 16 + i * 16);
+      });
+    } else {
+      // Generic: dots pattern
+      ctx.fillStyle = 'rgba(200, 160, 60, 0.12)';
+      for (let x = 10; x < w; x += 15) {
+        for (let y = 10; y < h; y += 15) {
+          ctx.beginPath();
+          ctx.arc(x + Math.random() * 4, y + Math.random() * 4, 1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// SCROLL VELOCITY BLUR
+// ═══════════════════════════════════════════════════
+
+function initVelocityBlur() {
+  const blurEl = document.querySelector('[data-velocity-blur]') as HTMLElement;
+  if (!blurEl) return;
+
+  let lastScroll = 0;
+  let velocity = 0;
+
+  ScrollTrigger.addEventListener('refresh', () => { lastScroll = window.scrollY; });
+
+  gsap.ticker.add(() => {
+    const current = window.scrollY;
+    const newVelocity = Math.abs(current - lastScroll);
+    velocity += (newVelocity - velocity) * 0.1; // smooth
+    lastScroll = current;
+
+    if (velocity > 30) {
+      const blur = Math.min((velocity - 30) * 0.05, 4);
+      blurEl.style.backdropFilter = `blur(${blur.toFixed(1)}px)`;
+      blurEl.style.opacity = '1';
+    } else {
+      blurEl.style.opacity = '0';
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════
 // CARD COUNTER + SPOTLIGHT + PROGRESS
 // ═══════════════════════════════════════════════════
 
@@ -380,7 +515,15 @@ function fireScanline(master: gsap.core.Timeline, time: number) {
 // MAIN INIT
 // ═══════════════════════════════════════════════════
 
-export function init3DAnimations() {
+export async function init3DAnimations() {
+  // ── Play intro first ──
+  if (!prefersReduced) {
+    await playIntro();
+  } else {
+    const intro = document.querySelector('[data-intro]') as HTMLElement;
+    if (intro) intro.style.display = 'none';
+  }
+
   // ── Smooth Scroll ──
   if (!prefersReduced) {
     const lenis = new Lenis({ lerp: 0.06, smoothWheel: true });
@@ -399,11 +542,15 @@ export function init3DAnimations() {
   // ── Nav ──
   if (!prefersReduced) gsap.from('nav', { y: -20, opacity: 0, duration: 0.5, ease: 'power3.out' });
 
+  // ── Generative card canvases ──
+  initCardCanvases();
+
   // ── Interactive ──
   if (!prefersReduced) {
     initMatrixCanvas();
     initParticles();
     initPerlinWave();
+    initVelocityBlur();
     if (!isTouch) { initCursorGlow(); initSceneParallax(); initMagneticButton(); }
   }
 

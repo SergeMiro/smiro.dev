@@ -100,6 +100,47 @@ html[data-view="3d"] body {
   overflow-x: hidden;
 }
 
+/* ── Loading Intro ── */
+.intro-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.intro__logo {
+  font-family: var(--font-display);
+  font-size: clamp(4rem, 10vw, 8rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--color-text);
+  opacity: 0;
+}
+
+.intro__tagline {
+  font-size: clamp(0.7rem, 1.2vw, 0.9rem);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  opacity: 0;
+}
+
+/* ── Scroll Velocity Blur ── */
+.velocity-blur {
+  position: absolute;
+  inset: 0;
+  z-index: 11;
+  pointer-events: none;
+  backdrop-filter: blur(0px);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
 /* ── Cinematic: Section & Sticky ── */
 .cinematic {
   position: relative;
@@ -1129,21 +1170,6 @@ html[data-view="3d"] body {
   gap: 0.35rem;
 }
 
-.card__tech {
-  font-size: 0.65rem;
-  padding: 0.2rem 0.55rem;
-  border-radius: 6px;
-  background: var(--color-surface-2);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  transition: border-color 0.2s, color 0.2s;
-}
-
-.scene3d__card:hover .card__tech {
-  border-color: color-mix(in oklch, var(--color-primary) 15%, transparent);
-  color: var(--color-text);
-}
-
 .card__highlight {
   font-size: 0.8rem;
   color: var(--color-primary);
@@ -1163,50 +1189,81 @@ html[data-view="3d"] body {
   padding-top: 0.5rem;
 }
 
+/* Card preview with generative canvas */
+.card__preview {
+  height: 80px;
+  border-radius: 12px;
+  margin: -2rem -2rem 0.75rem -2rem;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-surface-2);
+}
+
+.card__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.6;
+}
+
+.card__preview-label {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.5rem;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+}
+
+/* Card tech tag micro-interactions */
+.card__tech {
+  font-size: 0.65rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  transition: border-color 0.2s, color 0.2s, transform 0.2s, background 0.2s;
+  cursor: default;
+}
+
+.card__tech:hover {
+  border-color: color-mix(in oklch, var(--color-primary) 30%, transparent);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+  background: color-mix(in oklch, var(--color-primary) 5%, var(--color-surface-2));
+}
+
+/* Card link underline animation */
 .card__link {
   font-size: 0.8rem;
   color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
-  transition: color 0.2s, letter-spacing 0.3s;
+  position: relative;
+  transition: color 0.2s;
 }
+
+.card__link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--color-primary);
+  transition: width 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.card__link:hover::after {
+  width: 100%;
+}
+
 .card__link:hover {
   color: var(--color-text);
-  letter-spacing: 0.02em;
-}
-
-/* Card preview gradient bar */
-.card__preview {
-  height: 4px;
-  border-radius: 20px 20px 0 0;
-  margin: -2rem -2rem 0.75rem -2rem;
-  position: relative;
-  overflow: hidden;
-}
-
-.card__preview[data-category="ai"] {
-  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
-}
-.card__preview[data-category="web"] {
-  background: linear-gradient(90deg, oklch(0.65 0.15 270), oklch(0.7 0.14 320));
-}
-.card__preview[data-category="devops"] {
-  background: linear-gradient(90deg, oklch(0.65 0.16 150), oklch(0.7 0.14 192));
-}
-.card__preview[data-category="oss"] {
-  background: linear-gradient(90deg, oklch(0.7 0.12 60), oklch(0.65 0.14 30));
-}
-
-.card__preview-label {
-  position: absolute;
-  right: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.5rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  color: rgba(255,255,255,0.4);
-  display: none;
 }
 
 /* Card counter indicator */
