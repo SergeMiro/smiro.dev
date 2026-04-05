@@ -6,6 +6,8 @@ import Lenis from 'lenis';
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
 const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isMobile = window.matchMedia('(max-width: 768px)').matches;
+const isTouch = 'ontouchstart' in window;
 
 // ─── Matrix Rain Canvas ───
 function initMatrixCanvas() {
@@ -16,8 +18,8 @@ function initMatrixCanvas() {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  const chars = 'アイウエオカキクケコサシスセソタチツテト01{}[]<>/=;:.()#$%&*+-~^|\\!?@ABCDEFabcdef';
-  const fontSize = 14;
+  const chars = 'アイウエオカキクケコ01{}[]<>/=;:.()#$&*+-~';
+  const fontSize = isMobile ? 16 : 14;
   let columns: number[] = [];
   let w = 0, h = 0;
   let animId = 0;
@@ -84,7 +86,7 @@ function initMatrixCanvas() {
     const py = y - rect.top;
 
     gsap.to(mask, {
-      '--mask-size': '250px',
+      '--mask-size': isMobile ? '150px' : '250px',
       duration: 0.6,
       ease: 'power2.out',
       onUpdate() {
@@ -249,43 +251,45 @@ function initBgParallax(section: HTMLElement) {
   const brackets = section.querySelectorAll('.bg-bracket');
   const crosses = section.querySelectorAll('.bg-cross');
 
-  // Each element moves at a different rate based on its position
+  // On mobile: lighter parallax (fewer elements, smaller distances)
+  const factor = isMobile ? 0.4 : 1;
+
   snippets.forEach((el, i) => {
-    const rate = 0.3 + (i % 3) * 0.15;
+    const rate = (0.3 + (i % 3) * 0.15) * factor;
     gsap.to(el, {
       y: () => -window.innerHeight * rate,
       scrollTrigger: {
         trigger: section,
         start: 'top top',
         end: 'bottom bottom',
-        scrub: 2,
+        scrub: isMobile ? 3 : 2,
       },
     });
   });
 
   brackets.forEach((el, i) => {
-    const rate = 0.2 + (i % 2) * 0.2;
+    const rate = (0.2 + (i % 2) * 0.2) * factor;
     gsap.to(el, {
       y: () => -window.innerHeight * rate * 0.5,
-      rotate: (i % 2 === 0) ? 15 : -10,
+      rotate: isMobile ? 0 : ((i % 2 === 0) ? 15 : -10),
       scrollTrigger: {
         trigger: section,
         start: 'top top',
         end: 'bottom bottom',
-        scrub: 3,
+        scrub: isMobile ? 4 : 3,
       },
     });
   });
 
   crosses.forEach((el, i) => {
     gsap.to(el, {
-      y: () => -window.innerHeight * 0.15,
+      y: () => -window.innerHeight * 0.15 * factor,
       opacity: 0.15 + (i % 3) * 0.1,
       scrollTrigger: {
         trigger: section,
         start: 'top top',
         end: 'bottom bottom',
-        scrub: 2.5,
+        scrub: isMobile ? 3.5 : 2.5,
       },
     });
   });
@@ -421,9 +425,11 @@ export function init3DAnimations() {
   // ── Interactive effects ──
   if (!prefersReduced) {
     initMatrixCanvas();
-    initCursorGlow();
     initParticles();
-    initSceneParallax();
+    if (!isTouch) {
+      initCursorGlow();
+      initSceneParallax();
+    }
   }
 
   const section = document.getElementById('hero-3d');
@@ -700,7 +706,9 @@ export function init3DAnimations() {
     initCardCounter(section);
     initPhaseIndicator(master);
   }
-  requestAnimationFrame(() => {
-    initCardTilt();
-  });
+  if (!isTouch) {
+    requestAnimationFrame(() => {
+      initCardTilt();
+    });
+  }
 }
