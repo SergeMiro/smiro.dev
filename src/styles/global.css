@@ -902,6 +902,84 @@ html[data-view="3d"] body {
   letter-spacing: 0.02em;
 }
 
+/* Card preview gradient bar */
+.card__preview {
+  height: 4px;
+  border-radius: 20px 20px 0 0;
+  margin: -2rem -2rem 0.75rem -2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.card__preview[data-category="ai"] {
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+}
+.card__preview[data-category="web"] {
+  background: linear-gradient(90deg, oklch(0.65 0.15 270), oklch(0.7 0.14 320));
+}
+.card__preview[data-category="devops"] {
+  background: linear-gradient(90deg, oklch(0.65 0.16 150), oklch(0.7 0.14 192));
+}
+.card__preview[data-category="oss"] {
+  background: linear-gradient(90deg, oklch(0.7 0.12 60), oklch(0.65 0.14 30));
+}
+
+.card__preview-label {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.4);
+  display: none;
+}
+
+/* Card counter indicator */
+.scene3d__counter {
+  position: absolute;
+  bottom: 5vh;
+  right: 6vw;
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  opacity: 0;
+  z-index: 2;
+  font-family: 'Courier New', monospace;
+}
+
+.counter__current {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  min-width: 2ch;
+}
+
+.counter__sep {
+  font-size: 1rem;
+  color: var(--color-text-faint);
+  margin: 0 0.15rem;
+}
+
+.counter__total {
+  font-size: 1rem;
+  color: var(--color-text-faint);
+}
+
+/* Scan line transition effect */
+.cinematic__scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+  z-index: 8;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 0 20px 4px color-mix(in oklch, var(--color-primary) 30%, transparent);
+}
+
 /* Contact CTA */
 .cinematic__contact {
   position: absolute;

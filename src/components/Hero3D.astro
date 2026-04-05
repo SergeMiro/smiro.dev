@@ -180,15 +180,21 @@ import { projects } from '../data/projects';
         </div>
       </div>
 
+      <!-- Scan line (phase transition effect) -->
+      <div class="cinematic__scanline" data-scanline></div>
+
       <!-- Phase 3: 3D Perspective Conveyor -->
       <div class="cinematic__cards-section">
         <h2 class="cinematic__cards-label" data-cards-label>FEATURED WORK</h2>
         <div class="scene3d" data-scene3d>
           <div class="scene3d__track" data-scene3d-track>
             {projects.map((project, i) => (
-              <div class="scene3d__card" data-card={i} data-tilt-card>
+              <div class={`scene3d__card scene3d__card--${project.category}`} data-card={i} data-tilt-card>
                 <div class="card__glow"></div>
                 <div class="card__inner">
+                  <div class="card__preview" data-category={project.category}>
+                    <span class="card__preview-label">{project.category.toUpperCase()}</span>
+                  </div>
                   <div class="card__header">
                     <div class="card__status">
                       {project.status && <span class="card__status-dot"></span>}
@@ -220,6 +226,12 @@ import { projects } from '../data/projects';
               </div>
             ))}
           </div>
+        </div>
+        <!-- Card counter -->
+        <div class="scene3d__counter" data-card-counter>
+          <span class="counter__current" data-counter-current>01</span>
+          <span class="counter__sep">/</span>
+          <span class="counter__total">{'0'}{projects.length}</span>
         </div>
       </div>
 

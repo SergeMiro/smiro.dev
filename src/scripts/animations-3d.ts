@@ -208,6 +208,133 @@ function initCardTilt() {
   });
 }
 
+// ─── Mouse Parallax on 3D Scene ───
+function initSceneParallax() {
+  const scene = document.querySelector('[data-scene3d]') as HTMLElement;
+  const track = document.querySelector('[data-scene3d-track]') as HTMLElement;
+  if (!scene || !track) return;
+
+  const sticky = document.querySelector('.cinematic__sticky') as HTMLElement;
+  if (!sticky) return;
+
+  sticky.addEventListener('mousemove', (e) => {
+    const rect = sticky.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+
+    // Subtle tilt of the whole 3D scene based on mouse position
+    gsap.to(track, {
+      rotateY: -18 + x * 5,
+      rotateX: 2 + y * -3,
+      duration: 0.8,
+      ease: 'power2.out',
+      overwrite: 'auto',
+    });
+  });
+
+  sticky.addEventListener('mouseleave', () => {
+    gsap.to(track, {
+      rotateY: -18,
+      rotateX: 2,
+      duration: 1,
+      ease: 'power3.out',
+      overwrite: 'auto',
+    });
+  });
+}
+
+// ─── Background Parallax on Scroll ───
+function initBgParallax(section: HTMLElement) {
+  const snippets = section.querySelectorAll('.bg-snippet');
+  const brackets = section.querySelectorAll('.bg-bracket');
+  const crosses = section.querySelectorAll('.bg-cross');
+
+  // Each element moves at a different rate based on its position
+  snippets.forEach((el, i) => {
+    const rate = 0.3 + (i % 3) * 0.15;
+    gsap.to(el, {
+      y: () => -window.innerHeight * rate,
+      scrollTrigger: {
+        trigger: section,
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 2,
+      },
+    });
+  });
+
+  brackets.forEach((el, i) => {
+    const rate = 0.2 + (i % 2) * 0.2;
+    gsap.to(el, {
+      y: () => -window.innerHeight * rate * 0.5,
+      rotate: (i % 2 === 0) ? 15 : -10,
+      scrollTrigger: {
+        trigger: section,
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 3,
+      },
+    });
+  });
+
+  crosses.forEach((el, i) => {
+    gsap.to(el, {
+      y: () => -window.innerHeight * 0.15,
+      opacity: 0.15 + (i % 3) * 0.1,
+      scrollTrigger: {
+        trigger: section,
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 2.5,
+      },
+    });
+  });
+}
+
+// ─── Card Counter Update ───
+function initCardCounter(section: HTMLElement) {
+  const counter = section.querySelector('[data-counter-current]');
+  const cards = section.querySelectorAll('.scene3d__card');
+  if (!counter || !cards.length) return;
+
+  // Observe which card is closest to viewport center
+  const observer = new IntersectionObserver(
+    (entries) => {
+      let bestCard = -1;
+      let bestRatio = 0;
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && entry.intersectionRatio > bestRatio) {
+          bestRatio = entry.intersectionRatio;
+          bestCard = parseInt((entry.target as HTMLElement).dataset.card || '0');
+        }
+      });
+      if (bestCard >= 0) {
+        const num = String(bestCard + 1).padStart(2, '0');
+        if (counter.textContent !== num) {
+          counter.textContent = num;
+        }
+      }
+    },
+    { threshold: [0, 0.25, 0.5, 0.75, 1], rootMargin: '-30% 0px -30% 0px' }
+  );
+
+  cards.forEach((card) => observer.observe(card));
+}
+
+// ─── Scan Line Transition ───
+function fireScanline(master: gsap.core.Timeline, time: number) {
+  const scanline = document.querySelector('[data-scanline]');
+  if (!scanline) return;
+
+  master.fromTo(
+    scanline,
+    { top: '0%', opacity: 0 },
+    { top: '100%', opacity: 0.8, duration: 0.04, ease: 'none' },
+    time
+  );
+  master.to(scanline, { opacity: 0, duration: 0.01, ease: 'none' }, time + 0.04);
+}
+
 // ─── Particle visibility tied to scroll ───
 function initParticles() {
   const particles = document.querySelectorAll('.particle');
@@ -262,6 +389,7 @@ export function init3DAnimations() {
     initMatrixCanvas();
     initCursorGlow();
     initParticles();
+    initSceneParallax();
   }
 
   const section = document.getElementById('hero-3d');
@@ -383,6 +511,9 @@ export function init3DAnimations() {
   // PHASE 2→3 Transition: Hero exits with depth
   // ═══════════════════════════════════════════════
 
+  // Scan line wipe
+  fireScanline(master, 0.38);
+
   master.to(
     '.cinematic__hero-content',
     { scale: 0.6, opacity: 0, y: -100, filter: 'blur(8px)', duration: 0.06, ease: 'none' },
@@ -448,9 +579,21 @@ export function init3DAnimations() {
   master.to('[data-bg-group="B"]', { opacity: 0, duration: 0.06, ease: 'none' }, 0.56);
   master.to('[data-bg-group="C"]', { opacity: 1, duration: 0.08, ease: 'none' }, 0.56);
 
+  // Card counter shows during card phase
+  master.fromTo(
+    '[data-card-counter]',
+    { opacity: 0 },
+    { opacity: 0.7, duration: 0.03, ease: 'none' },
+    0.45
+  );
+  master.to('[data-card-counter]', { opacity: 0, duration: 0.03, ease: 'none' }, 0.72);
+
   // ═══════════════════════════════════════════════
   // PHASE 3→4 Transition: Cards exit with blur
   // ═══════════════════════════════════════════════
+
+  // Scan line wipe
+  fireScanline(master, 0.73);
 
   if (scene) {
     master.to(scene, { opacity: 0, filter: 'blur(6px)', duration: 0.05, ease: 'none' }, 0.74);
@@ -503,7 +646,11 @@ export function init3DAnimations() {
   master.to('.ambient-orb--2', { x: '0', y: '0', opacity: 0.06, duration: 0.15, ease: 'none' }, 0.80);
   master.to('.ambient-orb--3', { opacity: 0.05, scale: 1.3, duration: 0.15, ease: 'none' }, 0.80);
 
-  // Init card tilt after DOM is ready
+  // Init interactive features after DOM is ready
+  if (!prefersReduced) {
+    initBgParallax(section);
+    initCardCounter(section);
+  }
   requestAnimationFrame(() => {
     initCardTilt();
   });
