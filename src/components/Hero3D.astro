@@ -158,8 +158,25 @@ import { projects } from '../data/projects';
       </div>
     </div>
 
+    <!-- ═══ LIGHT RAYS through shutters ═══ -->
+    <div class="cinematic__lightrays" data-lightrays aria-hidden="true">
+      <div class="lightray lightray--1"></div>
+      <div class="lightray lightray--2"></div>
+      <div class="lightray lightray--3"></div>
+      <div class="lightray lightray--4"></div>
+      <div class="lightray lightray--5"></div>
+    </div>
+
     <!-- ═══ VIGNETTE ═══ -->
     <div class="cinematic__vignette"></div>
+
+    <!-- ═══ PHASE INDICATOR (right side dots) ═══ -->
+    <div class="phase-indicator" data-phase-indicator aria-hidden="true">
+      <div class="phase-dot phase-dot--active" data-phase-dot="1"><span>Open</span></div>
+      <div class="phase-dot" data-phase-dot="2"><span>Hello</span></div>
+      <div class="phase-dot" data-phase-dot="3"><span>Work</span></div>
+      <div class="phase-dot" data-phase-dot="4"><span>Contact</span></div>
+    </div>
 
     <!-- ═══ SCENE CONTENT ═══ -->
     <div class="cinematic__scene-content">
@@ -170,6 +187,7 @@ import { projects } from '../data/projects';
           <span class="badge__dot"></span>
           Available for freelance
         </div>
+        <div class="cinematic__cursor-block" data-cursor-block>_</div>
         <h1 class="cinematic__title" data-hero-line="1">FULL STACK</h1>
         <h1 class="cinematic__title cinematic__title--accent" data-hero-line="2">AI ARCHITECT</h1>
         <h1 class="cinematic__title" data-hero-line="3">DEVELOPER<span class="cinematic__title--dot">.</span></h1>
@@ -237,7 +255,7 @@ import { projects } from '../data/projects';
 
       <!-- Phase 4: Contact CTA -->
       <div class="cinematic__contact">
-        <h2 class="cinematic__contact-title" data-contact-title>LET'S WORK</h2>
+        <h2 class="cinematic__contact-title glitch" data-contact-title data-text="LET'S WORK">LET'S WORK</h2>
         <p class="cinematic__contact-sub" data-contact-sub>Got a project in mind? Let's build something extraordinary together.</p>
         <a href="/contact" class="cinematic__contact-btn" data-contact-btn>
           <span>Get in Touch</span>

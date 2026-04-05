@@ -321,6 +321,40 @@ function initCardCounter(section: HTMLElement) {
   cards.forEach((card) => observer.observe(card));
 }
 
+// ─── Phase Indicator ───
+function initPhaseIndicator(master: gsap.core.Timeline) {
+  const dots = document.querySelectorAll('[data-phase-dot]');
+  if (!dots.length) return;
+
+  // Show indicator
+  gsap.set('[data-phase-indicator]', { opacity: 0 });
+  master.to('[data-phase-indicator]', { opacity: 1, duration: 0.04, ease: 'none' }, 0.05);
+
+  const phases = [
+    { dot: 1, start: 0, end: 0.22 },
+    { dot: 2, start: 0.22, end: 0.44 },
+    { dot: 3, start: 0.44, end: 0.78 },
+    { dot: 4, start: 0.78, end: 1.0 },
+  ];
+
+  // Use ScrollTrigger's onUpdate to track phase
+  const trigger = master.scrollTrigger;
+  if (trigger) {
+    trigger.vars.onUpdate = function(self: ScrollTrigger) {
+      const p = self.progress;
+      phases.forEach(({ dot, start, end }) => {
+        const el = document.querySelector(`[data-phase-dot="${dot}"]`);
+        if (!el) return;
+        if (p >= start && p < end) {
+          el.classList.add('phase-dot--active');
+        } else {
+          el.classList.remove('phase-dot--active');
+        }
+      });
+    };
+  }
+}
+
 // ─── Scan Line Transition ───
 function fireScanline(master: gsap.core.Timeline, time: number) {
   const scanline = document.querySelector('[data-scanline]');
@@ -417,6 +451,10 @@ export function init3DAnimations() {
   // Light leak pulses as shutters begin
   master.to('.cinematic__light-leak', { opacity: 1, duration: 0.08, ease: 'none' }, 0);
 
+  // Light rays stream in as shutters crack open
+  master.to('[data-lightrays]', { opacity: 1, duration: 0.06, ease: 'none' }, 0.04);
+  master.to('[data-lightrays]', { opacity: 0, duration: 0.06, ease: 'none' }, 0.16);
+
   // Shutters swing open with slight stagger
   master.to(
     '.cinematic__shutter--left',
@@ -455,6 +493,16 @@ export function init3DAnimations() {
   // ═══════════════════════════════════════════════
   // PHASE 2: Hero Text Reveal (0.22 → 0.42)
   // ═══════════════════════════════════════════════
+
+  // Blinking cursor appears before text
+  master.fromTo(
+    '[data-cursor-block]',
+    { opacity: 0 },
+    { opacity: 1, duration: 0.02, ease: 'none' },
+    0.19
+  );
+  // Cursor disappears as text starts
+  master.to('[data-cursor-block]', { opacity: 0, display: 'none', duration: 0.01, ease: 'none' }, 0.22);
 
   // Hero lines — SplitText char animation with 3D depth
   const heroLines = section.querySelectorAll('[data-hero-line]');
@@ -650,6 +698,7 @@ export function init3DAnimations() {
   if (!prefersReduced) {
     initBgParallax(section);
     initCardCounter(section);
+    initPhaseIndicator(master);
   }
   requestAnimationFrame(() => {
     initCardTilt();

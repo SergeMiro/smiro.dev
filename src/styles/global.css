@@ -267,6 +267,167 @@ html[data-view="3d"] body {
   50% { transform: translate(calc(-50% + 10vw), calc(-50% - 10vh)) scale(1.15); }
 }
 
+/* ── Light Rays ── */
+.cinematic__lightrays {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.lightray {
+  position: absolute;
+  top: -20%;
+  width: 3px;
+  height: 140%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in oklch, var(--color-primary) 15%, transparent) 30%,
+    color-mix(in oklch, var(--color-primary) 6%, transparent) 70%,
+    transparent 100%
+  );
+  filter: blur(6px);
+  transform-origin: top center;
+}
+
+.lightray--1 { left: 20%; transform: rotate(-3deg); opacity: 0.8; }
+.lightray--2 { left: 35%; transform: rotate(-1deg); opacity: 0.5; width: 4px; }
+.lightray--3 { left: 50%; transform: rotate(0deg); opacity: 0.9; width: 5px; }
+.lightray--4 { left: 65%; transform: rotate(1deg); opacity: 0.6; }
+.lightray--5 { left: 80%; transform: rotate(3deg); opacity: 0.7; width: 4px; }
+
+/* ── Phase Indicator ── */
+.phase-indicator {
+  position: absolute;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  align-items: flex-end;
+}
+
+.phase-dot {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-direction: row-reverse;
+  cursor: default;
+}
+
+.phase-dot::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--color-text-faint);
+  background: transparent;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  flex-shrink: 0;
+}
+
+.phase-dot--active::after {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 10px color-mix(in oklch, var(--color-primary) 40%, transparent);
+  width: 10px;
+  height: 10px;
+}
+
+.phase-dot span {
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  opacity: 0;
+  transform: translateX(5px);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.phase-dot--active span {
+  opacity: 0.6;
+  transform: translateX(0);
+  color: var(--color-primary);
+}
+
+/* ── Cursor Block (before hero text) ── */
+.cinematic__cursor-block {
+  font-family: 'Courier New', monospace;
+  font-size: var(--text-hero);
+  color: var(--color-primary);
+  opacity: 0;
+  animation: cursor-blink 0.8s step-end infinite;
+  line-height: 0.95;
+  margin-bottom: -0.5em;
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ── Glitch Effect ── */
+.glitch {
+  position: relative;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.glitch::before {
+  animation: glitch-top 3s ease-in-out infinite;
+  clip-path: inset(0 0 65% 0);
+  color: var(--color-primary);
+  opacity: 0.8;
+}
+
+.glitch::after {
+  animation: glitch-bottom 3s ease-in-out infinite 0.15s;
+  clip-path: inset(65% 0 0 0);
+  color: var(--color-accent);
+  opacity: 0.8;
+}
+
+@keyframes glitch-top {
+  0%, 90%, 100% { transform: translate(0); }
+  92% { transform: translate(-4px, -2px); }
+  94% { transform: translate(3px, 1px); }
+  96% { transform: translate(-2px, 0); }
+  98% { transform: translate(1px, -1px); }
+}
+
+@keyframes glitch-bottom {
+  0%, 90%, 100% { transform: translate(0); }
+  91% { transform: translate(3px, 1px); }
+  93% { transform: translate(-2px, -1px); }
+  95% { transform: translate(4px, 0); }
+  97% { transform: translate(-1px, 2px); }
+}
+
+/* ── Card inner lift on hover ── */
+.scene3d__card:hover .card__inner {
+  transform: translateZ(15px);
+}
+
+.card__inner {
+  transform: translateZ(0);
+  transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
 /* ── Vignette ── */
 .cinematic__vignette {
   position: absolute;
@@ -1056,7 +1217,9 @@ html[data-view="3d"] body {
   }
 
   .cursor-glow,
-  .particles {
+  .particles,
+  .phase-indicator,
+  .cinematic__lightrays {
     display: none;
   }
 
