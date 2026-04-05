@@ -325,6 +325,84 @@ function initCardCounter(section: HTMLElement) {
   cards.forEach((card) => observer.observe(card));
 }
 
+// ─── Magnetic Button ───
+function initMagneticButton() {
+  document.querySelectorAll('[data-magnetic]').forEach((wrap) => {
+    const el = wrap as HTMLElement;
+    const btn = el.querySelector('a, button') as HTMLElement;
+    if (!btn) return;
+
+    el.addEventListener('mousemove', (e: MouseEvent) => {
+      const rect = el.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      gsap.to(btn, {
+        x: x * 0.3,
+        y: y * 0.3,
+        duration: 0.4,
+        ease: 'power2.out',
+      });
+    });
+
+    el.addEventListener('mouseleave', () => {
+      gsap.to(btn, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.5)' });
+    });
+  });
+}
+
+// ─── Card Spotlight (center of viewport) ───
+function initCardSpotlight(section: HTMLElement) {
+  const cards = section.querySelectorAll('.scene3d__card');
+  if (!cards.length) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.intersectionRatio > 0.6) {
+          entry.target.classList.add('is-spotlight');
+        } else {
+          entry.target.classList.remove('is-spotlight');
+        }
+      });
+    },
+    { threshold: [0, 0.3, 0.6, 1], rootMargin: '-25% 0px -25% 0px' }
+  );
+
+  cards.forEach((card) => observer.observe(card));
+}
+
+// ─── Terminal Typing Effect ───
+function initTerminalTyping(master: gsap.core.Timeline) {
+  const textEl = document.querySelector('[data-terminal-text]');
+  const terminalEl = document.querySelector('[data-hero-terminal]');
+  if (!textEl || !terminalEl) return;
+
+  const lines = [
+    'npx astro build && vercel --prod',
+    'claude chat --model opus',
+    'docker compose up -d',
+  ];
+  const fullText = lines[Math.floor(Math.random() * lines.length)];
+
+  // Show terminal
+  master.to(terminalEl, { opacity: 1, duration: 0.02, ease: 'none' }, 0.34);
+
+  // Type chars one by one synced to scroll
+  const chars = fullText.split('');
+  const charDuration = 0.03 / chars.length;
+
+  let currentText = '';
+  chars.forEach((char, i) => {
+    master.call(() => {
+      currentText += char;
+      textEl.textContent = currentText;
+    }, undefined, 0.34 + (i * charDuration));
+  });
+
+  // Hide with hero
+  master.to(terminalEl, { opacity: 0, duration: 0.02, ease: 'none' }, 0.38);
+}
+
 // ─── Phase Indicator ───
 function initPhaseIndicator(master: gsap.core.Timeline) {
   const dots = document.querySelectorAll('[data-phase-dot]');
@@ -429,6 +507,7 @@ export function init3DAnimations() {
     if (!isTouch) {
       initCursorGlow();
       initSceneParallax();
+      initMagneticButton();
     }
   }
 
@@ -700,10 +779,14 @@ export function init3DAnimations() {
   master.to('.ambient-orb--2', { x: '0', y: '0', opacity: 0.06, duration: 0.15, ease: 'none' }, 0.80);
   master.to('.ambient-orb--3', { opacity: 0.05, scale: 1.3, duration: 0.15, ease: 'none' }, 0.80);
 
+  // Terminal typing
+  initTerminalTyping(master);
+
   // Init interactive features after DOM is ready
   if (!prefersReduced) {
     initBgParallax(section);
     initCardCounter(section);
+    initCardSpotlight(section);
     initPhaseIndicator(master);
   }
   if (!isTouch) {

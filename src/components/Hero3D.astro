@@ -167,6 +167,9 @@ import { projects } from '../data/projects';
       <div class="lightray lightray--5"></div>
     </div>
 
+    <!-- ═══ NOISE OVERLAY ═══ -->
+    <div class="cinematic__noise" aria-hidden="true"></div>
+
     <!-- ═══ VIGNETTE ═══ -->
     <div class="cinematic__vignette"></div>
 
@@ -188,10 +191,15 @@ import { projects } from '../data/projects';
           Available for freelance
         </div>
         <div class="cinematic__cursor-block" data-cursor-block>_</div>
-        <h1 class="cinematic__title" data-hero-line="1">FULL STACK</h1>
+        <h1 class="cinematic__title cinematic__title--outline" data-hero-line="1">FULL STACK</h1>
         <h1 class="cinematic__title cinematic__title--accent" data-hero-line="2">AI ARCHITECT</h1>
         <h1 class="cinematic__title" data-hero-line="3">DEVELOPER<span class="cinematic__title--dot">.</span></h1>
         <p class="cinematic__sub" data-hero-sub>Building intelligent systems from concept to production.<br/>Based in Dijon, France.</p>
+        <div class="cinematic__terminal" data-hero-terminal>
+          <span class="terminal__prompt">$</span>
+          <span class="terminal__text" data-terminal-text></span>
+          <span class="terminal__cursor">|</span>
+        </div>
         <div class="cinematic__scroll-hint" data-scroll-hint>
           <span>Scroll to explore</span>
           <div class="scroll-hint__line"></div>
@@ -257,10 +265,12 @@ import { projects } from '../data/projects';
       <div class="cinematic__contact">
         <h2 class="cinematic__contact-title glitch" data-contact-title data-text="LET'S WORK">LET'S WORK</h2>
         <p class="cinematic__contact-sub" data-contact-sub>Got a project in mind? Let's build something extraordinary together.</p>
-        <a href="/contact" class="cinematic__contact-btn" data-contact-btn>
-          <span>Get in Touch</span>
-          <span class="btn__arrow">&rarr;</span>
-        </a>
+        <div class="magnetic-wrap" data-magnetic>
+          <a href="/contact" class="cinematic__contact-btn" data-contact-btn>
+            <span>Get in Touch</span>
+            <span class="btn__arrow">&rarr;</span>
+          </a>
+        </div>
       </div>
 
     </div>
