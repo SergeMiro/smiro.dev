@@ -3,34 +3,10 @@ import Layout from '../layouts/Layout.astro';
 import Hero from '../components/Hero.astro';
 import About from '../components/About.astro';
 import FeaturedProjects from '../components/FeaturedProjects.astro';
-import Hero3D from '../components/Hero3D.astro';
-import About3D from '../components/About3D.astro';
-import Projects3D from '../components/Projects3D.astro';
 ---
 
 <Layout title="SergeMiro" pageColor="home">
-  <!-- 2D Version (default) -->
-  <div id="view-2d">
-    <Hero />
-    <About />
-    <FeaturedProjects />
-  </div>
-
-  <!-- 3D Version (hidden by default, shown via JS) -->
-  <div id="view-3d" style="display:none">
-    <Hero3D />
-    <About3D />
-    <Projects3D />
-  </div>
+  <Hero />
+  <About />
+  <FeaturedProjects />
 </Layout>
-
-<script is:inline>
-  // Run before GSAP — switch layout instantly, no flash
-  (function() {
-    var mode = localStorage.getItem('viewMode') || '2d';
-    if (mode === '3d') {
-      document.getElementById('view-2d').style.display = 'none';
-      document.getElementById('view-3d').style.display = 'block';
-    }
-  })();
-</script>

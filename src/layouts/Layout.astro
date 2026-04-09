@@ -2,8 +2,6 @@
 import { ClientRouter } from 'astro:transitions';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
-import Cursor from '../components/Cursor.astro';
-import ViewModeToggle from '../components/ViewModeToggle.astro';
 import '../styles/global.css';
 
 interface Props {
@@ -91,16 +89,11 @@ const fullTitle = `${title} | smiro.dev`;
       <div class="blob blob--3 bottom-[10%] left-[30%]"></div>
     </div>
 
-    <Cursor />
     <Nav />
     <main id="main-content" transition:animate="fade">
       <slot />
     </main>
     <Footer />
-    <ViewModeToggle />
-
-    <!-- Code snippets container for matrix effect -->
-    <div id="code-snippets-container" aria-hidden="true"></div>
 
     <script>
       import '../scripts/animations';
