@@ -38,7 +38,7 @@ import { projects as hardcodedProjects, filters } from '../../data/projects';
       </div>
 
       <!-- Project grid with 3D cards -->
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="project-grid">
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 transition-[min-height] duration-500" id="project-grid" style="min-height: 400px;">
         {hardcodedProjects.map((project) => (
           <div
             data-category={project.category}
@@ -207,6 +207,10 @@ import { projects as hardcodedProjects, filters } from '../../data/projects';
         b.classList.toggle('border-[var(--color-border)]', !isActive);
       });
 
+      const grid = document.getElementById('project-grid');
+      // Lock current height before filtering to prevent footer jump
+      if (grid) grid.style.minHeight = grid.offsetHeight + 'px';
+
       const state = Flip.getState(allCards);
 
       allCards.forEach((card) => {
@@ -225,6 +229,12 @@ import { projects as hardcodedProjects, filters } from '../../data/projects';
         absolute: true,
         onEnter: (elements) => gsap.fromTo(elements, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.5 }),
         onLeave: (elements) => gsap.to(elements, { opacity: 0, scale: 0.9, duration: 0.3 }),
+        onComplete: () => {
+          // After animation, set min-height to actual content height
+          if (grid) {
+            gsap.to(grid, { minHeight: grid.scrollHeight, duration: 0.3, ease: 'power2.out' });
+          }
+        },
       });
     });
   });

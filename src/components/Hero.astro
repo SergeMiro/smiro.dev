@@ -1,5 +1,5 @@
 ---
-
+import PcEvolution from './PcEvolution.astro';
 ---
 
 <section class="relative min-h-screen flex items-center pt-16 overflow-hidden">
@@ -10,12 +10,10 @@
     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-[oklch(0.7_0.15_140)] opacity-[0.03] blur-[90px] animate-pulse-slow" style="animation-delay: 4s"></div>
   </div>
 
-  <div class="relative mx-auto max-w-7xl px-6 py-24 md:py-32 w-full">
-    <!-- 3D Floating Badge - Top Right -->
-    <div class="flex justify-between items-start mb-8 flex-col-reverse sm:flex-row gap-4">
-      <div data-reveal>
-        <!-- empty spacer on mobile, label on desktop handled by badge -->
-      </div>
+  <div class="relative mx-auto max-w-7xl px-6 py-16 md:py-24 w-full">
+    <!-- Top row: Badge -->
+    <div class="flex justify-between items-start mb-6 flex-col-reverse sm:flex-row gap-4">
+      <div data-reveal></div>
       <div class="badge-3d self-start sm:self-auto" data-reveal>
         <div class="badge-3d-inner">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0"></span>
@@ -24,41 +22,49 @@
       </div>
     </div>
 
-    <!-- Heading with 3D depth -->
-    <h1
-      data-split="chars"
-      class="font-[var(--font-display)] text-[length:var(--text-hero)] font-bold leading-[0.95] tracking-tight max-w-5xl"
-    >
-      Full Stack Developer.<br />
-      <span class="text-[var(--color-primary)]">AI Whisperer.</span><br />
-      Automation Addict.
-    </h1>
+    <!-- Two-column layout: text + animation -->
+    <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+      <!-- Left: Text content -->
+      <div>
+        <h1
+          data-split="chars"
+          class="font-[var(--font-display)] text-[length:clamp(1.8rem,4.5vw,4.5rem)] font-bold leading-[0.95] tracking-tight"
+        >
+          Full Stack Developer.<br />
+          <span class="text-[var(--color-primary)]">AI Whisperer.</span><br />
+          Automation Addict.
+        </h1>
 
-    <!-- Subheading -->
-    <p class="hero-sub mt-8 max-w-2xl text-lg md:text-xl text-[var(--color-text-muted)] leading-relaxed">
-      I build web apps, teach LLMs to work for me, and automate everything else
-      — based in Dijon, France.
-    </p>
+        <p class="hero-sub mt-6 max-w-xl text-lg md:text-xl text-[var(--color-text-muted)] leading-relaxed">
+          I build web apps, teach LLMs to work for me, and automate everything else
+          — based in Dijon, France.
+        </p>
 
-    <!-- CTAs with matrix code effect -->
-    <div class="hero-ctas mt-10 flex flex-wrap gap-4">
-      <a
-        href="/projects"
-        class="code-trigger inline-flex items-center gap-2 px-6 py-3 bg-[var(--color-primary)] text-[var(--color-bg)] font-medium rounded-lg hover:bg-[var(--color-primary-hover)] transition-all duration-300 hover:shadow-lg hover:shadow-[var(--color-primary)]/20 active:scale-[0.97]"
-        data-prefetch
-      >
-        View Projects
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M5 12h14M12 5l7 7-7 7" />
-        </svg>
-      </a>
-      <a
-        href="/contact"
-        class="code-trigger inline-flex items-center gap-2 px-6 py-3 border border-[var(--color-border)] text-[var(--color-text)] font-medium rounded-lg hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-all duration-300 active:scale-[0.97]"
-        data-prefetch
-      >
-        Contact Me
-      </a>
+        <div class="hero-ctas mt-8 flex flex-wrap gap-4">
+          <a
+            href="/projects"
+            class="code-trigger inline-flex items-center gap-2 px-6 py-3 bg-[var(--color-primary)] text-[var(--color-bg)] font-medium rounded-lg hover:bg-[var(--color-primary-hover)] transition-all duration-300 hover:shadow-lg hover:shadow-[var(--color-primary)]/20 active:scale-[0.97]"
+            data-prefetch
+          >
+            View Projects
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </a>
+          <a
+            href="/contact"
+            class="code-trigger inline-flex items-center gap-2 px-6 py-3 border border-[var(--color-border)] text-[var(--color-text)] font-medium rounded-lg hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-all duration-300 active:scale-[0.97]"
+            data-prefetch
+          >
+            Contact Me
+          </a>
+        </div>
+      </div>
+
+      <!-- Right: PC Evolution Animation -->
+      <div class="order-first lg:order-last" data-reveal>
+        <PcEvolution />
+      </div>
     </div>
   </div>
 

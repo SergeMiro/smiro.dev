@@ -71,7 +71,7 @@ const fullTitle = `${title} | smiro.dev`;
 
     <ClientRouter />
   </head>
-  <body class="grain bg-[var(--color-bg)] text-[var(--color-text)] antialiased">
+  <body class="grain bg-[var(--color-bg)] text-[var(--color-text)] antialiased min-h-screen flex flex-col">
     <!-- Page Loader -->
     <div class="page-loader" id="page-loader">
       <div class="loader-spinner"></div>
@@ -90,7 +90,7 @@ const fullTitle = `${title} | smiro.dev`;
     </div>
 
     <Nav />
-    <main id="main-content" transition:animate="fade">
+    <main id="main-content" class="flex-1" transition:animate="fade">
       <slot />
     </main>
     <Footer />
