@@ -1,502 +1,886 @@
 ---
-const era2000 = `<svg viewBox="0 0 600 420" fill="none" xmlns="http://www.w3.org/2000/svg" class="pc-svg">
-  <rect x="40" y="360" width="520" height="8" rx="2" fill="#4a3f35" opacity="0.6"/>
-  <!-- Horizontal tower (beige) -->
-  <rect x="100" y="310" width="280" height="50" rx="4" fill="#d4c8a8"/>
-  <rect x="100" y="310" width="280" height="50" rx="4" stroke="#b8ad8e" stroke-width="1.5" fill="none"/>
-  <rect x="115" y="320" width="50" height="8" rx="1" fill="#bfb494" stroke="#a89e7e" stroke-width="0.5"/>
-  <rect x="115" y="333" width="80" height="14" rx="2" fill="#bfb494" stroke="#a89e7e" stroke-width="0.5"/>
-  <circle cx="360" cy="335" r="5" fill="#2d5a2d" stroke="#1a3a1a" stroke-width="1"/>
-  <circle cx="345" cy="335" r="2" fill="#00ff00" class="power-led"/>
-  <!-- CRT Monitor -->
-  <rect x="140" y="100" width="240" height="210" rx="12" fill="#c8bda0"/>
-  <rect x="140" y="100" width="240" height="210" rx="12" stroke="#a89e7e" stroke-width="2" fill="none"/>
-  <rect x="155" y="115" width="210" height="160" rx="8" fill="#1a1a1a"/>
-  <rect x="162" y="122" width="196" height="146" rx="4" fill="#0a1628" class="screen screen-2000"/>
-  <rect x="162" y="122" width="196" height="146" rx="4" fill="url(#crt-glare)" opacity="0.15"/>
-  <circle cx="180" cy="290" r="4" fill="#a89e7e"/>
-  <circle cx="195" cy="290" r="4" fill="#a89e7e"/>
-  <rect x="310" y="287" width="20" height="8" rx="2" fill="#a89e7e"/>
-  <text x="260" y="296" text-anchor="middle" fill="#8a8070" font-size="8" font-family="Arial">SVGA</text>
-  <!-- Notepad window -->
-  <rect x="168" y="128" width="90" height="105" fill="#c0c0c0"/>
-  <rect x="168" y="128" width="90" height="14" fill="#000080"/>
-  <text x="172" y="138" fill="white" font-size="6" font-family="monospace">notepad.exe</text>
-  <rect x="248" y="129" width="8" height="12" fill="#c0c0c0" stroke="#808080" stroke-width="0.5"/>
-  <text x="250" y="138" fill="black" font-size="7" font-family="monospace">X</text>
-  <text x="172" y="150" fill="#000" font-size="5" font-family="monospace">&lt;html&gt;</text>
-  <text x="172" y="157" fill="#000" font-size="5" font-family="monospace">&lt;body&gt;</text>
-  <text x="172" y="164" fill="#000" font-size="5" font-family="monospace"> &lt;h1&gt;Welcome&lt;/h1&gt;</text>
-  <text x="172" y="171" fill="#000" font-size="5" font-family="monospace"> &lt;p&gt;My first</text>
-  <text x="172" y="178" fill="#000" font-size="5" font-family="monospace">  website!&lt;/p&gt;</text>
-  <text x="172" y="185" fill="#000" font-size="5" font-family="monospace"> &lt;marquee&gt;</text>
-  <text x="172" y="192" fill="#000" font-size="5" font-family="monospace">  Hello World!</text>
-  <text x="172" y="199" fill="#000" font-size="5" font-family="monospace"> &lt;/marquee&gt;</text>
-  <text x="172" y="206" fill="#000" font-size="5" font-family="monospace">&lt;/body&gt;</text>
-  <text x="172" y="213" fill="#000" font-size="5" font-family="monospace">&lt;/html&gt;</text>
+/**
+ * PC Evolution Animation — 3D styled SVG illustrations
+ * Each era: detailed computer with depth, shadows, glows, reflections
+ */
+
+// Shared SVG defs for 3D effects
+const sharedDefs = `
+  <defs>
+    <filter id="shadow-sm" x="-5%" y="-5%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+    <filter id="shadow-lg" x="-10%" y="-5%" width="130%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.6"/>
+    </filter>
+    <filter id="glow-green" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feFlood flood-color="#00ff88" flood-opacity="0.6" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="glow"/>
+      <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow-blue" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feFlood flood-color="#4488ff" flood-opacity="0.6" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="glow"/>
+      <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feFlood flood-color="#00dfd8" flood-opacity="0.5" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="glow"/>
+      <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="inner-shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feComponentTransfer in="SourceAlpha"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>
+      <feGaussianBlur stdDeviation="3"/>
+      <feOffset dx="0" dy="2" result="offsetblur"/>
+      <feFlood flood-color="#000" flood-opacity="0.4" result="color"/>
+      <feComposite in2="offsetblur" operator="in"/>
+      <feComposite in2="SourceAlpha" operator="in"/>
+      <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode/></feMerge>
+    </filter>
+    <linearGradient id="desk-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5a4f40"/>
+      <stop offset="50%" stop-color="#3a3228"/>
+      <stop offset="100%" stop-color="#2a2420"/>
+    </linearGradient>
+    <linearGradient id="desk-top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6a5f50" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#4a3f35" stop-opacity="0.3"/>
+    </linearGradient>
+    <radialGradient id="screen-glow-green" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#00ff88" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#00ff88" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="screen-glow-blue" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#4488ff" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#4488ff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="screen-glow-purple" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#a855f7" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="screen-glow-cyan" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#00dfd8" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#00dfd8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+`;
+
+// 3D desk element shared across eras
+const desk3d = `
+  <rect x="20" y="358" width="560" height="22" rx="3" fill="url(#desk-grad)" filter="url(#shadow-sm)"/>
+  <rect x="20" y="358" width="560" height="4" rx="2" fill="url(#desk-top)"/>
+  <line x1="30" y1="380" x2="30" y2="418" stroke="#3a3228" stroke-width="8" stroke-linecap="round"/>
+  <line x1="570" y1="380" x2="570" y2="418" stroke="#3a3228" stroke-width="8" stroke-linecap="round"/>
+`;
+
+const era2000 = `<svg viewBox="0 0 600 440" fill="none" xmlns="http://www.w3.org/2000/svg" class="pc-svg">
+  ${sharedDefs}
+  ${desk3d}
+
+  <!-- ============ HORIZONTAL TOWER (beige 3D) ============ -->
+  <g filter="url(#shadow-sm)">
+    <!-- Tower body -->
+    <linearGradient id="tower2000" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e0d5ba"/>
+      <stop offset="30%" stop-color="#d4c8a8"/>
+      <stop offset="100%" stop-color="#b8ad8e"/>
+    </linearGradient>
+    <rect x="100" y="305" width="290" height="52" rx="5" fill="url(#tower2000)"/>
+    <!-- Tower 3D edge (bottom) -->
+    <rect x="100" y="347" width="290" height="10" rx="0 0 5 5" fill="#a09480" opacity="0.6"/>
+    <!-- Tower 3D edge (right) -->
+    <rect x="385" y="308" width="8" height="49" fill="#9a8e76" opacity="0.4"/>
+    <!-- Floppy drive slot -->
+    <rect x="115" y="315" width="55" height="9" rx="1.5" fill="#c4b898"/>
+    <rect x="115" y="315" width="55" height="9" rx="1.5" stroke="#a89e7e" stroke-width="0.8" fill="none"/>
+    <line x1="118" y1="319.5" x2="167" y2="319.5" stroke="#a89e7e" stroke-width="0.3"/>
+    <!-- CD-ROM drive -->
+    <rect x="115" y="329" width="90" height="16" rx="2" fill="#c4b898"/>
+    <rect x="115" y="329" width="90" height="16" rx="2" stroke="#a89e7e" stroke-width="0.8" fill="none"/>
+    <circle cx="160" cy="337" r="5" fill="#bab08e" stroke="#a89e7e" stroke-width="0.5"/>
+    <circle cx="160" cy="337" r="1.5" fill="#a89e7e"/>
+    <rect x="170" y="335" width="15" height="4" rx="1" fill="#a89e7e" opacity="0.5"/>
+    <!-- Power button -->
+    <circle cx="365" cy="331" r="7" fill="#c4b898" stroke="#a09480" stroke-width="1.5"/>
+    <circle cx="365" cy="331" r="4" fill="#b0a68a"/>
+    <!-- Power LED -->
+    <circle cx="348" cy="331" r="2.5" fill="#00ff44" filter="url(#glow-green)" class="power-led"/>
+    <!-- Ventilation lines -->
+    <g opacity="0.3" stroke="#a89e7e" stroke-width="0.6">
+      <line x1="280" y1="315" x2="330" y2="315"/>
+      <line x1="280" y1="319" x2="330" y2="319"/>
+      <line x1="280" y1="323" x2="330" y2="323"/>
+      <line x1="280" y1="327" x2="330" y2="327"/>
+    </g>
+  </g>
+
+  <!-- ============ CRT MONITOR (3D with depth) ============ -->
+  <g filter="url(#shadow-lg)">
+    <!-- Monitor back depth -->
+    <rect x="152" y="104" width="230" height="205" rx="14" fill="#a89e7e" opacity="0.4"/>
+    <!-- Monitor body -->
+    <linearGradient id="crt-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ddd2b8"/>
+      <stop offset="40%" stop-color="#c8bda0"/>
+      <stop offset="100%" stop-color="#a89e80"/>
+    </linearGradient>
+    <rect x="145" y="98" width="230" height="205" rx="14" fill="url(#crt-body)"/>
+    <!-- Highlight strip on top -->
+    <rect x="148" y="98" width="224" height="6" rx="3" fill="white" opacity="0.15"/>
+    <!-- Inner bezel (dark, recessed) -->
+    <rect x="160" y="112" width="200" height="158" rx="8" fill="#111"/>
+    <!-- Screen bezel inner edge (3D inset) -->
+    <rect x="162" y="114" width="196" height="154" rx="6" fill="#0a0a0a"/>
+    <!-- CRT screen (slightly convex gradient) -->
+    <radialGradient id="crt-screen" cx="40%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#142238"/>
+      <stop offset="100%" stop-color="#060d1a"/>
+    </radialGradient>
+    <rect x="166" y="118" width="188" height="146" rx="3" fill="url(#crt-screen)" class="screen screen-2000"/>
+    <!-- CRT glass reflection (curved highlight) -->
+    <ellipse cx="220" cy="145" rx="60" ry="30" fill="white" opacity="0.04"/>
+    <!-- Screen ambient glow -->
+    <rect x="145" y="98" width="230" height="205" rx="14" fill="url(#screen-glow-green)" opacity="0.5"/>
+    <!-- Monitor buttons row -->
+    <g>
+      <circle cx="185" cy="282" r="4.5" fill="#b8ad8e" stroke="#a09480" stroke-width="0.8"/>
+      <circle cx="200" cy="282" r="4.5" fill="#b8ad8e" stroke="#a09480" stroke-width="0.8"/>
+      <rect x="300" y="278" width="22" height="9" rx="2" fill="#b8ad8e" stroke="#a09480" stroke-width="0.8"/>
+    </g>
+    <text x="260" y="290" text-anchor="middle" fill="#8a8070" font-size="9" font-family="Arial" font-weight="bold" letter-spacing="2">SVGA</text>
+  </g>
+
+  <!-- ============ SCREEN CONTENT: Notepad + IE ============ -->
+  <!-- Notepad -->
+  <rect x="172" y="124" width="86" height="100" rx="1" fill="#c0c0c0"/>
+  <rect x="172" y="124" width="86" height="14" fill="#000080"/>
+  <text x="176" y="134" fill="white" font-size="5.5" font-family="monospace">notepad.exe</text>
+  <rect x="248" y="125" width="8" height="12" fill="#c0c0c0" stroke="#808080" stroke-width="0.5"/>
+  <text x="250" y="134" fill="black" font-size="6" font-family="monospace">X</text>
+  <rect x="172" y="138" width="86" height="86" fill="white"/>
+  <text x="175" y="148" fill="#000" font-size="4.8" font-family="monospace">&lt;html&gt;</text>
+  <text x="175" y="155" fill="#000" font-size="4.8" font-family="monospace">&lt;body bgcolor=</text>
+  <text x="175" y="162" fill="#000" font-size="4.8" font-family="monospace">  "#ffff00"&gt;</text>
+  <text x="175" y="169" fill="#000" font-size="4.8" font-family="monospace"> &lt;center&gt;</text>
+  <text x="175" y="176" fill="#000" font-size="4.8" font-family="monospace">  &lt;h1&gt;Welcome</text>
+  <text x="175" y="183" fill="#000" font-size="4.8" font-family="monospace">  &lt;/h1&gt;</text>
+  <text x="175" y="190" fill="#000" font-size="4.8" font-family="monospace">  &lt;marquee&gt;</text>
+  <text x="175" y="197" fill="#000" font-size="4.8" font-family="monospace">   Hello!</text>
+  <text x="175" y="204" fill="#000" font-size="4.8" font-family="monospace">  &lt;/marquee&gt;</text>
+  <text x="175" y="211" fill="#000" font-size="4.8" font-family="monospace"> &lt;/center&gt;</text>
+
   <!-- IE Browser -->
-  <rect x="264" y="128" width="88" height="105" fill="#c0c0c0"/>
-  <rect x="264" y="128" width="88" height="14" fill="#000080"/>
-  <text x="268" y="138" fill="white" font-size="5" font-family="monospace">Internet Explorer</text>
-  <rect x="264" y="142" width="88" height="10" fill="#c0c0c0" stroke="#808080" stroke-width="0.3"/>
-  <rect x="268" y="144" width="60" height="6" rx="1" fill="white" stroke="#808080" stroke-width="0.3"/>
-  <rect x="264" y="152" width="88" height="81" fill="white"/>
-  <text x="280" y="168" fill="#000080" font-size="10" font-weight="bold" font-family="Times New Roman">Welcome</text>
-  <text x="270" y="180" fill="black" font-size="5" font-family="Times New Roman">My first website!</text>
-  <rect x="270" y="185" width="70" height="1" fill="#808080"/>
-  <text x="270" y="196" fill="blue" font-size="5" font-family="Times New Roman">Click here!</text>
-  <text x="270" y="208" fill="purple" font-size="5" font-family="Times New Roman">&#9733; Under Construction &#9733;</text>
-  <rect x="280" y="215" width="40" height="15" fill="#ffff00" stroke="#ff0000" stroke-width="0.5"/>
-  <text x="285" y="225" fill="#ff0000" font-size="5" font-weight="bold">NEW!!</text>
-  <!-- Keyboard -->
-  <rect x="130" y="368" width="200" height="35" rx="3" fill="#d4c8a8" stroke="#b8ad8e" stroke-width="1"/>
-  <g opacity="0.6">
-    <rect x="138" y="373" width="184" height="5" rx="1" fill="#bfb494"/>
-    <rect x="140" y="381" width="180" height="5" rx="1" fill="#bfb494"/>
-    <rect x="142" y="389" width="176" height="5" rx="1" fill="#bfb494"/>
-    <rect x="165" y="397" width="110" height="4" rx="1" fill="#bfb494"/>
-  </g>
-  <!-- Ball mouse -->
-  <ellipse cx="400" cy="385" rx="16" ry="22" fill="#d4c8a8" stroke="#b8ad8e" stroke-width="1"/>
-  <rect x="396" y="372" width="8" height="10" rx="2" fill="#bfb494"/>
-  <line x1="400" y1="365" x2="400" y2="355" stroke="#b8ad8e" stroke-width="1.5"/>
-  <defs>
-    <linearGradient id="crt-glare" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="white" stop-opacity="0.4"/>
-      <stop offset="30%" stop-color="white" stop-opacity="0"/>
-      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+  <rect x="264" y="124" width="84" height="100" rx="1" fill="#c0c0c0"/>
+  <rect x="264" y="124" width="84" height="14" fill="#000080"/>
+  <text x="268" y="133" fill="white" font-size="4.5" font-family="monospace">Internet Explorer</text>
+  <rect x="264" y="138" width="84" height="10" fill="#c0c0c0" stroke="#808080" stroke-width="0.3"/>
+  <rect x="268" y="140" width="55" height="6" rx="1" fill="white" stroke="#808080" stroke-width="0.3"/>
+  <rect x="264" y="148" width="84" height="76" fill="#ffff99"/>
+  <text x="278" y="166" fill="#000080" font-size="11" font-weight="bold" font-family="Times New Roman">Welcome</text>
+  <text x="270" y="178" fill="black" font-size="4.5" font-family="Times New Roman">My first website!</text>
+  <rect x="270" y="182" width="70" height="1" fill="#808080"/>
+  <text x="270" y="194" fill="blue" font-size="4.5" font-family="Times New Roman">Click here!</text>
+  <rect x="280" y="200" width="40" height="14" fill="#ff0000" rx="2"/>
+  <text x="285" y="210" fill="#fff" font-size="5" font-weight="bold">NEW!!</text>
+  <!-- Blinking cursor in notepad -->
+  <rect x="218" y="207" width="1" height="7" fill="#000" class="power-led"/>
+
+  <!-- ============ KEYBOARD 3D ============ -->
+  <g filter="url(#shadow-sm)">
+    <linearGradient id="kb2000" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ddd2b8"/>
+      <stop offset="100%" stop-color="#c4b898"/>
     </linearGradient>
-  </defs>
+    <rect x="130" y="364" width="210" height="28" rx="4" fill="url(#kb2000)"/>
+    <rect x="130" y="388" width="210" height="4" rx="2" fill="#a89e7e" opacity="0.5"/>
+    <g opacity="0.5">
+      <rect x="137" y="369" width="196" height="4" rx="1" fill="#bfb494"/>
+      <rect x="139" y="376" width="192" height="4" rx="1" fill="#bfb494"/>
+      <rect x="141" y="383" width="188" height="3" rx="1" fill="#bfb494"/>
+    </g>
+  </g>
+
+  <!-- ============ BALL MOUSE 3D ============ -->
+  <g filter="url(#shadow-sm)">
+    <radialGradient id="mouse2000" cx="45%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#e0d5ba"/>
+      <stop offset="100%" stop-color="#b8ad8e"/>
+    </radialGradient>
+    <ellipse cx="410" cy="378" rx="18" ry="24" fill="url(#mouse2000)"/>
+    <ellipse cx="410" cy="378" rx="18" ry="24" stroke="#a89e7e" stroke-width="1" fill="none"/>
+    <rect x="405" y="362" width="10" height="12" rx="3" fill="#c4b898" stroke="#a89e7e" stroke-width="0.5"/>
+    <line x1="410" y1="362" x2="410" y2="368" stroke="#a89e7e" stroke-width="0.3"/>
+    <!-- Mouse cord -->
+    <path d="M410 354 Q410 345 405 340 Q395 332 400 320" stroke="#a89e7e" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  </g>
 </svg>`;
 
-const era2005 = `<svg viewBox="0 0 600 420" fill="none" xmlns="http://www.w3.org/2000/svg" class="pc-svg">
-  <rect x="40" y="360" width="520" height="8" rx="2" fill="#4a3f35" opacity="0.6"/>
-  <!-- Vertical tower (silver) -->
-  <rect x="420" y="200" width="80" height="160" rx="4" fill="#b0b0b8"/>
-  <rect x="420" y="200" width="80" height="160" rx="4" stroke="#909098" stroke-width="1.5" fill="none"/>
-  <rect x="430" y="215" width="60" height="12" rx="2" fill="#a0a0a8" stroke="#808088" stroke-width="0.5"/>
-  <circle cx="460" cy="340" r="7" fill="#303038" stroke="#505058" stroke-width="1"/>
-  <circle cx="460" cy="340" r="3" fill="#4488ff" class="power-led"/>
-  <rect x="445" y="245" width="12" height="6" rx="1" fill="#303038"/>
-  <rect x="445" y="255" width="12" height="6" rx="1" fill="#303038"/>
-  <g opacity="0.3">
-    <line x1="430" y1="280" x2="490" y2="280" stroke="#808088" stroke-width="0.5"/>
-    <line x1="430" y1="284" x2="490" y2="284" stroke="#808088" stroke-width="0.5"/>
-    <line x1="430" y1="288" x2="490" y2="288" stroke="#808088" stroke-width="0.5"/>
-    <line x1="430" y1="292" x2="490" y2="292" stroke="#808088" stroke-width="0.5"/>
-    <line x1="430" y1="296" x2="490" y2="296" stroke="#808088" stroke-width="0.5"/>
-    <line x1="430" y1="300" x2="490" y2="300" stroke="#808088" stroke-width="0.5"/>
-  </g>
-  <!-- LCD Monitor (early, thick bezel) -->
-  <rect x="100" y="110" width="280" height="200" rx="6" fill="#c0c0c8"/>
-  <rect x="100" y="110" width="280" height="200" rx="6" stroke="#a0a0a8" stroke-width="2" fill="none"/>
-  <rect x="118" y="125" width="244" height="165" rx="2" fill="#1a1a2e" class="screen screen-2005"/>
-  <rect x="210" y="310" width="60" height="30" rx="2" fill="#b0b0b8"/>
-  <rect x="190" y="338" width="100" height="8" rx="3" fill="#a0a0a8"/>
-  <text x="240" y="302" text-anchor="middle" fill="#808088" font-size="8" font-family="Arial">LCD 17"</text>
-  <!-- Dreamweaver -->
-  <rect x="122" y="129" width="115" height="155" fill="#2d2d3d"/>
-  <rect x="122" y="129" width="115" height="12" fill="#4a4a6a"/>
-  <text x="126" y="138" fill="#ccc" font-size="5" font-family="monospace">Dreamweaver MX</text>
-  <text x="126" y="150" fill="#cc7832" font-size="4.5" font-family="monospace">&lt;!DOCTYPE html&gt;</text>
-  <text x="126" y="156" fill="#cc7832" font-size="4.5" font-family="monospace">&lt;html&gt;</text>
-  <text x="126" y="162" fill="#cc7832" font-size="4.5" font-family="monospace">&lt;head&gt;</text>
-  <text x="126" y="168" fill="#6a9955" font-size="4.5" font-family="monospace"> &lt;style&gt;</text>
-  <text x="126" y="174" fill="#9cdcfe" font-size="4.5" font-family="monospace">  body &#123;</text>
-  <text x="126" y="180" fill="#9cdcfe" font-size="4.5" font-family="monospace">   font: Arial;</text>
-  <text x="126" y="186" fill="#9cdcfe" font-size="4.5" font-family="monospace">   background:</text>
-  <text x="126" y="192" fill="#ce9178" font-size="4.5" font-family="monospace">    #f0f0f0;</text>
-  <text x="126" y="198" fill="#9cdcfe" font-size="4.5" font-family="monospace">  &#125;</text>
-  <text x="126" y="204" fill="#9cdcfe" font-size="4.5" font-family="monospace">  .menu &#123;</text>
-  <text x="126" y="210" fill="#9cdcfe" font-size="4.5" font-family="monospace">   float: left;</text>
-  <text x="126" y="216" fill="#9cdcfe" font-size="4.5" font-family="monospace">   width: 200px;</text>
-  <text x="126" y="222" fill="#9cdcfe" font-size="4.5" font-family="monospace">  &#125;</text>
-  <rect x="126" y="254" width="107" height="24" fill="#3a3a4a"/>
-  <text x="130" y="262" fill="#999" font-size="4" font-family="Arial">Properties</text>
-  <rect x="130" y="266" width="40" height="6" rx="1" fill="#4a4a5a"/>
-  <rect x="175" y="266" width="40" height="6" rx="1" fill="#4a4a5a"/>
-  <!-- Firefox -->
-  <rect x="241" y="129" width="117" height="155" fill="#f0f0f0"/>
-  <rect x="241" y="129" width="117" height="12" fill="#e07020"/>
-  <text x="245" y="138" fill="white" font-size="5" font-family="Arial">Firefox</text>
-  <rect x="241" y="141" width="117" height="10" fill="#eee" stroke="#ccc" stroke-width="0.3"/>
-  <rect x="245" y="143" width="80" height="6" rx="1" fill="white" stroke="#ccc" stroke-width="0.3"/>
-  <rect x="241" y="151" width="117" height="133" fill="white"/>
-  <rect x="241" y="151" width="117" height="20" fill="url(#grad2005)"/>
-  <text x="250" y="164" fill="white" font-size="8" font-weight="bold" font-family="Arial">MyBlog</text>
-  <rect x="241" y="171" width="117" height="10" fill="#336699"/>
-  <text x="248" y="179" fill="white" font-size="4" font-family="Arial">Home | About | Gallery | Links</text>
-  <rect x="243" y="184" width="30" height="90" fill="#e8e8f0"/>
-  <text x="246" y="192" fill="#336699" font-size="4" font-family="Arial">Menu</text>
-  <rect x="246" y="196" width="24" height="4" rx="1" fill="#ccc"/>
-  <rect x="246" y="203" width="24" height="4" rx="1" fill="#ccc"/>
-  <rect x="246" y="210" width="24" height="4" rx="1" fill="#ccc"/>
-  <text x="278" y="193" fill="#333" font-size="5" font-weight="bold" font-family="Arial">Welcome!</text>
-  <rect x="278" y="197" width="75" height="3" rx="1" fill="#ddd"/>
-  <rect x="278" y="203" width="70" height="3" rx="1" fill="#ddd"/>
-  <rect x="278" y="209" width="73" height="3" rx="1" fill="#ddd"/>
-  <rect x="278" y="218" width="40" height="30" fill="#d0e8d0" stroke="#8ab88a" stroke-width="0.5"/>
-  <text x="283" y="235" fill="#336699" font-size="4">photo.jpg</text>
-  <!-- Keyboard black -->
-  <rect x="120" y="368" width="200" height="32" rx="4" fill="#2a2a2a" stroke="#404040" stroke-width="1"/>
-  <g opacity="0.4">
-    <rect x="128" y="373" width="184" height="4" rx="1" fill="#404040"/>
-    <rect x="130" y="380" width="180" height="4" rx="1" fill="#404040"/>
-    <rect x="132" y="387" width="176" height="4" rx="1" fill="#404040"/>
-    <rect x="155" y="394" width="110" height="3" rx="1" fill="#404040"/>
-  </g>
-  <!-- Optical mouse -->
-  <ellipse cx="380" cy="380" rx="14" ry="20" fill="#b0b0b8" stroke="#909098" stroke-width="1"/>
-  <rect x="377" y="368" width="6" height="6" rx="2" fill="#909098"/>
-  <ellipse cx="380" cy="376" rx="3" ry="2" fill="#808088"/>
-  <defs>
-    <linearGradient id="grad2005" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#4477aa"/>
-      <stop offset="100%" stop-color="#2255aa"/>
+const era2005 = `<svg viewBox="0 0 600 440" fill="none" xmlns="http://www.w3.org/2000/svg" class="pc-svg">
+  ${sharedDefs}
+  ${desk3d}
+
+  <!-- ============ VERTICAL TOWER (silver 3D) ============ -->
+  <g filter="url(#shadow-lg)">
+    <linearGradient id="tower2005" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#d0d0d8"/>
+      <stop offset="50%" stop-color="#b8b8c0"/>
+      <stop offset="100%" stop-color="#98989e"/>
     </linearGradient>
-  </defs>
+    <rect x="425" y="195" width="85" height="162" rx="5" fill="url(#tower2005)"/>
+    <!-- Right edge 3D -->
+    <rect x="505" y="198" width="8" height="156" fill="#808088" opacity="0.4"/>
+    <!-- Bottom edge 3D -->
+    <rect x="425" y="349" width="85" height="8" rx="0 0 5 5" fill="#707078" opacity="0.4"/>
+    <!-- Highlight strip -->
+    <rect x="428" y="195" width="2" height="155" fill="white" opacity="0.2"/>
+    <!-- DVD drive -->
+    <rect x="435" y="210" width="65" height="14" rx="2.5" fill="#a8a8b0"/>
+    <rect x="435" y="210" width="65" height="14" rx="2.5" stroke="#909098" stroke-width="0.8" fill="none"/>
+    <circle cx="467" cy="217" r="3.5" fill="#98989e"/>
+    <circle cx="467" cy="217" r="1" fill="#808088"/>
+    <rect x="478" y="215" width="12" height="4" rx="1" fill="#909098"/>
+    <!-- USB ports -->
+    <rect x="450" y="240" width="14" height="7" rx="1.5" fill="#2a2a30"/>
+    <rect x="450" y="251" width="14" height="7" rx="1.5" fill="#2a2a30"/>
+    <!-- Power button (3D) -->
+    <radialGradient id="pwrbtn05" cx="40%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#404048"/>
+      <stop offset="100%" stop-color="#1a1a20"/>
+    </radialGradient>
+    <circle cx="467" cy="335" r="9" fill="url(#pwrbtn05)" stroke="#505058" stroke-width="1.5"/>
+    <circle cx="467" cy="335" r="4" fill="#4488ff" filter="url(#glow-blue)" class="power-led"/>
+    <!-- Mesh ventilation -->
+    <g opacity="0.25" stroke="#808088" stroke-width="0.6">
+      <line x1="435" y1="280" x2="500" y2="280"/>
+      <line x1="435" y1="284" x2="500" y2="284"/>
+      <line x1="435" y1="288" x2="500" y2="288"/>
+      <line x1="435" y1="292" x2="500" y2="292"/>
+      <line x1="435" y1="296" x2="500" y2="296"/>
+      <line x1="435" y1="300" x2="500" y2="300"/>
+      <line x1="435" y1="304" x2="500" y2="304"/>
+      <line x1="435" y1="308" x2="500" y2="308"/>
+    </g>
+  </g>
+
+  <!-- ============ LCD MONITOR (early, thick silver bezel 3D) ============ -->
+  <g filter="url(#shadow-lg)">
+    <linearGradient id="lcd2005" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d8d8e0"/>
+      <stop offset="40%" stop-color="#c0c0c8"/>
+      <stop offset="100%" stop-color="#a0a0a8"/>
+    </linearGradient>
+    <rect x="95" y="105" width="295" height="205" rx="8" fill="url(#lcd2005)"/>
+    <!-- Right edge 3D -->
+    <rect x="385" y="108" width="6" height="200" fill="#909098" opacity="0.4"/>
+    <!-- Bottom edge 3D -->
+    <rect x="95" y="300" width="295" height="8" fill="#909098" opacity="0.3"/>
+    <!-- Top highlight -->
+    <rect x="98" y="105" width="289" height="4" rx="2" fill="white" opacity="0.2"/>
+    <!-- Screen bezel -->
+    <rect x="113" y="120" width="259" height="170" rx="3" fill="#0a0a14"/>
+    <!-- Screen -->
+    <rect x="117" y="124" width="251" height="162" rx="1" fill="#1a1a2e" class="screen screen-2005"/>
+    <!-- Screen glow -->
+    <rect x="95" y="105" width="295" height="205" rx="8" fill="url(#screen-glow-blue)" opacity="0.4"/>
+    <!-- Brand -->
+    <text x="242" y="300" text-anchor="middle" fill="#808088" font-size="8" font-family="Arial" font-weight="bold" letter-spacing="1">LCD 17"</text>
+    <!-- Stand (3D pillar) -->
+    <linearGradient id="stand2005" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#c0c0c8"/>
+      <stop offset="50%" stop-color="#b0b0b8"/>
+      <stop offset="100%" stop-color="#909098"/>
+    </linearGradient>
+    <rect x="215" y="310" width="55" height="30" rx="3" fill="url(#stand2005)"/>
+    <rect x="195" y="338" width="95" height="8" rx="4" fill="url(#stand2005)"/>
+    <rect x="195" y="338" width="95" height="3" rx="1.5" fill="white" opacity="0.1"/>
+  </g>
+
+  <!-- ============ SCREEN CONTENT: Dreamweaver + Firefox ============ -->
+  <!-- Dreamweaver MX -->
+  <rect x="121" y="128" width="120" height="152" fill="#2d2d3d"/>
+  <rect x="121" y="128" width="120" height="13" fill="#4a4a6a"/>
+  <text x="125" y="137" fill="#ccc" font-size="5" font-family="monospace">Dreamweaver MX</text>
+  <text x="125" y="150" fill="#cc7832" font-size="4.2" font-family="monospace">&lt;!DOCTYPE html&gt;</text>
+  <text x="125" y="157" fill="#cc7832" font-size="4.2" font-family="monospace">&lt;html&gt;</text>
+  <text x="125" y="164" fill="#cc7832" font-size="4.2" font-family="monospace">&lt;head&gt;</text>
+  <text x="125" y="171" fill="#6a9955" font-size="4.2" font-family="monospace"> &lt;style&gt;</text>
+  <text x="125" y="178" fill="#9cdcfe" font-size="4.2" font-family="monospace">  body &#123;</text>
+  <text x="125" y="185" fill="#9cdcfe" font-size="4.2" font-family="monospace">   font: Arial;</text>
+  <text x="125" y="192" fill="#ce9178" font-size="4.2" font-family="monospace">   background:</text>
+  <text x="125" y="199" fill="#ce9178" font-size="4.2" font-family="monospace">    #f0f0f0;</text>
+  <text x="125" y="206" fill="#9cdcfe" font-size="4.2" font-family="monospace">  &#125;</text>
+  <text x="125" y="213" fill="#9cdcfe" font-size="4.2" font-family="monospace">  .menu &#123;</text>
+  <text x="125" y="220" fill="#9cdcfe" font-size="4.2" font-family="monospace">   float: left;</text>
+  <text x="125" y="227" fill="#9cdcfe" font-size="4.2" font-family="monospace">   width: 200px;</text>
+  <text x="125" y="234" fill="#9cdcfe" font-size="4.2" font-family="monospace">  &#125;</text>
+  <!-- Properties panel -->
+  <rect x="121" y="252" width="120" height="28" fill="#3a3a4a"/>
+  <text x="125" y="262" fill="#999" font-size="3.8" font-family="Arial">Properties</text>
+  <rect x="125" y="266" width="45" height="6" rx="1" fill="#4a4a5a"/>
+  <rect x="175" y="266" width="45" height="6" rx="1" fill="#4a4a5a"/>
+
+  <!-- Firefox browser -->
+  <rect x="245" y="128" width="119" height="152" fill="#f0f0f0"/>
+  <linearGradient id="ff-bar" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#ff8020"/>
+    <stop offset="100%" stop-color="#cc5500"/>
+  </linearGradient>
+  <rect x="245" y="128" width="119" height="13" fill="url(#ff-bar)" rx="1 1 0 0"/>
+  <text x="249" y="137" fill="white" font-size="5" font-family="Arial" font-weight="bold">Firefox</text>
+  <rect x="245" y="141" width="119" height="10" fill="#eee" stroke="#ccc" stroke-width="0.3"/>
+  <rect x="249" y="143" width="80" height="6" rx="2" fill="white" stroke="#ccc" stroke-width="0.3"/>
+  <rect x="245" y="151" width="119" height="129" fill="white"/>
+  <!-- Header gradient -->
+  <linearGradient id="grad2005" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#4477aa"/>
+    <stop offset="100%" stop-color="#2255aa"/>
+  </linearGradient>
+  <rect x="245" y="151" width="119" height="22" fill="url(#grad2005)"/>
+  <text x="255" y="166" fill="white" font-size="9" font-weight="bold" font-family="Arial">MyBlog</text>
+  <!-- Nav bar -->
+  <rect x="245" y="173" width="119" height="10" fill="#336699"/>
+  <text x="252" y="181" fill="white" font-size="3.8" font-family="Arial">Home | About | Gallery | Links</text>
+  <!-- Sidebar -->
+  <rect x="247" y="186" width="30" height="85" fill="#e8e8f0"/>
+  <text x="250" y="195" fill="#336699" font-size="4" font-family="Arial">Menu</text>
+  <rect x="250" y="199" width="24" height="4" rx="1" fill="#ccc"/>
+  <rect x="250" y="206" width="24" height="4" rx="1" fill="#ccc"/>
+  <rect x="250" y="213" width="24" height="4" rx="1" fill="#ccc"/>
+  <!-- Content -->
+  <text x="282" y="196" fill="#333" font-size="5.5" font-weight="bold" font-family="Arial">Welcome!</text>
+  <rect x="282" y="200" width="75" height="3" rx="1" fill="#ddd"/>
+  <rect x="282" y="206" width="70" height="3" rx="1" fill="#ddd"/>
+  <rect x="282" y="212" width="73" height="3" rx="1" fill="#ddd"/>
+  <rect x="282" y="222" width="45" height="35" fill="#d0e8d0" stroke="#8ab88a" stroke-width="0.5"/>
+  <text x="288" y="242" fill="#336699" font-size="3.5">photo.jpg</text>
+
+  <!-- ============ KEYBOARD (black 3D) ============ -->
+  <g filter="url(#shadow-sm)">
+    <linearGradient id="kb2005" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a3a3a"/>
+      <stop offset="100%" stop-color="#1a1a1a"/>
+    </linearGradient>
+    <rect x="115" y="364" width="210" height="26" rx="4" fill="url(#kb2005)"/>
+    <rect x="115" y="386" width="210" height="4" rx="2" fill="#0a0a0a" opacity="0.5"/>
+    <g opacity="0.3">
+      <rect x="123" y="369" width="194" height="3" rx="1" fill="#444"/>
+      <rect x="125" y="375" width="190" height="3" rx="1" fill="#444"/>
+      <rect x="127" y="381" width="186" height="3" rx="1" fill="#444"/>
+    </g>
+  </g>
+
+  <!-- ============ OPTICAL MOUSE (3D silver) ============ -->
+  <g filter="url(#shadow-sm)">
+    <radialGradient id="mouse2005" cx="40%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#d0d0d8"/>
+      <stop offset="100%" stop-color="#909098"/>
+    </radialGradient>
+    <ellipse cx="390" cy="376" rx="16" ry="22" fill="url(#mouse2005)"/>
+    <ellipse cx="390" cy="376" rx="16" ry="22" stroke="#808088" stroke-width="0.8" fill="none"/>
+    <rect x="386" y="362" width="8" height="8" rx="2.5" fill="#b0b0b8" stroke="#909098" stroke-width="0.5"/>
+    <ellipse cx="390" cy="372" rx="3.5" ry="2" fill="#808088"/>
+  </g>
 </svg>`;
 
-const era2010 = `<svg viewBox="0 0 600 420" fill="none" xmlns="http://www.w3.org/2000/svg" class="pc-svg">
-  <rect x="40" y="360" width="520" height="8" rx="2" fill="#4a3f35" opacity="0.6"/>
-  <!-- Slim monitor -->
-  <rect x="95" y="120" width="320" height="195" rx="4" fill="#1a1a1a"/>
-  <rect x="95" y="120" width="320" height="195" rx="4" stroke="#333" stroke-width="1.5" fill="none"/>
-  <rect x="103" y="127" width="304" height="175" rx="1" fill="#1e1e2e" class="screen screen-2010"/>
-  <rect x="235" y="315" width="40" height="25" rx="2" fill="#2a2a2a"/>
-  <rect x="205" y="338" width="100" height="6" rx="3" fill="#1a1a1a"/>
-  <rect x="245" y="308" width="20" height="3" rx="1" fill="#333"/>
-  <!-- Small tower -->
-  <rect x="440" y="290" width="60" height="70" rx="4" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
-  <circle cx="470" cy="345" r="4" fill="#333" stroke="#444" stroke-width="0.5"/>
-  <circle cx="470" cy="345" r="2" fill="#0099ff" class="power-led"/>
-  <rect x="450" y="300" width="40" height="8" rx="1" fill="#222" stroke="#333" stroke-width="0.3"/>
+const era2010 = `<svg viewBox="0 0 600 440" fill="none" xmlns="http://www.w3.org/2000/svg" class="pc-svg">
+  ${sharedDefs}
+  ${desk3d}
+
+  <!-- ============ SLIM LCD MONITOR (3D black) ============ -->
+  <g filter="url(#shadow-lg)">
+    <linearGradient id="lcd2010" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a2a2a"/>
+      <stop offset="100%" stop-color="#111"/>
+    </linearGradient>
+    <rect x="88" y="115" width="340" height="200" rx="5" fill="url(#lcd2010)"/>
+    <rect x="88" y="305" width="340" height="8" fill="#0a0a0a" opacity="0.5"/>
+    <!-- Thin bezel highlight -->
+    <rect x="90" y="115" width="336" height="2" rx="1" fill="white" opacity="0.08"/>
+    <!-- Screen -->
+    <rect x="96" y="122" width="324" height="182" rx="2" fill="#14141e" class="screen screen-2010"/>
+    <!-- Screen glow -->
+    <rect x="88" y="115" width="340" height="200" rx="5" fill="url(#screen-glow-purple)" opacity="0.5"/>
+    <!-- Stand -->
+    <linearGradient id="stand2010" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2a2a2a"/>
+      <stop offset="50%" stop-color="#222"/>
+      <stop offset="100%" stop-color="#1a1a1a"/>
+    </linearGradient>
+    <rect x="230" y="315" width="56" height="25" rx="3" fill="url(#stand2010)"/>
+    <rect x="200" y="338" width="116" height="7" rx="3.5" fill="url(#stand2010)"/>
+    <rect x="200" y="338" width="116" height="2" rx="1" fill="white" opacity="0.06"/>
+    <!-- Brand dot -->
+    <circle cx="258" cy="308" r="2" fill="#333"/>
+  </g>
+
+  <!-- ============ MINI TOWER (3D) ============ -->
+  <g filter="url(#shadow-sm)">
+    <linearGradient id="tower2010" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2a2a2a"/>
+      <stop offset="100%" stop-color="#151515"/>
+    </linearGradient>
+    <rect x="450" y="280" width="65" height="75" rx="4" fill="url(#tower2010)"/>
+    <rect x="510" y="283" width="6" height="70" fill="#0a0a0a" opacity="0.4"/>
+    <circle cx="482" cy="340" r="4.5" fill="#222" stroke="#333" stroke-width="0.8"/>
+    <circle cx="482" cy="340" r="2.5" fill="#0099ff" filter="url(#glow-blue)" class="power-led"/>
+    <rect x="458" y="292" width="48" height="9" rx="1.5" fill="#1a1a1a" stroke="#333" stroke-width="0.3"/>
+  </g>
+
+  <!-- ============ SCREEN: Sublime + Chrome ============ -->
   <!-- Sublime Text -->
-  <rect x="107" y="131" width="145" height="165" fill="#272822"/>
-  <rect x="107" y="131" width="145" height="10" fill="#3e3d32"/>
-  <text x="111" y="139" fill="#a6e22e" font-size="4.5" font-family="monospace">index.html - Sublime</text>
-  <g fill="#75715e" font-size="4" font-family="monospace">
-    <text x="111" y="149">1</text><text x="111" y="155">2</text><text x="111" y="161">3</text>
-    <text x="111" y="167">4</text><text x="111" y="173">5</text><text x="111" y="179">6</text>
-    <text x="111" y="185">7</text><text x="111" y="191">8</text><text x="111" y="197">9</text>
+  <rect x="100" y="126" width="155" height="172" fill="#272822"/>
+  <rect x="100" y="126" width="155" height="11" fill="#3e3d32"/>
+  <text x="104" y="134" fill="#a6e22e" font-size="4.5" font-family="monospace">index.html - Sublime Text</text>
+  <g fill="#75715e" font-size="3.8" font-family="monospace">
+    <text x="104" y="145">1</text><text x="104" y="152">2</text><text x="104" y="159">3</text>
+    <text x="104" y="166">4</text><text x="104" y="173">5</text><text x="104" y="180">6</text>
+    <text x="104" y="187">7</text><text x="104" y="194">8</text><text x="104" y="201">9</text>
   </g>
-  <text x="122" y="149" fill="#f92672" font-size="4.5" font-family="monospace">&lt;div class="hero"&gt;</text>
-  <text x="122" y="155" fill="#f8f8f2" font-size="4.5" font-family="monospace"> $(.slider).animate(</text>
-  <text x="122" y="161" fill="#f8f8f2" font-size="4.5" font-family="monospace">   opacity: 1,</text>
-  <text x="122" y="167" fill="#f8f8f2" font-size="4.5" font-family="monospace">   left: +=50</text>
-  <text x="122" y="173" fill="#f8f8f2" font-size="4.5" font-family="monospace"> , 500);</text>
-  <text x="122" y="179" fill="#75715e" font-size="4.5" font-family="monospace"> // jQuery magic</text>
-  <text x="122" y="185" fill="#f92672" font-size="4.5" font-family="monospace"> border-radius:</text>
-  <text x="122" y="191" fill="#ae81ff" font-size="4.5" font-family="monospace">   12px;</text>
-  <text x="122" y="197" fill="#f92672" font-size="4.5" font-family="monospace"> box-shadow:</text>
+  <text x="116" y="145" fill="#f92672" font-size="4.3" font-family="monospace">&lt;div class="hero"&gt;</text>
+  <text x="116" y="152" fill="#f8f8f2" font-size="4.3" font-family="monospace"> $(.slider).animate(</text>
+  <text x="116" y="159" fill="#f8f8f2" font-size="4.3" font-family="monospace">   opacity: 1,</text>
+  <text x="116" y="166" fill="#f8f8f2" font-size="4.3" font-family="monospace">   left: +=50</text>
+  <text x="116" y="173" fill="#f8f8f2" font-size="4.3" font-family="monospace"> , 500);</text>
+  <text x="116" y="180" fill="#75715e" font-size="4.3" font-family="monospace"> // jQuery magic</text>
+  <text x="116" y="187" fill="#f92672" font-size="4.3" font-family="monospace"> border-radius: 12px;</text>
+  <text x="116" y="194" fill="#f92672" font-size="4.3" font-family="monospace"> box-shadow:</text>
+  <text x="116" y="201" fill="#ae81ff" font-size="4.3" font-family="monospace">  0 4px 12px rgba(</text>
+  <!-- Minimap -->
+  <rect x="240" y="137" width="12" height="155" fill="#2d2d22" opacity="0.6"/>
+  <rect x="240" y="137" width="12" height="20" fill="rgba(255,255,255,0.05)"/>
+
   <!-- Chrome -->
-  <rect x="256" y="131" width="147" height="165" fill="#fff"/>
-  <rect x="256" y="131" width="147" height="10" fill="#dee1e6"/>
-  <rect x="258" y="132" width="50" height="8" rx="2" fill="#fff"/>
-  <text x="262" y="138" fill="#333" font-size="4" font-family="Arial">MyApp</text>
-  <rect x="256" y="141" width="147" height="10" fill="#f1f3f4"/>
-  <rect x="260" y="143" width="100" height="6" rx="3" fill="white" stroke="#ddd" stroke-width="0.3"/>
-  <text x="264" y="148" fill="#555" font-size="4" font-family="Arial">myapp.com</text>
-  <rect x="256" y="151" width="147" height="145" fill="white"/>
-  <rect x="256" y="151" width="147" height="50" rx="0" fill="url(#grad2010)"/>
-  <text x="280" y="172" fill="white" font-size="9" font-weight="bold" font-family="Arial">MyApp 2.0</text>
-  <text x="276" y="183" fill="rgba(255,255,255,0.8)" font-size="4.5" font-family="Arial">The best way to share your life</text>
-  <rect x="280" y="188" width="40" height="10" rx="5" fill="#ff6600"/>
-  <text x="284" y="195" fill="white" font-size="5" font-weight="bold" font-family="Arial">Sign Up</text>
-  <rect x="262" y="207" width="42" height="35" rx="4" fill="#f8f8f8" stroke="#eee" stroke-width="0.5"/>
-  <rect x="310" y="207" width="42" height="35" rx="4" fill="#f8f8f8" stroke="#eee" stroke-width="0.5"/>
-  <rect x="358" y="207" width="42" height="35" rx="4" fill="#f8f8f8" stroke="#eee" stroke-width="0.5"/>
-  <rect x="268" y="212" width="30" height="12" rx="2" fill="#e0e8f0"/>
-  <rect x="316" y="212" width="30" height="12" rx="2" fill="#e8e0f0"/>
-  <rect x="364" y="212" width="30" height="12" rx="2" fill="#e0f0e0"/>
-  <!-- Slim keyboard -->
-  <rect x="130" y="370" width="220" height="25" rx="3" fill="#e0e0e0" stroke="#ccc" stroke-width="1"/>
-  <g opacity="0.3">
-    <rect x="138" y="374" width="204" height="3" rx="1" fill="#bbb"/>
-    <rect x="140" y="380" width="200" height="3" rx="1" fill="#bbb"/>
-    <rect x="142" y="386" width="196" height="3" rx="1" fill="#bbb"/>
-  </g>
-  <!-- Mouse -->
-  <path d="M385 368 Q385 360 395 358 Q405 360 405 368 L405 392 Q405 398 395 400 Q385 398 385 392 Z" fill="#1a1a1a" stroke="#333" stroke-width="0.5"/>
-  <rect x="392" y="365" width="6" height="6" rx="2" fill="#333"/>
-  <defs>
-    <linearGradient id="grad2010" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#667eea"/>
-      <stop offset="100%" stop-color="#764ba2"/>
+  <rect x="259" y="126" width="157" height="172" fill="#fff"/>
+  <rect x="259" y="126" width="157" height="11" fill="#dee1e6"/>
+  <rect x="261" y="127" width="50" height="9" rx="2" fill="#fff"/>
+  <text x="265" y="134" fill="#333" font-size="4" font-family="Arial">MyApp</text>
+  <rect x="259" y="137" width="157" height="10" fill="#f1f3f4"/>
+  <rect x="263" y="139" width="100" height="6" rx="3" fill="white" stroke="#ddd" stroke-width="0.3"/>
+  <text x="267" y="144" fill="#555" font-size="3.8" font-family="Arial">myapp.com</text>
+  <rect x="259" y="147" width="157" height="151" fill="white"/>
+  <!-- Hero gradient -->
+  <linearGradient id="grad2010" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#667eea"/>
+    <stop offset="100%" stop-color="#764ba2"/>
+  </linearGradient>
+  <rect x="259" y="147" width="157" height="55" fill="url(#grad2010)"/>
+  <text x="285" y="172" fill="white" font-size="10" font-weight="bold" font-family="Arial">MyApp 2.0</text>
+  <text x="275" y="184" fill="rgba(255,255,255,0.8)" font-size="4.5" font-family="Arial">The best way to share your life</text>
+  <rect x="285" y="190" width="45" height="10" rx="5" fill="#ff6600"/>
+  <text x="290" y="198" fill="white" font-size="5" font-weight="bold" font-family="Arial">Sign Up</text>
+  <!-- Web 2.0 cards -->
+  <rect x="266" y="210" width="46" height="38" rx="5" fill="#f8f8f8" stroke="#eee" stroke-width="0.5"/>
+  <rect x="318" y="210" width="46" height="38" rx="5" fill="#f8f8f8" stroke="#eee" stroke-width="0.5"/>
+  <rect x="370" y="210" width="42" height="38" rx="5" fill="#f8f8f8" stroke="#eee" stroke-width="0.5"/>
+  <rect x="272" y="215" width="34" height="14" rx="3" fill="#e0e8f0"/>
+  <rect x="324" y="215" width="34" height="14" rx="3" fill="#e8e0f0"/>
+  <rect x="376" y="215" width="30" height="14" rx="3" fill="#e0f0e0"/>
+
+  <!-- ============ SLIM KEYBOARD ============ -->
+  <g filter="url(#shadow-sm)">
+    <linearGradient id="kb2010" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f0f0f0"/>
+      <stop offset="100%" stop-color="#ccc"/>
     </linearGradient>
-  </defs>
+    <rect x="125" y="366" width="230" height="20" rx="4" fill="url(#kb2010)"/>
+    <rect x="125" y="383" width="230" height="3" rx="1.5" fill="#bbb" opacity="0.4"/>
+  </g>
+
+  <!-- ============ MOUSE ============ -->
+  <g filter="url(#shadow-sm)">
+    <radialGradient id="mouse2010" cx="45%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#2a2a2a"/>
+      <stop offset="100%" stop-color="#0a0a0a"/>
+    </radialGradient>
+    <path d="M395 363 Q395 355 407 352 Q419 355 419 363 L419 392 Q419 400 407 403 Q395 400 395 392 Z" fill="url(#mouse2010)"/>
+    <path d="M395 363 Q395 355 407 352 Q419 355 419 363 L419 392 Q419 400 407 403 Q395 400 395 392 Z" stroke="#333" stroke-width="0.5" fill="none"/>
+    <rect x="404" y="358" width="6" height="7" rx="2" fill="#222"/>
+  </g>
 </svg>`;
 
-const era2015 = `<svg viewBox="0 0 600 420" fill="none" xmlns="http://www.w3.org/2000/svg" class="pc-svg">
-  <rect x="40" y="370" width="520" height="8" rx="2" fill="#4a3f35" opacity="0.6"/>
-  <!-- MacBook screen -->
-  <rect x="110" y="90" width="380" height="240" rx="8" fill="#e0e0e0"/>
-  <rect x="110" y="90" width="380" height="240" rx="8" stroke="#b0b0b0" stroke-width="1" fill="none"/>
-  <rect x="118" y="97" width="364" height="220" rx="2" fill="#1e1e2e" class="screen screen-2015"/>
-  <circle cx="300" cy="93" r="1.5" fill="#333"/>
-  <!-- MacBook base -->
-  <path d="M90 330 L510 330 L520 358 Q520 365 513 365 L87 365 Q80 365 80 358 Z" fill="#d0d0d0" stroke="#b0b0b0" stroke-width="1"/>
-  <rect x="260" y="338" width="80" height="22" rx="3" fill="#c8c8c8" stroke="#b0b0b0" stroke-width="0.5"/>
+const era2015 = `<svg viewBox="0 0 600 440" fill="none" xmlns="http://www.w3.org/2000/svg" class="pc-svg">
+  ${sharedDefs}
+  ${desk3d}
+
+  <!-- ============ MACBOOK (3D aluminum) ============ -->
+  <g filter="url(#shadow-lg)">
+    <!-- Screen lid -->
+    <linearGradient id="mac-lid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8e8e8"/>
+      <stop offset="30%" stop-color="#d8d8d8"/>
+      <stop offset="100%" stop-color="#b8b8b8"/>
+    </linearGradient>
+    <rect x="105" y="82" width="390" height="250" rx="10" fill="url(#mac-lid)"/>
+    <!-- Edge highlight -->
+    <rect x="107" y="82" width="386" height="3" rx="1.5" fill="white" opacity="0.3"/>
+    <!-- Screen -->
+    <rect x="115" y="92" width="370" height="228" rx="3" fill="#111" class="screen screen-2015"/>
+    <!-- Camera -->
+    <circle cx="300" cy="88" r="1.8" fill="#222" stroke="#333" stroke-width="0.5"/>
+    <!-- Green camera LED -->
+    <circle cx="305" cy="88" r="0.8" fill="#0f0" opacity="0.5"/>
+    <!-- Screen glow -->
+    <rect x="105" y="82" width="390" height="250" rx="10" fill="url(#screen-glow-purple)" opacity="0.3"/>
+  </g>
+
+  <!-- MacBook base (3D wedge) -->
+  <g filter="url(#shadow-sm)">
+    <linearGradient id="mac-base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0d0d0"/>
+      <stop offset="100%" stop-color="#aaa"/>
+    </linearGradient>
+    <path d="M85 332 L515 332 L525 355 Q525 360 520 360 L80 360 Q75 360 75 355 Z" fill="url(#mac-base)"/>
+    <!-- Top edge reflection -->
+    <line x1="90" y1="333" x2="510" y2="333" stroke="white" stroke-width="1" opacity="0.3"/>
+    <!-- Trackpad -->
+    <rect x="255" y="338" width="90" height="18" rx="3" fill="#c0c0c0" stroke="#aaa" stroke-width="0.5"/>
+  </g>
+
+  <!-- ============ SCREEN: VS Code + Material Design ============ -->
   <!-- VS Code -->
-  <rect x="122" y="101" width="170" height="210" fill="#1e1e1e"/>
-  <rect x="122" y="101" width="16" height="210" fill="#252526"/>
-  <rect x="125" y="106" width="10" height="10" rx="1" fill="#555"/>
-  <rect x="125" y="120" width="10" height="10" rx="1" fill="#555"/>
-  <rect x="125" y="134" width="10" height="10" rx="1" fill="#555"/>
-  <rect x="138" y="101" width="50" height="210" fill="#252526"/>
-  <text x="141" y="110" fill="#ccc" font-size="4" font-family="monospace">EXPLORER</text>
-  <text x="143" y="120" fill="#c8c864" font-size="4" font-family="monospace">src/</text>
-  <text x="147" y="128" fill="#ccc" font-size="4" font-family="monospace">App.jsx</text>
-  <text x="147" y="136" fill="#ccc" font-size="4" font-family="monospace">index.js</text>
-  <text x="147" y="144" fill="#4fc1ff" font-size="4" font-family="monospace">style.css</text>
-  <rect x="188" y="101" width="104" height="10" fill="#2d2d2d"/>
-  <rect x="188" y="101" width="42" height="10" fill="#1e1e1e"/>
-  <text x="192" y="109" fill="#ccc" font-size="4" font-family="monospace">App.jsx</text>
+  <rect x="119" y="96" width="175" height="218" fill="#1e1e1e"/>
+  <!-- Activity bar -->
+  <rect x="119" y="96" width="16" height="218" fill="#252526"/>
+  <rect x="122" y="101" width="10" height="10" rx="1.5" fill="#555"/>
+  <rect x="122" y="115" width="10" height="10" rx="1.5" fill="#555"/>
+  <rect x="122" y="129" width="10" height="10" rx="1.5" fill="#555"/>
+  <!-- File tree -->
+  <rect x="135" y="96" width="52" height="218" fill="#252526"/>
+  <text x="138" y="105" fill="#ccc" font-size="3.8" font-family="monospace">EXPLORER</text>
+  <text x="140" y="115" fill="#c8c864" font-size="3.8" font-family="monospace">src/</text>
+  <text x="144" y="123" fill="#ccc" font-size="3.8" font-family="monospace">App.jsx</text>
+  <text x="144" y="131" fill="#ccc" font-size="3.8" font-family="monospace">index.js</text>
+  <text x="144" y="139" fill="#4fc1ff" font-size="3.8" font-family="monospace">style.css</text>
+  <!-- Tab bar -->
+  <rect x="187" y="96" width="107" height="10" fill="#2d2d2d"/>
+  <rect x="187" y="96" width="42" height="10" fill="#1e1e1e"/>
+  <text x="191" y="104" fill="#ccc" font-size="3.8" font-family="monospace">App.jsx</text>
   <!-- React code -->
-  <g font-size="4.2" font-family="monospace">
-    <text x="192" y="120" fill="#c586c0">import</text><text x="215" y="120" fill="#9cdcfe"> React</text><text x="235" y="120" fill="#c586c0"> from</text><text x="251" y="120" fill="#ce9178"> 'react'</text>
-    <text x="192" y="127" fill="#c586c0">import</text><text x="215" y="127" fill="#9cdcfe"> './App.css'</text>
-    <text x="192" y="136" fill="#569cd6">const</text><text x="210" y="136" fill="#dcdcaa"> App</text><text x="224" y="136" fill="#f8f8f2"> = () =&gt;</text>
-    <text x="192" y="143" fill="#c586c0">  return (</text>
-    <text x="192" y="150" fill="#808080">    &lt;div className="app"&gt;</text>
-    <text x="192" y="157" fill="#808080">      &lt;Header /&gt;</text>
-    <text x="192" y="164" fill="#808080">      &lt;Hero</text>
-    <text x="192" y="171" fill="#9cdcfe">        title="Build"</text>
-    <text x="192" y="178" fill="#808080">      /&gt;</text>
-    <text x="192" y="185" fill="#808080">      &lt;Cards</text>
-    <text x="192" y="192" fill="#9cdcfe">        data=...</text>
-    <text x="192" y="199" fill="#808080">      /&gt;</text>
+  <g font-size="4" font-family="monospace">
+    <text x="191" y="116" fill="#c586c0">import</text><text x="214" y="116" fill="#9cdcfe"> React</text><text x="236" y="116" fill="#c586c0"> from</text><text x="254" y="116" fill="#ce9178"> 'react'</text>
+    <text x="191" y="124" fill="#c586c0">import</text><text x="214" y="124" fill="#9cdcfe"> './App.css'</text>
+    <text x="191" y="134" fill="#569cd6">const</text><text x="210" y="134" fill="#dcdcaa"> App</text><text x="225" y="134" fill="#f8f8f2"> = () =&gt;</text>
+    <text x="191" y="142" fill="#c586c0">  return (</text>
+    <text x="191" y="150" fill="#808080">    &lt;div className="app"&gt;</text>
+    <text x="191" y="158" fill="#808080">      &lt;Header /&gt;</text>
+    <text x="191" y="166" fill="#808080">      &lt;Hero</text>
+    <text x="191" y="174" fill="#9cdcfe">        title="Build"</text>
+    <text x="191" y="182" fill="#808080">      /&gt;</text>
+    <text x="191" y="190" fill="#808080">      &lt;Cards</text>
+    <text x="191" y="198" fill="#9cdcfe">        data=...</text>
+    <text x="191" y="206" fill="#808080">      /&gt;</text>
   </g>
   <!-- Terminal -->
-  <rect x="122" y="283" width="166" height="28" fill="#1a1a2e"/>
-  <text x="126" y="294" fill="#0f0" font-size="4" font-family="monospace">$ npm start</text>
-  <text x="126" y="302" fill="#888" font-size="4" font-family="monospace">Compiled successfully!</text>
+  <rect x="119" y="286" width="175" height="28" fill="#1a1a2e"/>
+  <text x="123" y="297" fill="#0f0" font-size="3.8" font-family="monospace">$ npm start</text>
+  <text x="123" y="305" fill="#888" font-size="3.8" font-family="monospace">Compiled successfully!</text>
+
   <!-- Chrome Material Design -->
-  <rect x="296" y="101" width="182" height="210" fill="#fafafa"/>
-  <rect x="296" y="101" width="182" height="10" fill="#dee1e6"/>
-  <rect x="298" y="102" width="40" height="8" rx="2" fill="white"/>
-  <text x="302" y="108" fill="#333" font-size="3.5" font-family="Arial">MyApp</text>
-  <rect x="296" y="111" width="182" height="8" fill="#f1f3f4"/>
-  <rect x="300" y="113" width="120" height="4" rx="2" fill="white" stroke="#ddd" stroke-width="0.3"/>
-  <rect x="296" y="119" width="182" height="192" fill="white"/>
-  <rect x="296" y="119" width="182" height="22" fill="#6200ee"/>
-  <text x="320" y="134" fill="white" font-size="7" font-weight="bold" font-family="Arial">Dashboard</text>
-  <circle cx="460" cy="295" r="10" fill="#03dac6"/>
-  <text x="457" y="299" fill="white" font-size="12" font-weight="bold">+</text>
-  <rect x="302" y="148" width="80" height="55" rx="4" fill="white" stroke="#e0e0e0" stroke-width="0.5"/>
-  <rect x="302" y="148" width="80" height="25" rx="4" fill="#bbdefb"/>
-  <text x="308" y="184" fill="#333" font-size="4.5" font-weight="bold" font-family="Arial">Analytics</text>
-  <text x="308" y="191" fill="#777" font-size="3.5" font-family="Arial">12.5k visitors</text>
-  <rect x="390" y="148" width="80" height="55" rx="4" fill="white" stroke="#e0e0e0" stroke-width="0.5"/>
-  <rect x="390" y="148" width="80" height="25" rx="4" fill="#c8e6c9"/>
-  <text x="396" y="184" fill="#333" font-size="4.5" font-weight="bold" font-family="Arial">Revenue</text>
-  <text x="396" y="191" fill="#777" font-size="3.5" font-family="Arial">$24,500</text>
-  <rect x="302" y="210" width="168" height="60" rx="4" fill="white" stroke="#e0e0e0" stroke-width="0.5"/>
-  <polyline points="310,258 325,250 340,255 355,240 370,245 385,230 400,235 415,220 430,225 445,215 460,210" fill="none" stroke="#6200ee" stroke-width="1.5"/>
-  <text x="308" y="218" fill="#333" font-size="4" font-weight="bold" font-family="Arial">Growth</text>
+  <rect x="298" y="96" width="183" height="218" fill="#fafafa"/>
+  <rect x="298" y="96" width="183" height="10" fill="#dee1e6"/>
+  <rect x="300" y="97" width="40" height="8" rx="2" fill="white"/>
+  <text x="304" y="103" fill="#333" font-size="3.5" font-family="Arial">MyApp</text>
+  <rect x="298" y="106" width="183" height="8" fill="#f1f3f4"/>
+  <rect x="302" y="108" width="120" height="4" rx="2" fill="white" stroke="#ddd" stroke-width="0.3"/>
+  <rect x="298" y="114" width="183" height="200" fill="white"/>
+  <!-- App bar -->
+  <rect x="298" y="114" width="183" height="24" fill="#6200ee"/>
+  <text x="320" y="130" fill="white" font-size="8" font-weight="bold" font-family="Arial">Dashboard</text>
+  <!-- FAB -->
+  <circle cx="465" cy="298" r="11" fill="#03dac6"/>
+  <text x="461" y="302" fill="white" font-size="13" font-weight="bold">+</text>
+  <!-- Cards -->
+  <rect x="305" y="146" width="82" height="56" rx="5" fill="white" stroke="#e0e0e0" stroke-width="0.5"/>
+  <rect x="305" y="146" width="82" height="27" rx="5" fill="#bbdefb"/>
+  <text x="311" y="185" fill="#333" font-size="4.5" font-weight="bold" font-family="Arial">Analytics</text>
+  <text x="311" y="193" fill="#777" font-size="3.5" font-family="Arial">12.5k visitors</text>
+  <rect x="394" y="146" width="82" height="56" rx="5" fill="white" stroke="#e0e0e0" stroke-width="0.5"/>
+  <rect x="394" y="146" width="82" height="27" rx="5" fill="#c8e6c9"/>
+  <text x="400" y="185" fill="#333" font-size="4.5" font-weight="bold" font-family="Arial">Revenue</text>
+  <text x="400" y="193" fill="#777" font-size="3.5" font-family="Arial">$24,500</text>
+  <!-- Chart -->
+  <rect x="305" y="210" width="171" height="65" rx="5" fill="white" stroke="#e0e0e0" stroke-width="0.5"/>
+  <polyline points="312,262 330,252 348,257 366,240 384,245 402,228 420,233 438,218 456,222 468,210" fill="none" stroke="#6200ee" stroke-width="2"/>
+  <text x="311" y="220" fill="#333" font-size="4.2" font-weight="bold" font-family="Arial">Growth</text>
 </svg>`;
 
-const era2020 = `<svg viewBox="0 0 600 420" fill="none" xmlns="http://www.w3.org/2000/svg" class="pc-svg">
-  <rect x="40" y="365" width="520" height="8" rx="2" fill="#4a3f35" opacity="0.6"/>
-  <!-- Ultrawide monitor -->
-  <rect x="60" y="100" width="480" height="230" rx="3" fill="#0a0a0a"/>
-  <rect x="60" y="100" width="480" height="230" rx="3" stroke="#222" stroke-width="1" fill="none"/>
-  <rect x="65" y="104" width="470" height="218" rx="1" fill="#1e1e2e" class="screen screen-2020"/>
-  <rect x="280" y="330" width="40" height="18" rx="1" fill="#1a1a1a"/>
-  <rect x="250" y="346" width="100" height="4" rx="2" fill="#0a0a0a"/>
-  <!-- VS Code -->
-  <rect x="69" y="108" width="230" height="210" fill="#1e1e1e"/>
-  <rect x="69" y="108" width="230" height="8" fill="#323233"/>
-  <circle cx="75" cy="112" r="2" fill="#ff5f56"/>
-  <circle cx="82" cy="112" r="2" fill="#ffbd2e"/>
-  <circle cx="89" cy="112" r="2" fill="#27c93f"/>
-  <rect x="69" y="116" width="14" height="202" fill="#252526"/>
-  <rect x="83" y="116" width="45" height="202" fill="#252526"/>
-  <text x="86" y="124" fill="#ccc" font-size="3.5" font-family="monospace">EXPLORER</text>
-  <text x="88" y="132" fill="#c8c864" font-size="3.5" font-family="monospace">components/</text>
-  <text x="92" y="139" fill="#4fc1ff" font-size="3.5" font-family="monospace">Hero.tsx</text>
-  <text x="92" y="146" fill="#4fc1ff" font-size="3.5" font-family="monospace">Nav.tsx</text>
-  <text x="88" y="153" fill="#c8c864" font-size="3.5" font-family="monospace">pages/</text>
-  <text x="92" y="160" fill="#4fc1ff" font-size="3.5" font-family="monospace">index.tsx</text>
-  <rect x="128" y="116" width="171" height="8" fill="#2d2d2d"/>
-  <rect x="128" y="116" width="50" height="8" fill="#1e1e1e"/>
-  <text x="132" y="122" fill="#ccc" font-size="3.5" font-family="monospace">Hero.tsx</text>
-  <!-- TypeScript + Tailwind -->
-  <g font-size="3.8" font-family="monospace">
-    <text x="132" y="132" fill="#c586c0">import</text><text x="153" y="132" fill="#f8f8f2"> motion </text><text x="180" y="132" fill="#c586c0">from</text>
-    <text x="132" y="139" fill="#ce9178">  'framer-motion'</text>
-    <text x="132" y="148" fill="#569cd6">interface</text><text x="162" y="148" fill="#4ec9b0"> HeroProps</text>
-    <text x="132" y="155" fill="#9cdcfe">  title: string</text>
-    <text x="132" y="162" fill="#9cdcfe">  subtitle?: string</text>
-    <text x="132" y="178" fill="#c586c0">export</text><text x="152" y="178" fill="#569cd6"> const</text><text x="170" y="178" fill="#dcdcaa"> Hero</text>
-    <text x="132" y="185" fill="#9cdcfe">  title, subtitle</text>
-    <text x="132" y="199" fill="#808080">  &lt;motion.section</text>
-    <text x="132" y="206" fill="#9cdcfe">    className="min-h-screen</text>
-    <text x="132" y="213" fill="#ce9178">      flex items-center</text>
-    <text x="132" y="220" fill="#ce9178">      bg-gradient-to-b"</text>
-    <text x="132" y="227" fill="#9cdcfe">    initial=</text><text x="165" y="227" fill="#f8f8f2"> opacity: 0 </text>
-    <text x="132" y="234" fill="#9cdcfe">    animate=</text><text x="165" y="234" fill="#f8f8f2"> opacity: 1 </text>
-  </g>
-  <!-- Terminal -->
-  <rect x="128" y="270" width="171" height="48" fill="#1a1a2e"/>
-  <rect x="128" y="270" width="171" height="8" fill="#252536"/>
-  <text x="132" y="276" fill="#888" font-size="3.5" font-family="monospace">TERMINAL</text>
-  <text x="132" y="286" fill="#0f0" font-size="3.5" font-family="monospace">$ npx next dev --turbo</text>
-  <text x="132" y="293" fill="#4fc1ff" font-size="3.5" font-family="monospace">ready in 180ms</text>
-  <text x="132" y="300" fill="#888" font-size="3.5" font-family="monospace">localhost:3000</text>
-  <!-- Modern website -->
-  <rect x="303" y="108" width="228" height="210" fill="#0f0f0f"/>
-  <rect x="303" y="108" width="228" height="8" fill="#1a1a1a"/>
-  <circle cx="309" cy="112" r="1.5" fill="#ff5f56"/>
-  <circle cx="315" cy="112" r="1.5" fill="#ffbd2e"/>
-  <circle cx="321" cy="112" r="1.5" fill="#27c93f"/>
-  <rect x="340" y="110" width="120" height="4" rx="2" fill="#2a2a2a"/>
-  <rect x="303" y="116" width="228" height="202" fill="#0a0a0a"/>
-  <text x="340" y="155" fill="white" font-size="12" font-weight="bold" font-family="Arial">Build</text>
-  <text x="340" y="170" fill="white" font-size="12" font-weight="bold" font-family="Arial">Faster.</text>
-  <text x="340" y="185" fill="#888" font-size="5" font-family="Arial">The modern platform for teams</text>
-  <rect x="340" y="192" width="60" height="14" rx="7" fill="url(#grad2020)"/>
-  <text x="349" y="202" fill="white" font-size="5" font-weight="bold" font-family="Arial">Get Started</text>
-  <rect x="408" y="192" width="50" height="14" rx="7" fill="none" stroke="#444" stroke-width="0.5"/>
-  <text x="417" y="202" fill="#ccc" font-size="5" font-family="Arial">Docs</text>
-  <rect x="316" y="220" width="65" height="40" rx="6" fill="#1a1a2e" stroke="#2a2a3e" stroke-width="0.5"/>
-  <rect x="388" y="220" width="65" height="40" rx="6" fill="#1a1a2e" stroke="#2a2a3e" stroke-width="0.5"/>
-  <rect x="460" y="220" width="65" height="40" rx="6" fill="#1a1a2e" stroke="#2a2a3e" stroke-width="0.5"/>
-  <text x="330" y="240" fill="white" font-size="7" font-weight="bold">10x</text>
-  <text x="330" y="248" fill="#888" font-size="3.5">Faster builds</text>
-  <text x="400" y="240" fill="white" font-size="7" font-weight="bold">99%</text>
-  <text x="400" y="248" fill="#888" font-size="3.5">Uptime</text>
-  <text x="472" y="240" fill="white" font-size="7" font-weight="bold">50k</text>
-  <text x="472" y="248" fill="#888" font-size="3.5">Users</text>
-  <rect x="316" y="268" width="209" height="40" rx="6" fill="#111" stroke="#2a2a3e" stroke-width="0.5"/>
-  <text x="322" y="280" fill="#888" font-size="3.5" font-family="monospace">npx create-next-app@latest</text>
-  <text x="322" y="290" fill="#4fc1ff" font-size="3.5" font-family="monospace">TypeScript, Tailwind, App Router</text>
-  <text x="322" y="300" fill="#27c93f" font-size="3.5" font-family="monospace">Done in 12s</text>
-  <!-- Wireless keyboard -->
-  <rect x="160" y="374" width="200" height="18" rx="6" fill="#e0e0e0" stroke="#ccc" stroke-width="0.5"/>
-  <!-- Trackpad -->
-  <rect x="400" y="374" width="80" height="50" rx="6" fill="#e0e0e0" stroke="#ccc" stroke-width="0.5"/>
-  <defs>
-    <linearGradient id="grad2020" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#7c3aed"/>
-      <stop offset="100%" stop-color="#2563eb"/>
+const era2020 = `<svg viewBox="0 0 600 440" fill="none" xmlns="http://www.w3.org/2000/svg" class="pc-svg">
+  ${sharedDefs}
+  ${desk3d}
+
+  <!-- ============ ULTRAWIDE MONITOR (3D near-frameless) ============ -->
+  <g filter="url(#shadow-lg)">
+    <linearGradient id="uw2020" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1a1a"/>
+      <stop offset="100%" stop-color="#050505"/>
     </linearGradient>
-  </defs>
+    <rect x="50" y="95" width="500" height="235" rx="5" fill="url(#uw2020)"/>
+    <!-- Top bezel highlight -->
+    <rect x="52" y="95" width="496" height="1.5" rx="0.75" fill="white" opacity="0.06"/>
+    <!-- Screen -->
+    <rect x="55" y="100" width="490" height="222" rx="2" fill="#0d1117" class="screen screen-2020"/>
+    <!-- Screen glow -->
+    <rect x="50" y="95" width="500" height="235" rx="5" fill="url(#screen-glow-purple)" opacity="0.4"/>
+    <!-- Chin -->
+    <rect x="50" y="322" width="500" height="5" fill="#0a0a0a"/>
+    <!-- Stand -->
+    <linearGradient id="stand2020" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#222"/>
+      <stop offset="50%" stop-color="#1a1a1a"/>
+      <stop offset="100%" stop-color="#111"/>
+    </linearGradient>
+    <rect x="275" y="327" width="50" height="16" rx="2" fill="url(#stand2020)"/>
+    <rect x="240" y="341" width="120" height="5" rx="2.5" fill="url(#stand2020)"/>
+    <rect x="240" y="341" width="120" height="1.5" rx="0.75" fill="white" opacity="0.04"/>
+  </g>
+
+  <!-- ============ SCREEN: VS Code + Modern site ============ -->
+  <!-- VS Code -->
+  <rect x="59" y="104" width="238" height="214" fill="#1e1e1e"/>
+  <rect x="59" y="104" width="238" height="9" fill="#323233"/>
+  <circle cx="66" cy="109" r="2.2" fill="#ff5f56"/><circle cx="74" cy="109" r="2.2" fill="#ffbd2e"/><circle cx="82" cy="109" r="2.2" fill="#27c93f"/>
+  <!-- Activity bar -->
+  <rect x="59" y="113" width="14" height="205" fill="#252526"/>
+  <!-- File tree -->
+  <rect x="73" y="113" width="48" height="205" fill="#252526"/>
+  <text x="76" y="121" fill="#ccc" font-size="3.2" font-family="monospace">EXPLORER</text>
+  <text x="78" y="130" fill="#c8c864" font-size="3.2" font-family="monospace">components/</text>
+  <text x="82" y="138" fill="#4fc1ff" font-size="3.2" font-family="monospace">Hero.tsx</text>
+  <text x="82" y="146" fill="#4fc1ff" font-size="3.2" font-family="monospace">Nav.tsx</text>
+  <text x="78" y="154" fill="#c8c864" font-size="3.2" font-family="monospace">pages/</text>
+  <text x="82" y="162" fill="#4fc1ff" font-size="3.2" font-family="monospace">index.tsx</text>
+  <!-- Tabs -->
+  <rect x="121" y="113" width="176" height="9" fill="#2d2d2d"/>
+  <rect x="121" y="113" width="52" height="9" fill="#1e1e1e"/>
+  <text x="125" y="120" fill="#ccc" font-size="3.2" font-family="monospace">Hero.tsx</text>
+  <!-- Code -->
+  <g font-size="3.5" font-family="monospace">
+    <text x="125" y="130" fill="#c586c0">import</text><text x="147" y="130" fill="#f8f8f2"> motion </text><text x="175" y="130" fill="#c586c0">from</text>
+    <text x="125" y="138" fill="#ce9178">  'framer-motion'</text>
+    <text x="125" y="148" fill="#569cd6">interface</text><text x="158" y="148" fill="#4ec9b0"> HeroProps</text>
+    <text x="125" y="156" fill="#9cdcfe">  title: string</text>
+    <text x="125" y="164" fill="#9cdcfe">  subtitle?: string</text>
+    <text x="125" y="176" fill="#c586c0">export</text><text x="148" y="176" fill="#569cd6"> const</text><text x="168" y="176" fill="#dcdcaa"> Hero</text>
+    <text x="125" y="184" fill="#9cdcfe">  title, subtitle</text>
+    <text x="125" y="196" fill="#808080">  &lt;motion.section</text>
+    <text x="125" y="204" fill="#9cdcfe">    className="min-h-screen</text>
+    <text x="125" y="212" fill="#ce9178">      flex items-center</text>
+    <text x="125" y="220" fill="#ce9178">      bg-gradient-to-b"</text>
+    <text x="125" y="228" fill="#9cdcfe">    initial= opacity: 0 </text>
+    <text x="125" y="236" fill="#9cdcfe">    animate= opacity: 1 </text>
+  </g>
+  <!-- Terminal -->
+  <rect x="121" y="268" width="176" height="50" fill="#1a1a2e"/>
+  <rect x="121" y="268" width="176" height="8" fill="#252536"/>
+  <text x="125" y="274" fill="#888" font-size="3.2" font-family="monospace">TERMINAL</text>
+  <text x="125" y="285" fill="#0f0" font-size="3.3" font-family="monospace">$ npx next dev --turbo</text>
+  <text x="125" y="293" fill="#4fc1ff" font-size="3.3" font-family="monospace">ready in 180ms</text>
+  <text x="125" y="301" fill="#888" font-size="3.3" font-family="monospace">localhost:3000</text>
+
+  <!-- Modern website -->
+  <rect x="301" y="104" width="240" height="214" fill="#0a0a0a"/>
+  <rect x="301" y="104" width="240" height="9" fill="#1a1a1a"/>
+  <circle cx="308" cy="109" r="1.8" fill="#ff5f56"/><circle cx="315" cy="109" r="1.8" fill="#ffbd2e"/><circle cx="322" cy="109" r="1.8" fill="#27c93f"/>
+  <rect x="340" y="107" width="130" height="4" rx="2" fill="#222"/>
+  <rect x="301" y="113" width="240" height="205" fill="#0a0a0a"/>
+  <!-- Hero -->
+  <text x="330" y="150" fill="white" font-size="13" font-weight="bold" font-family="Arial">Build</text>
+  <text x="330" y="168" fill="white" font-size="13" font-weight="bold" font-family="Arial">Faster.</text>
+  <text x="330" y="183" fill="#888" font-size="5" font-family="Arial">The modern platform for teams</text>
+  <!-- Gradient CTA -->
+  <linearGradient id="grad2020" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#7c3aed"/>
+    <stop offset="100%" stop-color="#2563eb"/>
+  </linearGradient>
+  <rect x="330" y="192" width="65" height="15" rx="7.5" fill="url(#grad2020)"/>
+  <text x="341" y="203" fill="white" font-size="5.5" font-weight="bold" font-family="Arial">Get Started</text>
+  <rect x="403" y="192" width="55" height="15" rx="7.5" fill="none" stroke="#444" stroke-width="0.7"/>
+  <text x="416" y="203" fill="#ccc" font-size="5.5" font-family="Arial">Docs</text>
+  <!-- Bento grid -->
+  <rect x="315" y="220" width="68" height="42" rx="7" fill="#1a1a2e" stroke="#2a2a3e" stroke-width="0.5"/>
+  <rect x="390" y="220" width="68" height="42" rx="7" fill="#1a1a2e" stroke="#2a2a3e" stroke-width="0.5"/>
+  <rect x="465" y="220" width="68" height="42" rx="7" fill="#1a1a2e" stroke="#2a2a3e" stroke-width="0.5"/>
+  <text x="332" y="241" fill="white" font-size="8" font-weight="bold">10x</text>
+  <text x="332" y="250" fill="#888" font-size="3.5">Faster builds</text>
+  <text x="407" y="241" fill="white" font-size="8" font-weight="bold">99%</text>
+  <text x="407" y="250" fill="#888" font-size="3.5">Uptime</text>
+  <text x="482" y="241" fill="white" font-size="8" font-weight="bold">50k</text>
+  <text x="482" y="250" fill="#888" font-size="3.5">Users</text>
+  <!-- Code block -->
+  <rect x="315" y="270" width="218" height="40" rx="7" fill="#111" stroke="#2a2a3e" stroke-width="0.5"/>
+  <text x="322" y="283" fill="#888" font-size="3.5" font-family="monospace">npx create-next-app@latest</text>
+  <text x="322" y="293" fill="#4fc1ff" font-size="3.5" font-family="monospace">TypeScript, Tailwind, App Router</text>
+  <text x="322" y="303" fill="#27c93f" font-size="3.5" font-family="monospace">Done in 12s</text>
+
+  <!-- ============ WIRELESS KEYBOARD ============ -->
+  <g filter="url(#shadow-sm)">
+    <linearGradient id="kb2020" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f0f0f0"/>
+      <stop offset="100%" stop-color="#d0d0d0"/>
+    </linearGradient>
+    <rect x="155" y="368" width="210" height="16" rx="6" fill="url(#kb2020)"/>
+  </g>
+  <!-- Magic trackpad -->
+  <g filter="url(#shadow-sm)">
+    <rect x="400" y="365" width="85" height="52" rx="6" fill="url(#kb2020)"/>
+  </g>
 </svg>`;
 
-const era2025 = `<svg viewBox="0 0 600 420" fill="none" xmlns="http://www.w3.org/2000/svg" class="pc-svg">
-  <rect x="40" y="365" width="520" height="8" rx="2" fill="#4a3f35" opacity="0.6"/>
-  <!-- Curved ultrawide -->
-  <path d="M50 100 Q300 90 550 100 L548 320 Q300 325 52 320 Z" fill="#050505"/>
-  <path d="M50 100 Q300 90 550 100 L548 320 Q300 325 52 320 Z" stroke="#1a1a1a" stroke-width="1.5" fill="none"/>
-  <path d="M55 104 Q300 94 545 104 L543 316 Q300 321 57 316 Z" fill="#0d1117" class="screen screen-2025"/>
-  <rect x="275" y="325" width="50" height="10" rx="2" fill="#111"/>
-  <rect x="260" y="333" width="80" height="3" rx="1.5" fill="#0a0a0a"/>
-  <!-- LED strip -->
-  <rect x="100" y="320" width="400" height="2" rx="1" fill="url(#led-glow)" opacity="0.6"/>
-  <!-- VS Code with AI -->
-  <rect x="60" y="108" width="240" height="204" fill="#0d1117"/>
-  <rect x="60" y="108" width="240" height="8" fill="#161b22"/>
-  <circle cx="66" cy="112" r="1.5" fill="#ff5f56"/>
-  <circle cx="72" cy="112" r="1.5" fill="#ffbd2e"/>
-  <circle cx="78" cy="112" r="1.5" fill="#27c93f"/>
-  <text x="130" y="114" fill="#555" font-size="3" font-family="monospace" text-anchor="middle">Claude Code - smiro.dev</text>
-  <rect x="60" y="116" width="12" height="196" fill="#0d1117"/>
-  <rect x="72" y="116" width="40" height="196" fill="#0d1117" stroke="#1e2530" stroke-width="0.3"/>
-  <text x="75" y="124" fill="#8b949e" font-size="3" font-family="monospace">EXPLORER</text>
-  <text x="77" y="132" fill="#f0883e" font-size="3" font-family="monospace">src/</text>
-  <text x="80" y="139" fill="#79c0ff" font-size="3" font-family="monospace">Hero.astro</text>
-  <text x="80" y="146" fill="#79c0ff" font-size="3" font-family="monospace">Nav.astro</text>
-  <text x="80" y="153" fill="#79c0ff" font-size="3" font-family="monospace">About.astro</text>
-  <text x="77" y="160" fill="#f0883e" font-size="3" font-family="monospace">scripts/</text>
-  <text x="80" y="167" fill="#79c0ff" font-size="3" font-family="monospace">animations.ts</text>
-  <rect x="112" y="116" width="188" height="8" fill="#161b22"/>
-  <rect x="112" y="116" width="50" height="8" fill="#0d1117"/>
-  <text x="116" y="122" fill="#e6edf3" font-size="3" font-family="monospace">Hero.astro</text>
-  <!-- Astro code -->
-  <g font-size="3.5" font-family="monospace">
-    <text x="116" y="132" fill="#ff7b72">---</text>
-    <text x="116" y="139" fill="#c9d1d9">// AI-generated component</text>
-    <text x="116" y="146" fill="#ff7b72">import</text><text x="136" y="146" fill="#79c0ff"> gsap </text><text x="157" y="146" fill="#ff7b72">from</text><text x="171" y="146" fill="#a5d6ff"> 'gsap'</text>
-    <text x="116" y="153" fill="#ff7b72">import</text><text x="136" y="153" fill="#79c0ff"> type Props</text>
-    <text x="116" y="160" fill="#ff7b72">---</text>
-    <text x="116" y="169" fill="#7ee787">&lt;section</text><text x="143" y="169" fill="#79c0ff"> class=</text><text x="162" y="169" fill="#a5d6ff">"relative</text>
-    <text x="116" y="176" fill="#a5d6ff">  min-h-screen flex</text>
-    <text x="116" y="183" fill="#a5d6ff">  items-center"&gt;</text>
-    <text x="116" y="192" fill="#8b949e"> &lt;!-- AI suggestions --&gt;</text>
-    <text x="116" y="199" fill="#7ee787"> &lt;motion.div</text>
-    <text x="116" y="206" fill="#79c0ff">   initial= y: 40 </text>
-    <text x="116" y="213" fill="#79c0ff">   animate= y: 0 </text>
-    <text x="116" y="220" fill="#79c0ff">   transition=</text>
-    <text x="116" y="227" fill="#c9d1d9">     type: "spring" </text>
-  </g>
-  <!-- AI suggestion ghost -->
-  <rect x="116" y="230" width="170" height="14" rx="2" fill="#1a2332" opacity="0.6"/>
-  <text x="120" y="238" fill="#4a6a8a" font-size="3.5" font-family="monospace">   whileInView= opacity: 1 </text>
-  <text x="120" y="245" fill="#4a6a8a" font-size="3.5" font-family="monospace">   viewport= once: true </text>
-  <rect x="282" y="232" width="14" height="12" rx="3" fill="#238636"/>
-  <text x="285" y="240" fill="white" font-size="6">AI</text>
-  <!-- Terminal -->
-  <rect x="112" y="260" width="188" height="52" fill="#0d1117"/>
-  <rect x="112" y="260" width="188" height="8" fill="#161b22"/>
-  <text x="116" y="266" fill="#8b949e" font-size="3" font-family="monospace">CLAUDE CODE</text>
-  <text x="116" y="278" fill="#d2a8ff" font-size="3.5" font-family="monospace">claude&gt; build hero section</text>
-  <text x="116" y="286" fill="#8b949e" font-size="3.5" font-family="monospace">Creating Hero.astro with</text>
-  <text x="116" y="293" fill="#8b949e" font-size="3.5" font-family="monospace">GSAP animations, Tailwind</text>
-  <text x="116" y="300" fill="#7ee787" font-size="3.5" font-family="monospace">Done! 3 files modified.</text>
-  <rect x="116" y="304" width="140" height="3" rx="1.5" fill="#238636"/>
-  <!-- smiro.dev preview -->
-  <rect x="305" y="108" width="232" height="204" fill="#0a0a0a"/>
-  <rect x="305" y="108" width="232" height="8" fill="#1a1a1a"/>
-  <circle cx="311" cy="112" r="1.5" fill="#ff5f56"/>
-  <circle cx="317" cy="112" r="1.5" fill="#ffbd2e"/>
-  <circle cx="323" cy="112" r="1.5" fill="#27c93f"/>
-  <rect x="345" y="110" width="140" height="4" rx="2" fill="#1a1a2e"/>
-  <text x="358" y="114" fill="#555" font-size="3" font-family="monospace">smiro.dev</text>
-  <rect x="305" y="116" width="232" height="196" fill="#0f0e0c"/>
-  <rect x="305" y="116" width="232" height="12" fill="rgba(15,14,12,0.8)"/>
-  <text x="315" y="124" fill="#5eead4" font-size="5" font-weight="bold">SM</text>
-  <g fill="#7a7874" font-size="3.5">
-    <text x="430" y="124">Home</text><text x="452" y="124">Projects</text><text x="482" y="124">Blog</text><text x="502" y="124">Contact</text>
-  </g>
-  <text x="320" y="155" fill="#e8e6e2" font-size="12" font-weight="bold" font-family="serif">Full Stack</text>
-  <text x="320" y="172" fill="#e8e6e2" font-size="12" font-weight="bold" font-family="serif">Developer.</text>
-  <text x="320" y="189" fill="#5eead4" font-size="12" font-weight="bold" font-family="serif">AI Whisperer.</text>
-  <text x="320" y="204" fill="#7a7874" font-size="4.5">Building the future with AI</text>
-  <rect x="320" y="210" width="50" height="12" rx="4" fill="#5eead4"/>
-  <text x="328" y="218" fill="#0f0e0c" font-size="4" font-weight="bold">Projects</text>
-  <rect x="378" y="210" width="45" height="12" rx="4" fill="none" stroke="#3d3c3a" stroke-width="0.5"/>
-  <text x="386" y="218" fill="#e8e6e2" font-size="4">Contact</text>
-  <rect x="315" y="232" width="70" height="50" rx="4" fill="#141310" stroke="#2a2927" stroke-width="0.5"/>
-  <rect x="393" y="232" width="70" height="50" rx="4" fill="#141310" stroke="#2a2927" stroke-width="0.5"/>
-  <rect x="471" y="232" width="60" height="50" rx="4" fill="#141310" stroke="#2a2927" stroke-width="0.5"/>
-  <text x="320" y="246" fill="#e8e6e2" font-size="4" font-weight="bold">Vistalid</text>
-  <text x="320" y="253" fill="#7a7874" font-size="3">AI SaaS Platform</text>
-  <rect x="320" y="257" width="20" height="5" rx="2" fill="#064e3b"/>
-  <text x="323" y="261" fill="#34d399" font-size="3">Prod</text>
-  <text x="398" y="246" fill="#e8e6e2" font-size="4" font-weight="bold">SimplifyEU</text>
-  <text x="398" y="253" fill="#7a7874" font-size="3">Legal AI Tool</text>
-  <text x="476" y="246" fill="#e8e6e2" font-size="4" font-weight="bold">smiro.dev</text>
-  <text x="476" y="253" fill="#7a7874" font-size="3">Portfolio</text>
-  <rect x="320" y="290" width="60" height="10" rx="5" fill="rgba(52,211,153,0.1)" stroke="rgba(52,211,153,0.25)" stroke-width="0.5"/>
-  <circle cx="328" cy="295" r="2" fill="#34d399" class="power-led"/>
-  <text x="334" y="298" fill="#6ee7b7" font-size="3.5">Available</text>
-  <!-- Mech keyboard RGB -->
-  <rect x="170" y="374" width="180" height="20" rx="4" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="0.5"/>
-  <rect x="172" y="393" width="176" height="2" rx="1" fill="url(#led-glow)" opacity="0.4"/>
-  <!-- Mouse -->
-  <path d="M415 370 Q415 364 425 362 Q435 364 435 370 L435 395 Q435 400 425 402 Q415 400 415 395 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="0.5"/>
-  <rect x="423" y="368" width="4" height="5" rx="1" fill="#2a2a2a"/>
-  <line x1="420" y1="398" x2="430" y2="398" stroke="url(#led-glow)" stroke-width="1" opacity="0.5"/>
-  <defs>
+const era2025 = `<svg viewBox="0 0 600 440" fill="none" xmlns="http://www.w3.org/2000/svg" class="pc-svg">
+  ${sharedDefs}
+  ${desk3d}
+
+  <!-- ============ CURVED ULTRAWIDE (3D, near-frameless, floating) ============ -->
+  <g filter="url(#shadow-lg)">
+    <!-- Monitor body (curved) -->
+    <path d="M40 95 Q300 82 560 95 L557 318 Q300 324 43 318 Z" fill="#050505"/>
+    <path d="M40 95 Q300 82 560 95 L557 318 Q300 324 43 318 Z" stroke="#1a1a1a" stroke-width="1.5" fill="none"/>
+    <!-- Top bezel reflection -->
+    <path d="M45 96 Q300 84 555 96" stroke="white" stroke-width="0.8" opacity="0.06" fill="none"/>
+    <!-- Screen -->
+    <path d="M46 100 Q300 88 554 100 L552 314 Q300 320 48 314 Z" fill="#0d1117" class="screen screen-2025"/>
+    <!-- Screen glow (ambient) -->
+    <path d="M40 95 Q300 82 560 95 L557 318 Q300 324 43 318 Z" fill="url(#screen-glow-cyan)" opacity="0.6"/>
+    <!-- Bottom chin LED strip -->
     <linearGradient id="led-glow" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%" stop-color="#ff0080"/>
-      <stop offset="25%" stop-color="#7928ca"/>
-      <stop offset="50%" stop-color="#0070f3"/>
-      <stop offset="75%" stop-color="#00dfd8"/>
-      <stop offset="100%" stop-color="#7928ca"/>
+      <stop offset="20%" stop-color="#7928ca"/>
+      <stop offset="40%" stop-color="#0070f3"/>
+      <stop offset="60%" stop-color="#00dfd8"/>
+      <stop offset="80%" stop-color="#7928ca"/>
+      <stop offset="100%" stop-color="#ff0080"/>
     </linearGradient>
-  </defs>
+    <rect x="90" y="318" width="420" height="3" rx="1.5" fill="url(#led-glow)" opacity="0.7"/>
+    <!-- LED desk reflection -->
+    <rect x="120" y="358" width="360" height="6" rx="3" fill="url(#led-glow)" opacity="0.08"/>
+  </g>
+  <!-- Stand -->
+  <rect x="270" y="322" width="60" height="12" rx="2" fill="#111"/>
+  <rect x="252" y="332" width="96" height="4" rx="2" fill="#0a0a0a"/>
+
+  <!-- ============ SCREEN: Claude Code + smiro.dev ============ -->
+  <!-- VS Code / Claude Code IDE -->
+  <rect x="52" y="104" width="248" height="206" fill="#0d1117"/>
+  <rect x="52" y="104" width="248" height="9" fill="#161b22"/>
+  <circle cx="59" cy="109" r="1.8" fill="#ff5f56"/><circle cx="66" cy="109" r="1.8" fill="#ffbd2e"/><circle cx="73" cy="109" r="1.8" fill="#27c93f"/>
+  <text x="135" y="111" fill="#555" font-size="3" font-family="monospace" text-anchor="middle">Claude Code - smiro.dev</text>
+  <!-- Activity bar -->
+  <rect x="52" y="113" width="13" height="197" fill="#0d1117"/>
+  <!-- File tree -->
+  <rect x="65" y="113" width="42" height="197" fill="#0d1117" stroke="#1e2530" stroke-width="0.3"/>
+  <text x="68" y="121" fill="#8b949e" font-size="2.8" font-family="monospace">EXPLORER</text>
+  <text x="70" y="130" fill="#f0883e" font-size="2.8" font-family="monospace">src/</text>
+  <text x="73" y="138" fill="#79c0ff" font-size="2.8" font-family="monospace">Hero.astro</text>
+  <text x="73" y="146" fill="#79c0ff" font-size="2.8" font-family="monospace">Nav.astro</text>
+  <text x="73" y="154" fill="#79c0ff" font-size="2.8" font-family="monospace">About.astro</text>
+  <text x="70" y="162" fill="#f0883e" font-size="2.8" font-family="monospace">scripts/</text>
+  <text x="73" y="170" fill="#79c0ff" font-size="2.8" font-family="monospace">animations.ts</text>
+  <!-- Tabs -->
+  <rect x="107" y="113" width="193" height="9" fill="#161b22"/>
+  <rect x="107" y="113" width="52" height="9" fill="#0d1117"/>
+  <text x="111" y="120" fill="#e6edf3" font-size="2.8" font-family="monospace">Hero.astro</text>
+  <!-- Code -->
+  <g font-size="3.3" font-family="monospace">
+    <text x="111" y="130" fill="#ff7b72">---</text>
+    <text x="111" y="138" fill="#8b949e">// AI-generated component</text>
+    <text x="111" y="146" fill="#ff7b72">import</text><text x="131" y="146" fill="#79c0ff"> gsap </text><text x="152" y="146" fill="#ff7b72">from</text><text x="166" y="146" fill="#a5d6ff"> 'gsap'</text>
+    <text x="111" y="154" fill="#ff7b72">import</text><text x="131" y="154" fill="#79c0ff"> type Props</text>
+    <text x="111" y="162" fill="#ff7b72">---</text>
+    <text x="111" y="172" fill="#7ee787">&lt;section</text><text x="138" y="172" fill="#79c0ff"> class=</text><text x="157" y="172" fill="#a5d6ff">"relative</text>
+    <text x="111" y="180" fill="#a5d6ff">  min-h-screen flex</text>
+    <text x="111" y="188" fill="#a5d6ff">  items-center"&gt;</text>
+    <text x="111" y="198" fill="#8b949e"> &lt;!-- AI generated --&gt;</text>
+    <text x="111" y="206" fill="#7ee787"> &lt;motion.div</text>
+    <text x="111" y="214" fill="#79c0ff">   initial= y: 40 </text>
+    <text x="111" y="222" fill="#79c0ff">   animate= y: 0 </text>
+    <text x="111" y="230" fill="#79c0ff">   transition=</text>
+    <text x="111" y="238" fill="#c9d1d9">     type: "spring" </text>
+  </g>
+  <!-- AI inline suggestion -->
+  <rect x="111" y="242" width="175" height="12" rx="2" fill="#1a2332" opacity="0.7"/>
+  <text x="115" y="250" fill="#4a6a8a" font-size="3.3" font-family="monospace">   whileInView= opacity: 1</text>
+  <!-- AI badge -->
+  <rect x="280" y="244" width="16" height="10" rx="3" fill="#238636"/>
+  <text x="284" y="251" fill="white" font-size="5" font-weight="bold">AI</text>
+
+  <!-- Terminal: Claude Code -->
+  <rect x="107" y="262" width="193" height="48" fill="#0d1117"/>
+  <rect x="107" y="262" width="193" height="8" fill="#161b22"/>
+  <text x="111" y="268" fill="#8b949e" font-size="2.8" font-family="monospace">CLAUDE CODE</text>
+  <text x="111" y="280" fill="#d2a8ff" font-size="3.2" font-family="monospace">claude&gt; build hero section</text>
+  <text x="111" y="288" fill="#8b949e" font-size="3.2" font-family="monospace">Creating Hero.astro with GSAP</text>
+  <text x="111" y="296" fill="#7ee787" font-size="3.2" font-family="monospace">Done! 3 files modified.</text>
+  <!-- Progress bar -->
+  <rect x="111" y="302" width="150" height="3" rx="1.5" fill="#238636"/>
+  <rect x="111" y="302" width="150" height="1.5" rx="0.75" fill="#3adb76" opacity="0.4"/>
+
+  <!-- smiro.dev preview -->
+  <rect x="304" y="104" width="244" height="206" fill="#0a0a0a"/>
+  <rect x="304" y="104" width="244" height="9" fill="#1a1a1a"/>
+  <circle cx="311" cy="109" r="1.8" fill="#ff5f56"/><circle cx="318" cy="109" r="1.8" fill="#ffbd2e"/><circle cx="325" cy="109" r="1.8" fill="#27c93f"/>
+  <rect x="345" y="107" width="145" height="4" rx="2" fill="#1a1a2e"/>
+  <text x="362" y="111" fill="#555" font-size="3" font-family="monospace">smiro.dev</text>
+  <rect x="304" y="113" width="244" height="197" fill="#0f0e0c"/>
+  <!-- Nav -->
+  <rect x="304" y="113" width="244" height="13" fill="rgba(15,14,12,0.9)"/>
+  <text x="315" y="122" fill="#5eead4" font-size="5.5" font-weight="bold" font-family="serif">SM</text>
+  <g fill="#7a7874" font-size="3.5">
+    <text x="438" y="122">Home</text><text x="462" y="122">Projects</text><text x="494" y="122">Blog</text><text x="514" y="122">Contact</text>
+  </g>
+  <!-- Hero text -->
+  <text x="320" y="153" fill="#e8e6e2" font-size="13" font-weight="bold" font-family="serif">Full Stack</text>
+  <text x="320" y="172" fill="#e8e6e2" font-size="13" font-weight="bold" font-family="serif">Developer.</text>
+  <text x="320" y="191" fill="#5eead4" font-size="13" font-weight="bold" font-family="serif">AI Whisperer.</text>
+  <text x="320" y="206" fill="#7a7874" font-size="4.8">Building the future with AI &amp; automation</text>
+  <!-- CTAs -->
+  <rect x="320" y="214" width="55" height="13" rx="5" fill="#5eead4"/>
+  <text x="329" y="223" fill="#0f0e0c" font-size="4.5" font-weight="bold">Projects</text>
+  <rect x="382" y="214" width="50" height="13" rx="5" fill="none" stroke="#3d3c3a" stroke-width="0.5"/>
+  <text x="393" y="223" fill="#e8e6e2" font-size="4.5">Contact</text>
+  <!-- Project cards -->
+  <rect x="315" y="236" width="72" height="50" rx="5" fill="#141310" stroke="#2a2927" stroke-width="0.5"/>
+  <rect x="394" y="236" width="72" height="50" rx="5" fill="#141310" stroke="#2a2927" stroke-width="0.5"/>
+  <rect x="473" y="236" width="68" height="50" rx="5" fill="#141310" stroke="#2a2927" stroke-width="0.5"/>
+  <text x="320" y="251" fill="#e8e6e2" font-size="4.2" font-weight="bold">Vistalid</text>
+  <text x="320" y="259" fill="#7a7874" font-size="3">AI SaaS Platform</text>
+  <rect x="320" y="263" width="22" height="6" rx="3" fill="#064e3b"/>
+  <text x="324" y="268" fill="#34d399" font-size="3">Prod</text>
+  <text x="399" y="251" fill="#e8e6e2" font-size="4.2" font-weight="bold">SimplifyEU</text>
+  <text x="399" y="259" fill="#7a7874" font-size="3">Legal AI Tool</text>
+  <text x="478" y="251" fill="#e8e6e2" font-size="4.2" font-weight="bold">smiro.dev</text>
+  <text x="478" y="259" fill="#7a7874" font-size="3">Portfolio</text>
+  <!-- Available badge -->
+  <rect x="320" y="293" width="65" height="11" rx="5.5" fill="rgba(52,211,153,0.1)" stroke="rgba(52,211,153,0.3)" stroke-width="0.5"/>
+  <circle cx="329" cy="298.5" r="2" fill="#34d399" filter="url(#glow-green)" class="power-led"/>
+  <text x="336" y="302" fill="#6ee7b7" font-size="3.8">Available</text>
+
+  <!-- ============ MECH KEYBOARD (RGB glow) ============ -->
+  <g filter="url(#shadow-sm)">
+    <rect x="165" y="370" width="190" height="18" rx="5" fill="#111" stroke="#222" stroke-width="0.5"/>
+    <!-- RGB underglow -->
+    <rect x="167" y="387" width="186" height="3" rx="1.5" fill="url(#led-glow)" opacity="0.5"/>
+    <!-- Key caps hint -->
+    <g opacity="0.15">
+      <rect x="172" y="374" width="176" height="3" rx="1" fill="#333"/>
+      <rect x="174" y="380" width="172" height="3" rx="1" fill="#333"/>
+    </g>
+  </g>
+
+  <!-- ============ MOUSE (RGB) ============ -->
+  <g filter="url(#shadow-sm)">
+    <radialGradient id="mouse2025" cx="45%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#222"/>
+      <stop offset="100%" stop-color="#0a0a0a"/>
+    </radialGradient>
+    <path d="M420 365 Q420 358 432 355 Q444 358 444 365 L444 396 Q444 403 432 406 Q420 403 420 396 Z" fill="url(#mouse2025)"/>
+    <path d="M420 365 Q420 358 432 355 Q444 358 444 365 L444 396 Q444 403 432 406 Q420 403 420 396 Z" stroke="#222" stroke-width="0.5" fill="none"/>
+    <rect x="429" y="362" width="6" height="6" rx="2" fill="#1a1a1a"/>
+    <!-- Mouse RGB strip -->
+    <line x1="425" y1="402" x2="439" y2="402" stroke="url(#led-glow)" stroke-width="1.5" opacity="0.6"/>
+  </g>
 </svg>`;
 
 const eras = [era2000, era2005, era2010, era2015, era2020, era2025];
@@ -521,12 +905,14 @@ const eras = [era2000, era2005, era2010, era2015, era2020, era2025];
   <div class="tv-static" id="tv-static">
     <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
       <filter id="noise-filter">
-        <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="6" seed="0" />
+        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="6" seed="0" />
         <feColorMatrix type="saturate" values="0" />
       </filter>
       <rect width="100%" height="100%" filter="url(#noise-filter)" opacity="0.8" />
     </svg>
     <div class="scan-lines"></div>
+    <!-- Horizontal glitch bars -->
+    <div class="glitch-bars"></div>
   </div>
 
   <!-- Era frames -->
@@ -543,9 +929,10 @@ const eras = [era2000, era2005, era2010, era2015, era2020, era2025];
     width: 100%;
     max-width: 700px;
     margin: 0 auto;
-    aspect-ratio: 600 / 420;
+    aspect-ratio: 600 / 440;
     overflow: hidden;
-    border-radius: 12px;
+    border-radius: 16px;
+    background: radial-gradient(ellipse at 50% 80%, rgba(255,255,255,0.02) 0%, transparent 70%);
   }
 
   .eras-container {
@@ -573,8 +960,8 @@ const eras = [era2000, era2005, era2010, era2015, era2020, era2025];
 
   .year-display {
     position: absolute;
-    top: 12px;
-    right: 16px;
+    top: 8px;
+    right: 14px;
     z-index: 10;
     pointer-events: none;
   }
@@ -584,13 +971,14 @@ const eras = [era2000, era2005, era2010, era2015, era2020, era2025];
     font-size: clamp(2rem, 5vw, 3.5rem);
     font-weight: 700;
     color: var(--color-primary, #5eead4);
-    opacity: 0.25;
+    opacity: 0.2;
     line-height: 1;
+    text-shadow: 0 0 30px var(--color-primary, #5eead4);
   }
 
   .era-dots {
     position: absolute;
-    bottom: 12px;
+    bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 10;
@@ -598,17 +986,17 @@ const eras = [era2000, era2005, era2010, era2015, era2020, era2025];
     gap: 8px;
     align-items: center;
     padding: 6px 14px;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(12px);
     border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   .era-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.15);
     border: none;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -616,19 +1004,24 @@ const eras = [era2000, era2005, era2010, era2015, era2020, era2025];
     padding: 0;
   }
 
+  .era-dot:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
   .era-dot.active {
     background: var(--color-primary, #5eead4);
     width: 24px;
     border-radius: 4px;
-    box-shadow: 0 0 12px var(--color-primary, #5eead4);
+    box-shadow: 0 0 12px var(--color-primary, #5eead4), 0 0 4px var(--color-primary, #5eead4);
   }
 
   .dot-year {
     position: absolute;
-    bottom: 16px;
+    bottom: 18px;
     left: 50%;
     transform: translateX(-50%);
     font-size: 10px;
+    font-weight: 600;
     color: var(--color-text-muted, #7a7874);
     opacity: 0;
     transition: opacity 0.2s;
@@ -662,21 +1055,28 @@ const eras = [era2000, era2005, era2010, era2015, era2020, era2025];
     );
   }
 
+  .glitch-bars {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(transparent 0%, transparent 30%, rgba(0,255,200,0.03) 30.5%, transparent 31%, transparent 60%, rgba(255,0,100,0.02) 60.5%, transparent 61%);
+  }
+
   :global(.power-led) {
     animation: led-blink 3s ease-in-out infinite;
   }
 
   @keyframes led-blink {
     0%, 90%, 100% { opacity: 1; }
-    95% { opacity: 0.4; }
+    95% { opacity: 0.3; }
   }
 
   :global(.screen-2000) {
-    animation: crt-flicker 0.1s infinite alternate;
+    animation: crt-flicker 0.08s infinite alternate;
   }
 
   @keyframes crt-flicker {
-    0% { opacity: 0.97; }
+    0% { opacity: 0.96; }
     100% { opacity: 1; }
   }
 
@@ -722,26 +1122,31 @@ const eras = [era2000, era2005, era2010, era2015, era2020, era2025];
         },
       });
 
-      tl.to(staticOverlay, { opacity: 1, duration: 0.08 })
+      // Phase 1: Distortion + static
+      tl.to(staticOverlay, { opacity: 1, duration: 0.06 })
         .to(fromFrame, {
-          x: () => gsap.utils.random(-10, 10),
-          scaleX: () => gsap.utils.random(0.98, 1.02),
-          duration: 0.05,
-          repeat: 3,
+          x: () => gsap.utils.random(-12, 12),
+          scaleX: () => gsap.utils.random(0.97, 1.03),
+          skewX: () => gsap.utils.random(-2, 2),
+          duration: 0.04,
+          repeat: 4,
           yoyo: true,
         }, '<')
-        .set(fromFrame, { opacity: 0, visibility: 'hidden', x: 0, scaleX: 1 })
+        // Phase 2: Black flash + swap
+        .to(staticOverlay, { opacity: 0.9, duration: 0.03 })
+        .set(fromFrame, { opacity: 0, visibility: 'hidden', x: 0, scaleX: 1, skewX: 0 })
         .set(toFrame, { opacity: 1, visibility: 'visible', x: 0 })
         .call(() => { if (yearText) yearText.textContent = years[toEra]; })
+        // Phase 3: New frame stabilizes
         .to(toFrame, {
           x: () => gsap.utils.random(-6, 6),
           scaleX: () => gsap.utils.random(0.99, 1.01),
-          duration: 0.04,
+          duration: 0.03,
           repeat: 2,
           yoyo: true,
         })
-        .to(staticOverlay, { opacity: 0, duration: 0.15 })
-        .set(toFrame, { x: 0, scaleX: 1 });
+        .to(staticOverlay, { opacity: 0, duration: 0.2, ease: 'power2.out' })
+        .set(toFrame, { x: 0, scaleX: 1, skewX: 0 });
     }
 
     function nextEra() {
@@ -767,6 +1172,7 @@ const eras = [era2000, era2005, era2010, era2015, era2020, era2025];
 
     startAutoplay();
 
+    // Animate noise seed for dynamic static
     const noiseFilter = document.querySelector('#noise-filter feTurbulence');
     if (noiseFilter) {
       let seed = 0;
