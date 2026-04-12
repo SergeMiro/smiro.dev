@@ -38,7 +38,7 @@ import { projects as hardcodedProjects, filters } from '../../data/projects';
       </div>
 
       <!-- Project grid with 3D cards -->
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 transition-[min-height] duration-500" id="project-grid" style="min-height: 400px;">
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="project-grid">
         {hardcodedProjects.map((project) => (
           <div
             data-category={project.category}
@@ -208,8 +208,10 @@ import { projects as hardcodedProjects, filters } from '../../data/projects';
       });
 
       const grid = document.getElementById('project-grid');
-      // Lock current height before filtering to prevent footer jump
-      if (grid) grid.style.minHeight = grid.offsetHeight + 'px';
+      const section = grid?.closest('section') as HTMLElement | null;
+
+      // Lock the SECTION height to prevent any layout shift / footer jump
+      if (section) section.style.minHeight = section.offsetHeight + 'px';
 
       const state = Flip.getState(allCards);
 
@@ -230,9 +232,19 @@ import { projects as hardcodedProjects, filters } from '../../data/projects';
         onEnter: (elements) => gsap.fromTo(elements, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.5 }),
         onLeave: (elements) => gsap.to(elements, { opacity: 0, scale: 0.9, duration: 0.3 }),
         onComplete: () => {
-          // After animation, set min-height to actual content height
-          if (grid) {
-            gsap.to(grid, { minHeight: grid.scrollHeight, duration: 0.3, ease: 'power2.out' });
+          // After Flip is fully done, smoothly transition section to new height
+          if (section) {
+            // Force reflow to get correct height
+            const newHeight = section.scrollHeight;
+            gsap.to(section, {
+              minHeight: newHeight,
+              duration: 0.4,
+              ease: 'power2.out',
+              onComplete: () => {
+                // Release fixed height so layout can flow naturally
+                section.style.minHeight = '';
+              },
+            });
           }
         },
       });
