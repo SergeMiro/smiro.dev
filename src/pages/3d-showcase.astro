@@ -1,0 +1,599 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ZdogComputer from '../components/demos/ZdogComputer.astro';
+import CssIsometricComputer from '../components/demos/CssIsometricComputer.astro';
+import Canvas2dComputer from '../components/demos/Canvas2dComputer.astro';
+---
+
+<Layout title="3D Showcase" description="Comparing different 3D rendering approaches for web illustrations" pageColor="demos">
+  <section class="pt-32 pb-24">
+    <div class="mx-auto max-w-7xl px-6">
+      <h1 data-split="words" class="font-[var(--font-display)] text-[length:var(--text-2xl)] font-bold leading-tight mb-4">
+        3D Rendering Showcase
+      </h1>
+      <p class="text-[var(--color-text-muted)] text-lg mb-4 max-w-3xl">
+        Comparing different approaches to 3D illustrations on the web.
+        Each section renders the same concept — a modern developer workstation — using a different technology.
+      </p>
+      <p class="text-sm text-[var(--color-text-faint)] mb-16">
+        Scroll down to compare: Three.js (WebGL), Zdog (Canvas pseudo-3D), CSS 3D Transforms, Canvas 2D, and the current CSS 3D + Live Typing approach.
+      </p>
+
+      <!-- ================================ -->
+      <!-- 1. THREE.JS + TOON SHADING       -->
+      <!-- ================================ -->
+      <div class="showcase-section" data-reveal>
+        <div class="showcase-header">
+          <div class="showcase-badge">1</div>
+          <div>
+            <h2 class="showcase-title">Three.js + MeshToonMaterial</h2>
+            <p class="showcase-subtitle">WebGL / Real 3D / Cel-shading</p>
+          </div>
+          <div class="showcase-tags">
+            <span class="tag tag-green">Best Quality</span>
+            <span class="tag tag-yellow">~700KB</span>
+          </div>
+        </div>
+        <div class="showcase-card">
+          <div class="showcase-canvas" id="threejs-mount">
+            <!-- React island: Three.js computer -->
+          </div>
+          <div class="showcase-info">
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Rendering</span>
+                <span class="info-value">WebGL (GPU)</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">3D Type</span>
+                <span class="info-value">True 3D + Toon Shading</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Bundle Size</span>
+                <span class="info-value">~700KB (three.js)</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Interactivity</span>
+                <span class="info-value">Camera orbit, animations</span>
+              </div>
+            </div>
+            <div class="info-pros">
+              <strong>Pros:</strong> True 3D, shadows, reflections, camera rotation, Pixar-level possible with custom shaders, animated screen content via CanvasTexture.
+            </div>
+            <div class="info-cons">
+              <strong>Cons:</strong> Heavy bundle, requires WebGL, complex setup, needs 3D modeling skills for detailed models.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================ -->
+      <!-- 2. ZDOG                           -->
+      <!-- ================================ -->
+      <div class="showcase-section" data-reveal>
+        <div class="showcase-header">
+          <div class="showcase-badge">2</div>
+          <div>
+            <h2 class="showcase-title">Zdog — Pseudo-3D Engine</h2>
+            <p class="showcase-subtitle">Canvas / Flat 3D / Cartoon Style</p>
+          </div>
+          <div class="showcase-tags">
+            <span class="tag tag-blue">Lightest</span>
+            <span class="tag tag-green">~10KB</span>
+          </div>
+        </div>
+        <div class="showcase-card">
+          <div class="showcase-canvas">
+            <ZdogComputer />
+          </div>
+          <div class="showcase-info">
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Rendering</span>
+                <span class="info-value">Canvas 2D / SVG</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">3D Type</span>
+                <span class="info-value">Pseudo-3D (flat shading)</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Bundle Size</span>
+                <span class="info-value">~10KB</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Interactivity</span>
+                <span class="info-value">Drag to rotate</span>
+              </div>
+            </div>
+            <div class="info-pros">
+              <strong>Pros:</strong> Tiny bundle, drag to rotate, cartoon/Duolingo aesthetic, true circles (no polygons), designer-friendly API.
+            </div>
+            <div class="info-cons">
+              <strong>Cons:</strong> No real lighting/shadows, flat shading only, limited to geometric shapes, no texture support.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================ -->
+      <!-- 3. CSS 3D ISOMETRIC               -->
+      <!-- ================================ -->
+      <div class="showcase-section" data-reveal>
+        <div class="showcase-header">
+          <div class="showcase-badge">3</div>
+          <div>
+            <h2 class="showcase-title">CSS 3D Transforms — Isometric</h2>
+            <p class="showcase-subtitle">Pure CSS / No JS / Perspective</p>
+          </div>
+          <div class="showcase-tags">
+            <span class="tag tag-purple">Zero JS</span>
+            <span class="tag tag-green">0KB</span>
+          </div>
+        </div>
+        <div class="showcase-card">
+          <div class="showcase-canvas">
+            <CssIsometricComputer />
+          </div>
+          <div class="showcase-info">
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Rendering</span>
+                <span class="info-value">CSS (GPU-accelerated)</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">3D Type</span>
+                <span class="info-value">CSS perspective + rotateX/Y</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Bundle Size</span>
+                <span class="info-value">0KB (pure CSS)</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Interactivity</span>
+                <span class="info-value">CSS animations only</span>
+              </div>
+            </div>
+            <div class="info-pros">
+              <strong>Pros:</strong> Zero JavaScript, instant render, CSS animations for code typing, real HTML content on screen, best for SEO.
+            </div>
+            <div class="info-cons">
+              <strong>Cons:</strong> Fixed camera angle, limited to box shapes, no dynamic rotation, complex CSS for organic forms.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================ -->
+      <!-- 4. CANVAS 2D                      -->
+      <!-- ================================ -->
+      <div class="showcase-section" data-reveal>
+        <div class="showcase-header">
+          <div class="showcase-badge">4</div>
+          <div>
+            <h2 class="showcase-title">Canvas 2D — Painted Style</h2>
+            <p class="showcase-subtitle">Canvas API / Gradients / Hand-drawn</p>
+          </div>
+          <div class="showcase-tags">
+            <span class="tag tag-blue">No Dependencies</span>
+            <span class="tag tag-green">0KB</span>
+          </div>
+        </div>
+        <div class="showcase-card">
+          <div class="showcase-canvas">
+            <Canvas2dComputer />
+          </div>
+          <div class="showcase-info">
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Rendering</span>
+                <span class="info-value">Canvas 2D API</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">3D Type</span>
+                <span class="info-value">Fake 3D via gradients</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Bundle Size</span>
+                <span class="info-value">0KB (native API)</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Interactivity</span>
+                <span class="info-value">Full animation control</span>
+              </div>
+            </div>
+            <div class="info-pros">
+              <strong>Pros:</strong> No dependencies, pixel-perfect control, animated code typing, soft gradients and glow effects, good performance.
+            </div>
+            <div class="info-cons">
+              <strong>Cons:</strong> Not truly 3D, no rotation, more code to write, pixel density management needed, not accessible.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================ -->
+      <!-- 5. CURRENT: CSS 3D + LIVE TYPING  -->
+      <!-- ================================ -->
+      <div class="showcase-section" data-reveal>
+        <div class="showcase-header">
+          <div class="showcase-badge star">★</div>
+          <div>
+            <h2 class="showcase-title">CSS 3D + Live Typing <span class="current-badge">Current</span></h2>
+            <p class="showcase-subtitle">The approach used on the homepage now</p>
+          </div>
+          <div class="showcase-tags">
+            <span class="tag tag-green">Balanced</span>
+            <span class="tag tag-green">GSAP only</span>
+          </div>
+        </div>
+        <div class="showcase-card highlight">
+          <div class="showcase-canvas">
+            <a href="/" class="back-link">
+              View on homepage &rarr;
+            </a>
+            <div class="current-features">
+              <div class="feature">
+                <div class="feature-icon">&#9634;</div>
+                <div>
+                  <strong>CSS 3D Monitors</strong>
+                  <p>6 unique eras with visible depth faces</p>
+                </div>
+              </div>
+              <div class="feature">
+                <div class="feature-icon">&#9998;</div>
+                <div>
+                  <strong>Live Code Typing</strong>
+                  <p>Character-by-character with cursor</p>
+                </div>
+              </div>
+              <div class="feature">
+                <div class="feature-icon">&#9881;</div>
+                <div>
+                  <strong>Split Screen</strong>
+                  <p>Editor + live preview side by side</p>
+                </div>
+              </div>
+              <div class="feature">
+                <div class="feature-icon">&#9889;</div>
+                <div>
+                  <strong>TV Glitch Transitions</strong>
+                  <p>Canvas pixel noise + scan lines</p>
+                </div>
+              </div>
+              <div class="feature">
+                <div class="feature-icon">&#127752;</div>
+                <div>
+                  <strong>6 Computer Eras</strong>
+                  <p>2000 CRT to 2025 curved ultrawide</p>
+                </div>
+              </div>
+              <div class="feature">
+                <div class="feature-icon">&#128161;</div>
+                <div>
+                  <strong>Zero Extra Dependencies</strong>
+                  <p>CSS + GSAP (already installed)</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="showcase-info">
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Rendering</span>
+                <span class="info-value">CSS 3D + HTML + Canvas</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">3D Type</span>
+                <span class="info-value">CSS perspective + faces</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Bundle Size</span>
+                <span class="info-value">0KB extra (uses GSAP)</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Interactivity</span>
+                <span class="info-value">Autoplay + dot navigation</span>
+              </div>
+            </div>
+            <div class="info-pros">
+              <strong>Why this was chosen:</strong> Best balance of visual impact, performance, and no additional dependencies. Real HTML on screens means code typing looks authentic. CSS 3D gives depth without WebGL overhead.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comparison table -->
+      <div class="comparison-table" data-reveal>
+        <h2 class="font-[var(--font-display)] text-[length:var(--text-xl)] font-bold mb-6">Comparison</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Approach</th>
+                <th>Visual Quality</th>
+                <th>Bundle Size</th>
+                <th>Performance</th>
+                <th>Interactivity</th>
+                <th>Complexity</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Three.js + Toon</td>
+                <td><span class="stars">★★★★★</span></td>
+                <td class="text-amber-400">~700KB</td>
+                <td>Good (GPU)</td>
+                <td>Full 3D orbit</td>
+                <td class="text-red-400">High</td>
+              </tr>
+              <tr>
+                <td>Zdog</td>
+                <td><span class="stars">★★★☆☆</span></td>
+                <td class="text-emerald-400">~10KB</td>
+                <td>Excellent</td>
+                <td>Drag rotate</td>
+                <td class="text-emerald-400">Low</td>
+              </tr>
+              <tr>
+                <td>CSS 3D Isometric</td>
+                <td><span class="stars">★★★★☆</span></td>
+                <td class="text-emerald-400">0KB</td>
+                <td>Excellent</td>
+                <td>CSS only</td>
+                <td class="text-amber-400">Medium</td>
+              </tr>
+              <tr>
+                <td>Canvas 2D</td>
+                <td><span class="stars">★★★★☆</span></td>
+                <td class="text-emerald-400">0KB</td>
+                <td>Good</td>
+                <td>Full animation</td>
+                <td class="text-amber-400">Medium</td>
+              </tr>
+              <tr class="highlight-row">
+                <td><strong>CSS 3D + Typing ★</strong></td>
+                <td><span class="stars">★★★★☆</span></td>
+                <td class="text-emerald-400">0KB extra</td>
+                <td>Excellent</td>
+                <td>Autoplay + nav</td>
+                <td class="text-amber-400">Medium</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</Layout>
+
+<!-- Load Three.js component as React island -->
+<script>
+  import { createElement } from 'react';
+  import { createRoot } from 'react-dom/client';
+
+  async function mountThreeJs() {
+    const mount = document.getElementById('threejs-mount');
+    if (!mount) return;
+    const { default: ThreeJsComputer } = await import('../components/demos/ThreeJsComputer');
+    const root = createRoot(mount);
+    root.render(createElement(ThreeJsComputer));
+  }
+
+  // Lazy load Three.js when section is visible
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        mountThreeJs();
+        observer.disconnect();
+      }
+    });
+  }, { rootMargin: '200px' });
+
+  const mount = document.getElementById('threejs-mount');
+  if (mount) observer.observe(mount);
+</script>
+
+<style>
+  .showcase-section {
+    margin-bottom: 48px;
+  }
+  .showcase-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .showcase-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+  }
+  .showcase-badge.star {
+    background: var(--color-primary);
+    color: var(--color-bg);
+    border-color: var(--color-primary);
+  }
+  .showcase-title {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .showcase-subtitle {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+  .showcase-tags {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+  }
+  .tag {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .tag-green { background: rgba(52,211,153,0.1); color: #34d399; border: 1px solid rgba(52,211,153,0.2); }
+  .tag-yellow { background: rgba(251,191,36,0.1); color: #fbbf24; border: 1px solid rgba(251,191,36,0.2); }
+  .tag-blue { background: rgba(96,165,250,0.1); color: #60a5fa; border: 1px solid rgba(96,165,250,0.2); }
+  .tag-purple { background: rgba(168,85,247,0.1); color: #a855f7; border: 1px solid rgba(168,85,247,0.2); }
+
+  .showcase-card {
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--color-surface);
+  }
+  .showcase-card.highlight {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 30px rgba(94,234,212,0.05);
+  }
+  .showcase-canvas {
+    min-height: 350px;
+    background: var(--color-bg);
+    position: relative;
+  }
+  #threejs-mount {
+    min-height: 400px;
+  }
+  .showcase-info {
+    padding: 20px 24px;
+    border-top: 1px solid var(--color-border);
+  }
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .info-label {
+    font-size: 0.7rem;
+    color: var(--color-text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .info-value {
+    font-size: 0.85rem;
+    color: var(--color-text);
+    font-weight: 500;
+  }
+  .info-pros, .info-cons {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+    margin-top: 8px;
+  }
+  .info-pros strong { color: #34d399; }
+  .info-cons strong { color: #f87171; }
+
+  .current-badge {
+    display: inline-block;
+    background: var(--color-primary);
+    color: var(--color-bg);
+    padding: 1px 8px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    vertical-align: middle;
+    margin-left: 8px;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin: 16px 20px;
+    color: var(--color-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+  .back-link:hover { opacity: 0.8; }
+
+  .current-features {
+    padding: 0 20px 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+  }
+  .feature {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+  }
+  .feature-icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    width: 30px;
+    text-align: center;
+  }
+  .feature strong {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--color-text);
+  }
+  .feature p {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  /* Comparison table */
+  .comparison-table {
+    margin-top: 48px;
+  }
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  th {
+    text-align: left;
+    padding: 12px 16px;
+    background: var(--color-surface);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-muted);
+    border-bottom: 1px solid var(--color-border);
+  }
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text);
+  }
+  tr:last-child td { border-bottom: none; }
+  .highlight-row {
+    background: rgba(94,234,212,0.04);
+  }
+  .highlight-row td { color: var(--color-primary); }
+  .stars { color: #fbbf24; letter-spacing: 2px; }
+</style>

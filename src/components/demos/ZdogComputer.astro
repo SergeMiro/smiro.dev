@@ -1,0 +1,264 @@
+---
+/**
+ * Zdog — Pseudo-3D cartoon computer
+ * Flat, round, Duolingo-like aesthetic
+ */
+---
+
+<div class="zdog-wrap">
+  <canvas id="zdog-canvas" width="500" height="400"></canvas>
+</div>
+
+<style>
+  .zdog-wrap {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 350px;
+    cursor: grab;
+  }
+  .zdog-wrap:active { cursor: grabbing; }
+  #zdog-canvas {
+    max-width: 100%;
+    height: auto;
+  }
+</style>
+
+<script>
+  import Zdog from 'zdog';
+
+  const canvas = document.getElementById('zdog-canvas') as HTMLCanvasElement;
+  if (canvas) {
+    const illo = new Zdog.Illustration({
+      element: canvas,
+      dragRotate: true,
+      rotate: { x: -0.2, y: 0.5 },
+    });
+
+    const TAU = Zdog.TAU;
+
+    // ===== DESK =====
+    new Zdog.Box({
+      addTo: illo,
+      width: 240,
+      height: 8,
+      depth: 120,
+      translate: { y: 80 },
+      color: '#4a3f35',
+      topFace: '#5a4f45',
+      bottomFace: '#3a2f25',
+      leftFace: '#3a2f25',
+      rightFace: '#4a3f35',
+      stroke: 1,
+    });
+
+    // ===== MONITOR =====
+    // Body
+    const monitor = new Zdog.Box({
+      addTo: illo,
+      width: 160,
+      height: 100,
+      depth: 12,
+      translate: { y: -10 },
+      color: '#1a1a20',
+      topFace: '#252530',
+      bottomFace: '#0f0f14',
+      leftFace: '#151518',
+      rightFace: '#1a1a20',
+      stroke: 2,
+    });
+
+    // Screen (front face, inset)
+    new Zdog.Rect({
+      addTo: monitor,
+      width: 144,
+      height: 84,
+      translate: { z: 7 },
+      color: '#0d1117',
+      fill: true,
+      stroke: 1,
+    });
+
+    // Screen glow overlay
+    new Zdog.Rect({
+      addTo: monitor,
+      width: 144,
+      height: 84,
+      translate: { z: 7.5 },
+      color: 'rgba(94,234,212,0.08)',
+      fill: true,
+      stroke: 0,
+    });
+
+    // Code lines on screen
+    const screenGroup = new Zdog.Group({
+      addTo: monitor,
+      translate: { z: 8 },
+    });
+
+    const lineColors = ['#ff7b72', '#79c0ff', '#a5d6ff', '#7ee787', '#d2a8ff', '#ffa657', '#c9d1d9'];
+    for (let i = 0; i < 8; i++) {
+      const lineWidth = 30 + Math.random() * 80;
+      const indent = i % 3 === 0 ? 0 : (i % 3 === 1 ? 10 : 20);
+      new Zdog.Rect({
+        addTo: screenGroup,
+        width: lineWidth,
+        height: 4,
+        translate: {
+          x: -55 + indent + lineWidth / 2,
+          y: -32 + i * 9,
+        },
+        color: lineColors[i % lineColors.length],
+        fill: true,
+        stroke: 0,
+      });
+    }
+
+    // Cursor
+    const cursor = new Zdog.Rect({
+      addTo: screenGroup,
+      width: 2,
+      height: 6,
+      translate: { x: 20, y: -32 + 7 * 9 },
+      color: '#5eead4',
+      fill: true,
+      stroke: 0,
+    });
+
+    // LED strip (bottom of monitor)
+    const ledColors = ['#ff0080', '#7928ca', '#0070f3', '#00dfd8', '#7928ca'];
+    for (let i = 0; i < 5; i++) {
+      new Zdog.Rect({
+        addTo: monitor,
+        width: 20,
+        height: 2,
+        translate: {
+          x: -40 + i * 20,
+          y: 50,
+          z: 7,
+        },
+        color: ledColors[i],
+        fill: true,
+        stroke: 0,
+      });
+    }
+
+    // ===== STAND =====
+    // Neck
+    new Zdog.Box({
+      addTo: illo,
+      width: 12,
+      height: 30,
+      depth: 12,
+      translate: { y: 55 },
+      color: '#1a1a20',
+      topFace: '#252530',
+      stroke: 1,
+    });
+
+    // Base
+    new Zdog.Ellipse({
+      addTo: illo,
+      diameter: 60,
+      translate: { y: 73 },
+      rotate: { x: TAU / 4 },
+      color: '#1a1a20',
+      fill: true,
+      stroke: 4,
+    });
+
+    // ===== KEYBOARD =====
+    const keyboard = new Zdog.Box({
+      addTo: illo,
+      width: 120,
+      height: 6,
+      depth: 40,
+      translate: { y: 74, z: 50 },
+      color: '#111116',
+      topFace: '#1a1a20',
+      stroke: 1,
+    });
+
+    // Key rows
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 10; col++) {
+        const isAccent = row === 0 && col === 7;
+        new Zdog.Box({
+          addTo: keyboard,
+          width: 9,
+          height: 3,
+          depth: 9,
+          translate: {
+            x: -49 + col * 11,
+            y: -5,
+            z: -12 + row * 12,
+          },
+          color: isAccent ? '#5eead4' : '#2a2a30',
+          topFace: isAccent ? '#6ef7e0' : '#333340',
+          stroke: 0.5,
+        });
+      }
+    }
+
+    // ===== MOUSE =====
+    new Zdog.Shape({
+      addTo: illo,
+      path: [
+        { x: 0, y: -10 },
+        { arc: [{ x: 8, y: -8 }, { x: 8, y: 0 }] },
+        { arc: [{ x: 8, y: 12 }, { x: 0, y: 14 }] },
+        { arc: [{ x: -8, y: 12 }, { x: -8, y: 0 }] },
+        { arc: [{ x: -8, y: -8 }, { x: 0, y: -10 }] },
+      ],
+      translate: { x: 90, y: 72, z: 50 },
+      rotate: { x: TAU / 4 },
+      color: '#1a1a20',
+      fill: true,
+      stroke: 6,
+    });
+
+    // ===== COFFEE MUG =====
+    const mug = new Zdog.Cylinder({
+      addTo: illo,
+      diameter: 16,
+      length: 20,
+      translate: { x: -100, y: 64, z: 30 },
+      rotate: { x: -TAU / 4 },
+      color: '#5eead4',
+      topFace: '#3a2015',
+      stroke: 1,
+    });
+
+    // Mug handle
+    new Zdog.Ellipse({
+      addTo: mug,
+      diameter: 12,
+      translate: { x: 10, y: -4 },
+      rotate: { y: TAU / 4 },
+      color: '#5eead4',
+      stroke: 3,
+      quarters: 2,
+    });
+
+    // ===== ANIMATION =====
+    let frame = 0;
+    let cursorVisible = true;
+
+    function animate() {
+      // Cursor blink
+      frame++;
+      if (frame % 30 === 0) {
+        cursorVisible = !cursorVisible;
+        cursor.color = cursorVisible ? '#5eead4' : 'transparent';
+      }
+
+      // Gentle auto-rotate when not dragging
+      illo.rotate.y += 0.002;
+
+      illo.updateRenderGraph();
+      requestAnimationFrame(animate);
+    }
+    animate();
+  }
+</script>

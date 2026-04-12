@@ -1,0 +1,345 @@
+---
+/**
+ * Canvas 2D — Hand-painted style computer
+ * Soft gradients, glow effects, animated screen
+ */
+---
+
+<div class="canvas2d-wrap">
+  <canvas id="canvas2d-pc" width="600" height="420"></canvas>
+</div>
+
+<style>
+  .canvas2d-wrap {
+    width: 100%;
+    min-height: 350px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #canvas2d-pc {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+  }
+</style>
+
+<script>
+  const canvas = document.getElementById('canvas2d-pc') as HTMLCanvasElement;
+  if (canvas) {
+    const ctx = canvas.getContext('2d')!;
+    const W = 600, H = 420;
+    let frame = 0;
+    let codeChars = 0;
+
+    const codeLines = [
+      { indent: 0, tokens: [{ t: '---', c: '#ff7b72' }] },
+      { indent: 0, tokens: [{ t: '// AI component', c: '#8b949e' }] },
+      { indent: 0, tokens: [{ t: 'import ', c: '#ff7b72' }, { t: 'gsap', c: '#79c0ff' }, { t: ' from ', c: '#ff7b72' }, { t: "'gsap'", c: '#a5d6ff' }] },
+      { indent: 0, tokens: [{ t: '---', c: '#ff7b72' }] },
+      { indent: 0, tokens: [{ t: '', c: '#fff' }] },
+      { indent: 0, tokens: [{ t: '<section ', c: '#7ee787' }, { t: 'class=', c: '#79c0ff' }, { t: '"hero"', c: '#a5d6ff' }, { t: '>', c: '#7ee787' }] },
+      { indent: 1, tokens: [{ t: '<h1>', c: '#7ee787' }] },
+      { indent: 2, tokens: [{ t: 'AI Whisperer.', c: '#c9d1d9' }] },
+      { indent: 1, tokens: [{ t: '</h1>', c: '#7ee787' }] },
+      { indent: 1, tokens: [{ t: '<p ', c: '#7ee787' }, { t: 'class=', c: '#79c0ff' }, { t: '"sub"', c: '#a5d6ff' }, { t: '>', c: '#7ee787' }] },
+      { indent: 2, tokens: [{ t: 'Building the future', c: '#c9d1d9' }] },
+      { indent: 1, tokens: [{ t: '</p>', c: '#7ee787' }] },
+      { indent: 0, tokens: [{ t: '</section>', c: '#7ee787' }] },
+    ];
+
+    function roundRect(x: number, y: number, w: number, h: number, r: number) {
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, r);
+    }
+
+    function drawMonitor(time: number) {
+      // Shadow
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.6)';
+      ctx.shadowBlur = 40;
+      ctx.shadowOffsetY = 15;
+
+      // Body
+      const grad = ctx.createLinearGradient(100, 60, 500, 340);
+      grad.addColorStop(0, '#151518');
+      grad.addColorStop(1, '#08080a');
+      roundRect(100, 60, 400, 250, 10);
+      ctx.fillStyle = grad;
+      ctx.fill();
+      ctx.restore();
+
+      // Top edge highlight
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 1;
+      roundRect(101, 60, 398, 1, 0);
+      ctx.stroke();
+
+      // Screen
+      roundRect(108, 68, 384, 232, 4);
+      ctx.fillStyle = '#0d1117';
+      ctx.fill();
+
+      // Screen glow
+      const glowGrad = ctx.createRadialGradient(300, 184, 50, 300, 184, 250);
+      glowGrad.addColorStop(0, 'rgba(94,234,212,0.06)');
+      glowGrad.addColorStop(1, 'rgba(94,234,212,0)');
+      roundRect(108, 68, 384, 232, 4);
+      ctx.fillStyle = glowGrad;
+      ctx.fill();
+
+      // LED strip
+      const ledGrad = ctx.createLinearGradient(180, 0, 420, 0);
+      const hueShift = time * 0.0005;
+      ledGrad.addColorStop(0, `hsl(${320 + hueShift * 60}, 80%, 60%)`);
+      ledGrad.addColorStop(0.33, `hsl(${260 + hueShift * 60}, 70%, 55%)`);
+      ledGrad.addColorStop(0.66, `hsl(${200 + hueShift * 60}, 80%, 55%)`);
+      ledGrad.addColorStop(1, `hsl(${170 + hueShift * 60}, 80%, 60%)`);
+      roundRect(180, 302, 240, 3, 1.5);
+      ctx.fillStyle = ledGrad;
+      ctx.fill();
+
+      // LED glow on desk
+      ctx.save();
+      ctx.filter = 'blur(12px)';
+      roundRect(200, 365, 200, 8, 4);
+      ctx.fillStyle = ledGrad;
+      ctx.globalAlpha = 0.15;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawStand() {
+      // Neck
+      const neckGrad = ctx.createLinearGradient(285, 310, 315, 310);
+      neckGrad.addColorStop(0, '#111');
+      neckGrad.addColorStop(0.5, '#1a1a1e');
+      neckGrad.addColorStop(1, '#0e0e0e');
+      roundRect(285, 310, 30, 30, 2);
+      ctx.fillStyle = neckGrad;
+      ctx.fill();
+
+      // Base
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.shadowBlur = 15;
+      ctx.shadowOffsetY = 4;
+      roundRect(245, 340, 110, 8, 4);
+      ctx.fillStyle = '#111';
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawKeyboard(time: number) {
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.4)';
+      ctx.shadowBlur = 15;
+      ctx.shadowOffsetY = 5;
+
+      roundRect(180, 365, 240, 25, 5);
+      ctx.fillStyle = '#111';
+      ctx.strokeStyle = '#222';
+      ctx.lineWidth = 0.5;
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+
+      // Key hints
+      ctx.globalAlpha = 0.3;
+      for (let row = 0; row < 3; row++) {
+        roundRect(190, 370 + row * 6, 220, 3, 1);
+        ctx.fillStyle = '#333';
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // RGB underglow
+      ctx.save();
+      ctx.filter = 'blur(5px)';
+      const rgbGrad = ctx.createLinearGradient(200, 0, 400, 0);
+      const h = time * 0.0005;
+      rgbGrad.addColorStop(0, `hsl(${320 + h * 60}, 80%, 50%)`);
+      rgbGrad.addColorStop(0.5, `hsl(${200 + h * 60}, 80%, 50%)`);
+      rgbGrad.addColorStop(1, `hsl(${170 + h * 60}, 80%, 50%)`);
+      roundRect(200, 390, 200, 3, 1.5);
+      ctx.fillStyle = rgbGrad;
+      ctx.globalAlpha = 0.5;
+      ctx.fill();
+      ctx.restore();
+      ctx.globalAlpha = 1;
+    }
+
+    function drawMouse() {
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.3)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetY = 3;
+      // Mouse body
+      ctx.beginPath();
+      ctx.ellipse(470, 378, 12, 18, 0, 0, Math.PI * 2);
+      const mouseGrad = ctx.createRadialGradient(467, 372, 2, 470, 378, 18);
+      mouseGrad.addColorStop(0, '#222');
+      mouseGrad.addColorStop(1, '#0e0e0e');
+      ctx.fillStyle = mouseGrad;
+      ctx.fill();
+      ctx.restore();
+      // Scroll wheel
+      roundRect(468, 367, 4, 6, 2);
+      ctx.fillStyle = '#333';
+      ctx.fill();
+    }
+
+    function drawScreenContent(time: number) {
+      // Split line
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      ctx.fillRect(300, 68, 1, 232);
+
+      // === Editor side ===
+      // Editor bar
+      ctx.fillStyle = '#161b22';
+      roundRect(108, 68, 192, 16, [4, 0, 0, 0]);
+      ctx.fill();
+      // Traffic lights
+      const dots = [['#ff5f56', 118], ['#ffbd2e', 128], ['#27c93f', 138]];
+      dots.forEach(([color, x]) => {
+        ctx.beginPath();
+        ctx.arc(x as number, 76, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = color as string;
+        ctx.fill();
+      });
+      ctx.fillStyle = '#8b949e';
+      ctx.font = '7px monospace';
+      ctx.fillText('Hero.astro', 150, 79);
+
+      // Code lines (typing animation)
+      const maxChars = Math.floor(time / 80);
+      let totalChars = 0;
+      const lineH = 12;
+      const startY = 96;
+
+      for (let i = 0; i < codeLines.length; i++) {
+        const line = codeLines[i];
+        const x = 115 + line.indent * 12;
+        const y = startY + i * lineH;
+        if (y > 290) break;
+
+        // Line number
+        ctx.fillStyle = '#484f58';
+        ctx.font = '7px monospace';
+        ctx.fillText(String(i + 1), 110, y);
+
+        for (const token of line.tokens) {
+          const chars = token.t.split('');
+          for (const ch of chars) {
+            if (totalChars >= maxChars) {
+              // Cursor
+              if (Math.floor(time / 500) % 2 === 0) {
+                ctx.fillStyle = '#5eead4';
+                ctx.fillRect(x + ctx.measureText(token.t.substring(0, chars.indexOf(ch))).width, y - 7, 1.5, 9);
+              }
+              return;
+            }
+            totalChars++;
+          }
+          ctx.fillStyle = token.c;
+          ctx.font = '7.5px monospace';
+          ctx.fillText(token.t, x, y);
+        }
+      }
+
+      // === Preview side ===
+      // Preview bar
+      ctx.fillStyle = '#161b22';
+      roundRect(301, 68, 191, 16, [0, 4, 0, 0]);
+      ctx.fill();
+      const pdots = [['#ff5f56', 310], ['#ffbd2e', 320], ['#27c93f', 330]];
+      pdots.forEach(([color, x]) => {
+        ctx.beginPath();
+        ctx.arc(x as number, 76, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = color as string;
+        ctx.fill();
+      });
+      // URL bar
+      roundRect(340, 72, 140, 8, 3);
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      ctx.fill();
+      ctx.fillStyle = '#8b949e';
+      ctx.font = '6px monospace';
+      ctx.fillText('smiro.dev', 348, 78);
+
+      // Preview content
+      ctx.fillStyle = '#0f0e0c';
+      ctx.fillRect(301, 84, 191, 216);
+
+      // Nav
+      ctx.fillStyle = '#5eead4';
+      ctx.font = 'bold 8px serif';
+      ctx.fillText('SM', 310, 96);
+      ctx.fillStyle = '#7a7874';
+      ctx.font = '5px sans-serif';
+      ctx.fillText('Home  Projects  Blog  Contact', 410, 96);
+
+      // Hero text
+      ctx.fillStyle = '#e8e6e2';
+      ctx.font = 'bold 16px serif';
+      ctx.fillText('Full Stack', 310, 130);
+      ctx.fillText('Developer.', 310, 150);
+      ctx.fillStyle = '#5eead4';
+      ctx.fillText('AI Whisperer.', 310, 170);
+      ctx.fillStyle = '#7a7874';
+      ctx.font = '6px sans-serif';
+      ctx.fillText('Building the future with AI & automation', 310, 184);
+
+      // CTA buttons
+      roundRect(310, 192, 45, 12, 4);
+      ctx.fillStyle = '#5eead4';
+      ctx.fill();
+      ctx.fillStyle = '#0f0e0c';
+      ctx.font = 'bold 6px sans-serif';
+      ctx.fillText('Projects', 318, 200);
+
+      roundRect(362, 192, 40, 12, 4);
+      ctx.strokeStyle = '#3d3c3a';
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+      ctx.fillStyle = '#e8e6e2';
+      ctx.fillText('Contact', 370, 200);
+
+      // Project cards
+      for (let i = 0; i < 3; i++) {
+        const cx = 310 + i * 62;
+        roundRect(cx, 214, 56, 40, 5);
+        ctx.fillStyle = '#141310';
+        ctx.fill();
+        ctx.strokeStyle = '#2a2927';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+      const cardNames = ['Vistalid', 'SimplifyEU', 'smiro.dev'];
+      cardNames.forEach((name, i) => {
+        ctx.fillStyle = '#e8e6e2';
+        ctx.font = 'bold 6px sans-serif';
+        ctx.fillText(name, 315 + i * 62, 230);
+      });
+    }
+
+    function draw() {
+      const time = Date.now();
+      ctx.clearRect(0, 0, W, H);
+
+      // Background
+      ctx.fillStyle = '#0f0e0c';
+      ctx.fillRect(0, 0, W, H);
+
+      drawMonitor(time);
+      drawStand();
+      drawKeyboard(time);
+      drawMouse();
+      drawScreenContent(time);
+
+      frame++;
+      requestAnimationFrame(draw);
+    }
+    draw();
+  }
+</script>

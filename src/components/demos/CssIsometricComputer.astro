@@ -1,0 +1,383 @@
+---
+/**
+ * CSS Isometric 3D Computer
+ * Pure CSS — no JS, no libraries
+ * Isometric perspective with visible top + side faces
+ */
+---
+
+<div class="iso-scene">
+  <div class="iso-computer">
+    <!-- Monitor -->
+    <div class="iso-monitor">
+      <div class="iso-monitor-front">
+        <div class="iso-screen">
+          <!-- Code typing with CSS animation -->
+          <div class="iso-editor">
+            <div class="iso-editor-bar">
+              <span class="iso-dot red"></span>
+              <span class="iso-dot yellow"></span>
+              <span class="iso-dot green"></span>
+              <span class="iso-editor-name">Hero.astro</span>
+            </div>
+            <div class="iso-code">
+              <div class="code-line" style="--delay:0"><span class="kw">---</span></div>
+              <div class="code-line" style="--delay:1"><span class="cm">// Astro component</span></div>
+              <div class="code-line" style="--delay:2"><span class="kw">import</span> <span class="fn">gsap</span> <span class="kw">from</span> <span class="st">'gsap'</span></div>
+              <div class="code-line" style="--delay:3"><span class="kw">---</span></div>
+              <div class="code-line" style="--delay:4"></div>
+              <div class="code-line" style="--delay:5"><span class="tg">&lt;section</span> <span class="at">class=</span><span class="st">"hero"</span><span class="tg">&gt;</span></div>
+              <div class="code-line" style="--delay:6">  <span class="tg">&lt;h1&gt;</span></div>
+              <div class="code-line" style="--delay:7">    <span class="tx">AI Whisperer.</span></div>
+              <div class="code-line" style="--delay:8">  <span class="tg">&lt;/h1&gt;</span></div>
+              <div class="code-line" style="--delay:9">  <span class="tg">&lt;p&gt;</span><span class="tx">Build the</span></div>
+              <div class="code-line" style="--delay:10">    <span class="tx">future</span><span class="tg">&lt;/p&gt;</span></div>
+              <div class="code-line" style="--delay:11"><span class="tg">&lt;/section&gt;</span></div>
+            </div>
+          </div>
+          <!-- Preview -->
+          <div class="iso-preview">
+            <div class="iso-preview-bar">
+              <span class="iso-dot red"></span>
+              <span class="iso-dot yellow"></span>
+              <span class="iso-dot green"></span>
+              <span class="iso-url">smiro.dev</span>
+            </div>
+            <div class="iso-preview-content">
+              <div class="prev-nav">SM <span>Home Projects Blog</span></div>
+              <div class="prev-hero">
+                <div class="prev-title">Full Stack</div>
+                <div class="prev-title">Developer.</div>
+                <div class="prev-title accent">AI Whisperer.</div>
+                <div class="prev-sub">Building the future with AI</div>
+                <div class="prev-btns">
+                  <span class="prev-btn primary">Projects</span>
+                  <span class="prev-btn outline">Contact</span>
+                </div>
+              </div>
+              <div class="prev-cards">
+                <div class="prev-card"></div>
+                <div class="prev-card"></div>
+                <div class="prev-card"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="iso-power-led"></div>
+      </div>
+      <div class="iso-monitor-top"></div>
+      <div class="iso-monitor-right"></div>
+    </div>
+    <!-- Stand -->
+    <div class="iso-stand-neck"></div>
+    <div class="iso-stand-base">
+      <div class="iso-stand-base-top"></div>
+      <div class="iso-stand-base-right"></div>
+    </div>
+    <!-- Keyboard -->
+    <div class="iso-keyboard">
+      <div class="iso-kb-front">
+        <div class="iso-kb-row"></div>
+        <div class="iso-kb-row"></div>
+        <div class="iso-kb-row"></div>
+        <div class="iso-kb-space"></div>
+      </div>
+      <div class="iso-kb-top"></div>
+      <div class="iso-kb-right"></div>
+      <!-- RGB underglow -->
+      <div class="iso-rgb-glow"></div>
+    </div>
+    <!-- Desk glow -->
+    <div class="iso-desk-glow"></div>
+  </div>
+</div>
+
+<style>
+  .iso-scene {
+    width: 100%;
+    min-height: 350px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 800px;
+  }
+  .iso-computer {
+    transform-style: preserve-3d;
+    transform: rotateX(-8deg) rotateY(-18deg) rotateZ(2deg);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ===== MONITOR ===== */
+  .iso-monitor {
+    position: relative;
+    transform-style: preserve-3d;
+  }
+  .iso-monitor-front {
+    width: clamp(260px, 50vw, 420px);
+    aspect-ratio: 16/10;
+    background: linear-gradient(135deg, #0e0e0e, #050505);
+    border-radius: 8px;
+    padding: 4px;
+    box-shadow:
+      0 30px 80px rgba(0,0,0,0.8),
+      0 0 0 1px rgba(255,255,255,0.04),
+      inset 0 1px 0 rgba(255,255,255,0.06);
+    position: relative;
+    z-index: 2;
+  }
+  .iso-monitor-top {
+    position: absolute;
+    top: -12px;
+    left: 4px;
+    right: 4px;
+    height: 14px;
+    background: linear-gradient(180deg, #1a1a1a, #0e0e0e);
+    transform-origin: bottom;
+    transform: rotateX(75deg);
+    border-radius: 8px 8px 0 0;
+  }
+  .iso-monitor-right {
+    position: absolute;
+    top: 4px;
+    right: -10px;
+    bottom: 4px;
+    width: 12px;
+    background: linear-gradient(90deg, #0a0a0a, #060606);
+    transform-origin: left;
+    transform: rotateY(75deg);
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* ===== SCREEN ===== */
+  .iso-screen {
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    background: #0d1117;
+  }
+
+  /* ===== EDITOR ===== */
+  .iso-editor {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #0d1117;
+    min-width: 0;
+  }
+  .iso-editor-bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: #161b22;
+    font-size: 7px;
+    color: #8b949e;
+  }
+  .iso-dot { width: 5px; height: 5px; border-radius: 50%; }
+  .iso-dot.red { background: #ff5f56; }
+  .iso-dot.yellow { background: #ffbd2e; }
+  .iso-dot.green { background: #27c93f; }
+  .iso-editor-name { margin-left: 4px; font-family: monospace; }
+  .iso-code {
+    flex: 1;
+    padding: 6px 8px;
+    font-family: 'SF Mono', monospace;
+    font-size: 7px;
+    line-height: 1.6;
+    overflow: hidden;
+  }
+
+  /* Code typing animation — each line appears sequentially */
+  .code-line {
+    opacity: 0;
+    animation: typeIn 0.3s ease forwards;
+    animation-delay: calc(var(--delay) * 0.6s + 0.5s);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  @keyframes typeIn {
+    from { opacity: 0; max-width: 0; }
+    to { opacity: 1; max-width: 300px; }
+  }
+
+  /* Syntax colors */
+  .kw { color: #ff7b72; }
+  .fn { color: #79c0ff; }
+  .st { color: #a5d6ff; }
+  .cm { color: #8b949e; }
+  .tg { color: #7ee787; }
+  .at { color: #79c0ff; }
+  .tx { color: #c9d1d9; }
+
+  /* ===== PREVIEW ===== */
+  .iso-preview {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid rgba(255,255,255,0.06);
+    min-width: 0;
+  }
+  .iso-preview-bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: #161b22;
+    font-size: 7px;
+  }
+  .iso-url {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border-radius: 3px;
+    padding: 1px 6px;
+    color: #8b949e;
+    font-family: monospace;
+    margin-left: 4px;
+  }
+  .iso-preview-content {
+    flex: 1;
+    background: #0f0e0c;
+    padding: 6px;
+    overflow: hidden;
+  }
+  .prev-nav {
+    font-size: 7px;
+    font-weight: bold;
+    color: #5eead4;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .prev-nav span { font-weight: normal; color: #7a7874; font-size: 5px; }
+  .prev-title { font-size: 11px; font-weight: bold; color: #e8e6e2; line-height: 1.15; font-family: serif; }
+  .prev-title.accent { color: #5eead4; }
+  .prev-sub { font-size: 5px; color: #7a7874; margin: 4px 0; }
+  .prev-btns { display: flex; gap: 3px; }
+  .prev-btn { font-size: 5px; padding: 2px 6px; border-radius: 3px; }
+  .prev-btn.primary { background: #5eead4; color: #0f0e0c; }
+  .prev-btn.outline { border: 1px solid #3d3c3a; color: #e8e6e2; }
+  .prev-cards { display: flex; gap: 3px; margin-top: 6px; }
+  .prev-card {
+    flex: 1;
+    height: 28px;
+    background: #141310;
+    border-radius: 4px;
+    border: 1px solid #2a2927;
+  }
+
+  /* ===== POWER LED ===== */
+  .iso-power-led {
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 3px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #ff0080, #7928ca, #0070f3, #00dfd8);
+    box-shadow: 0 0 10px rgba(0,223,216,0.5);
+    animation: ledShift 3s linear infinite;
+  }
+  @keyframes ledShift {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+  }
+
+  /* ===== STAND ===== */
+  .iso-stand-neck {
+    width: 20px;
+    height: 22px;
+    background: linear-gradient(90deg, #111, #1a1a1a, #111);
+    position: relative;
+    z-index: 1;
+  }
+  .iso-stand-base {
+    width: 80px;
+    height: 6px;
+    background: #0e0e0e;
+    border-radius: 0 0 4px 4px;
+    position: relative;
+    transform-style: preserve-3d;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  }
+  .iso-stand-base-top {
+    position: absolute;
+    top: -4px;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: #151515;
+    transform-origin: bottom;
+    transform: rotateX(75deg);
+  }
+
+  /* ===== KEYBOARD ===== */
+  .iso-keyboard {
+    margin-top: 10px;
+    position: relative;
+    transform-style: preserve-3d;
+  }
+  .iso-kb-front {
+    width: clamp(180px, 35vw, 280px);
+    padding: 6px 10px;
+    background: #111;
+    border-radius: 5px;
+    border: 1px solid #222;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+  }
+  .iso-kb-row { height: 4px; background: #2a2a30; border-radius: 2px; opacity: 0.5; }
+  .iso-kb-space { height: 4px; width: 50%; margin: 0 auto; background: #2a2a30; border-radius: 2px; opacity: 0.5; }
+  .iso-kb-top {
+    position: absolute;
+    top: -5px;
+    left: 2px;
+    right: 2px;
+    height: 6px;
+    background: #151515;
+    transform-origin: bottom;
+    transform: rotateX(75deg);
+    border-radius: 5px 5px 0 0;
+  }
+  .iso-kb-right {
+    position: absolute;
+    top: 2px;
+    right: -6px;
+    bottom: 2px;
+    width: 7px;
+    background: #0a0a0a;
+    transform-origin: left;
+    transform: rotateY(75deg);
+    border-radius: 0 3px 3px 0;
+  }
+  .iso-rgb-glow {
+    position: absolute;
+    bottom: -4px;
+    left: 10%;
+    right: 10%;
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #ff0080, #7928ca, #0070f3, #00dfd8, #7928ca);
+    opacity: 0.6;
+    filter: blur(3px);
+    animation: ledShift 3s linear infinite;
+  }
+
+  /* ===== DESK GLOW ===== */
+  .iso-desk-glow {
+    width: 60%;
+    height: 15px;
+    background: radial-gradient(ellipse, rgba(94,234,212,0.15) 0%, transparent 70%);
+    margin-top: 10px;
+    filter: blur(10px);
+  }
+</style>
