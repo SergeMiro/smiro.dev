@@ -2,6 +2,7 @@
 import { ClientRouter } from 'astro:transitions';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
+import PageTransition from '../components/PageTransition.astro';
 import '../styles/global.css';
 
 interface Props {
@@ -90,8 +91,9 @@ const fullTitle = `${title} | smiro.dev`;
       <div class="blob blob--3 bottom-[10%] left-[30%]"></div>
     </div>
 
+    <PageTransition />
     <Nav />
-    <main id="main-content" class="flex-1" transition:animate="fade">
+    <main id="main-content" class="flex-1" transition:animate="none">
       <slot />
     </main>
     <Footer />

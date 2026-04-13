@@ -1,0 +1,83 @@
+---
+/**
+ * Page Transition Overlay
+ * Inspired by Barba.js + GSAP page transitions
+ * Uses Astro's built-in View Transitions hooks
+ *
+ * Effect: Horizontal blinds that slide in, pause, then slide out
+ * revealing the new page underneath
+ */
+---
+
+<div class="page-transition" id="page-transition" aria-hidden="true">
+  <div class="transition-blind" style="--i:0"></div>
+  <div class="transition-blind" style="--i:1"></div>
+  <div class="transition-blind" style="--i:2"></div>
+  <div class="transition-blind" style="--i:3"></div>
+  <div class="transition-blind" style="--i:4"></div>
+  <div class="transition-blind" style="--i:5"></div>
+</div>
+
+<style>
+  .page-transition {
+    position: fixed;
+    inset: 0;
+    z-index: 190;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+  }
+  .transition-blind {
+    flex: 1;
+    background: var(--color-text, #1a1a1a);
+    transform: scaleY(0);
+    transform-origin: top;
+    will-change: transform;
+  }
+</style>
+
+<script>
+  import gsap from 'gsap';
+
+  const overlay = document.getElementById('page-transition');
+  const blinds = overlay?.querySelectorAll('.transition-blind');
+  if (!overlay || !blinds?.length) throw new Error('Missing page-transition');
+
+  // === LEAVE: blinds close (cover the page) ===
+  document.addEventListener('astro:before-preparation', (e) => {
+    // Prevent default Astro fade
+    const event = e as any;
+    if (event.formData) return; // skip form submissions
+
+    overlay.style.pointerEvents = 'auto';
+
+    gsap.set(blinds, { scaleY: 0, transformOrigin: 'top' });
+    gsap.to(blinds, {
+      scaleY: 1,
+      duration: 0.4,
+      ease: 'power3.inOut',
+      stagger: {
+        each: 0.06,
+        from: 'start',
+      },
+    });
+  });
+
+  // === ENTER: blinds open (reveal new page) ===
+  document.addEventListener('astro:after-swap', () => {
+    gsap.set(blinds, { transformOrigin: 'bottom' });
+    gsap.to(blinds, {
+      scaleY: 0,
+      duration: 0.4,
+      delay: 0.15,
+      ease: 'power3.inOut',
+      stagger: {
+        each: 0.06,
+        from: 'end',
+      },
+      onComplete: () => {
+        overlay.style.pointerEvents = 'none';
+      },
+    });
+  });
+</script>
