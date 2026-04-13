@@ -3,15 +3,10 @@ import Layout from '../layouts/Layout.astro';
 import Hero from '../components/Hero.astro';
 import About from '../components/About.astro';
 import FeaturedProjects from '../components/FeaturedProjects.astro';
-import ScrollMask from '../components/ScrollMask.astro';
 ---
 
 <Layout title="SergeMiro" pageColor="home">
   <Hero />
-  <ScrollMask pattern="blinds">
-    <About />
-  </ScrollMask>
-  <ScrollMask pattern="grid" cols={10} rows={6}>
-    <FeaturedProjects />
-  </ScrollMask>
+  <About />
+  <FeaturedProjects />
 </Layout>
