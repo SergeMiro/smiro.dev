@@ -181,11 +181,11 @@ const currentPath = Astro.url.pathname;
     });
   });
 
-  // Theme icon sync
+  // Theme icon sync (default = light, dark-icon=sun shows in light, light-icon=moon shows in dark)
   function syncIcons() {
-    const isLight = document.documentElement.classList.contains('light');
-    document.querySelectorAll('.dark-icon').forEach(el => el.classList.toggle('hidden', isLight));
-    document.querySelectorAll('.light-icon').forEach(el => el.classList.toggle('hidden', !isLight));
+    const isDark = document.documentElement.classList.contains('dark');
+    document.querySelectorAll('.dark-icon').forEach(el => el.classList.toggle('hidden', isDark));
+    document.querySelectorAll('.light-icon').forEach(el => el.classList.toggle('hidden', !isDark));
   }
   syncIcons();
   const observer = new MutationObserver(syncIcons);

@@ -80,15 +80,15 @@ if (!prefersReduced) {
   }
 }
 
-// Theme toggle
+// Theme toggle (default = light, toggle adds 'dark')
 const toggle = document.querySelector('[data-theme-toggle]');
 if (toggle) {
   const saved = localStorage.getItem('theme');
-  if (saved === 'light') document.documentElement.classList.add('light');
+  if (saved === 'dark') document.documentElement.classList.add('dark');
 
   toggle.addEventListener('click', () => {
-    document.documentElement.classList.toggle('light');
-    const isLight = document.documentElement.classList.contains('light');
-    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    document.documentElement.classList.toggle('dark');
+    const isDark = document.documentElement.classList.contains('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
   });
 }
