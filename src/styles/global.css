@@ -40,16 +40,14 @@ html {
   background-color: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 1.8;
+  font-size: 16px;
+  line-height: 1.6;
   scroll-behavior: auto;
   -webkit-font-smoothing: antialiased;
 }
 
 body {
   overflow-x: hidden;
-  font-size: 16px;
-  line-height: 1.6;
 }
 
 /* ===== DARK MODE ===== */

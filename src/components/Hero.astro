@@ -1,49 +1,46 @@
 ---
-import PcEvolution from './PcEvolution.astro';
+
 ---
 
-<section class="relative min-h-screen flex items-center pt-16 overflow-hidden">
-  <!-- Abstract mesh gradient background -->
+<section class="relative min-h-[100svh] flex items-center pt-14 sm:pt-16 overflow-hidden">
+  <!-- Subtle warm gradient background -->
   <div class="absolute inset-0 opacity-30" aria-hidden="true">
-    <div class="absolute top-1/4 -left-1/4 w-[600px] h-[600px] rounded-full bg-[var(--color-primary)] opacity-[0.07] blur-[120px] animate-pulse-slow"></div>
-    <div class="absolute bottom-1/4 -right-1/4 w-[500px] h-[500px] rounded-full bg-[var(--color-accent)] opacity-[0.05] blur-[100px] animate-pulse-slow" style="animation-delay: 2s"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-[oklch(0.7_0.15_140)] opacity-[0.03] blur-[90px] animate-pulse-slow" style="animation-delay: 4s"></div>
+    <div class="absolute top-1/4 -left-1/4 w-[500px] h-[500px] rounded-full bg-[var(--color-primary)] opacity-[0.06] blur-[120px] animate-pulse-slow"></div>
+    <div class="absolute bottom-1/4 -right-1/4 w-[400px] h-[400px] rounded-full bg-[var(--color-accent)] opacity-[0.04] blur-[100px] animate-pulse-slow" style="animation-delay: 2s"></div>
   </div>
 
-  <div class="relative mx-auto max-w-7xl px-6 py-16 md:py-24 w-full">
-    <!-- Top row: Badge -->
-    <div class="flex justify-between items-start mb-6 flex-col-reverse sm:flex-row gap-4">
-      <div data-reveal></div>
-      <div class="badge-3d self-start sm:self-auto" data-reveal>
-        <div class="badge-3d-inner">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0"></span>
-          Available for freelance
-        </div>
+  <div class="relative mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 md:py-20 w-full">
+    <!-- Badge -->
+    <div class="mb-6 sm:mb-8" data-reveal>
+      <div class="badge-3d-inner">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0"></span>
+        Available for freelance
       </div>
     </div>
 
-    <!-- Two-column layout: text + animation -->
-    <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-      <!-- Left: Text content -->
+    <!-- Two-column: text + 3D computer -->
+    <div class="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+      <!-- Left: Text -->
       <div>
         <h1
           data-split="chars"
-          class="font-[var(--font-display)] text-[length:clamp(1.8rem,4.5vw,4.5rem)] font-bold leading-[0.95] tracking-tight"
+          class="font-[var(--font-serif)] text-[length:var(--text-hero)] leading-[1.08] tracking-tight"
+          style="font-weight: 400;"
         >
           Full Stack Developer.<br />
-          <span class="text-[var(--color-primary)]">AI Whisperer.</span><br />
+          <span class="text-[var(--color-primary)]" style="font-style: italic;">AI Whisperer.</span><br />
           Automation Addict.
         </h1>
 
-        <p class="hero-sub mt-6 max-w-xl text-lg md:text-xl text-[var(--color-text-muted)] leading-relaxed">
+        <p class="mt-5 sm:mt-6 max-w-md font-[var(--font-mono)] text-[13px] sm:text-[14px] leading-[1.8] text-[var(--color-text-body)]">
           I build web apps, teach LLMs to work for me, and automate everything else
           — based in Dijon, France.
         </p>
 
-        <div class="hero-ctas mt-8 flex flex-wrap gap-4">
+        <div class="mt-6 sm:mt-8 flex flex-wrap gap-3 sm:gap-4">
           <a
             href="/projects"
-            class="code-trigger inline-flex items-center gap-2 px-6 py-3 bg-[var(--color-primary)] text-[var(--color-bg)] font-medium rounded-lg hover:bg-[var(--color-primary-hover)] transition-all duration-300 hover:shadow-lg hover:shadow-[var(--color-primary)]/20 active:scale-[0.97]"
+            class="inline-flex items-center gap-2 px-7 py-3.5 sm:py-4 bg-[var(--color-text)] text-[var(--color-bg)] font-[var(--font-mono)] text-[14px] font-medium tracking-[0.02em] rounded-[10px] hover:opacity-90 transition-all duration-300 active:scale-[0.97]"
             data-prefetch
           >
             View Projects
@@ -53,7 +50,7 @@ import PcEvolution from './PcEvolution.astro';
           </a>
           <a
             href="/contact"
-            class="code-trigger inline-flex items-center gap-2 px-6 py-3 border border-[var(--color-border)] text-[var(--color-text)] font-medium rounded-lg hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-all duration-300 active:scale-[0.97]"
+            class="inline-flex items-center gap-2 px-7 py-3.5 sm:py-4 border border-[var(--color-border)] text-[var(--color-text)] font-[var(--font-mono)] text-[14px] font-medium tracking-[0.02em] rounded-[10px] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-all duration-300 active:scale-[0.97]"
             data-prefetch
           >
             Contact Me
@@ -61,24 +58,24 @@ import PcEvolution from './PcEvolution.astro';
         </div>
       </div>
 
-      <!-- Right: PC Evolution Animation -->
-      <div class="order-first lg:order-last" data-reveal>
-        <PcEvolution />
+      <!-- Right: 3D Pixar Computer -->
+      <div class="order-first lg:order-last" data-reveal id="pixar-mount">
+        <!-- Three.js mounts here via client-side script -->
       </div>
     </div>
   </div>
 
   <!-- Scroll indicator -->
-  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2" data-reveal>
-    <span class="text-xs text-[var(--color-text-faint)] tracking-widest uppercase">Scroll</span>
-    <div class="w-px h-12 bg-gradient-to-b from-[var(--color-text-faint)] to-transparent animate-scroll-line"></div>
+  <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2" data-reveal>
+    <span class="font-[var(--font-mono)] text-[10px] text-[var(--color-text-faint)] tracking-[0.12em] uppercase">Scroll</span>
+    <div class="w-px h-10 bg-gradient-to-b from-[var(--color-text-faint)] to-transparent animate-scroll-line"></div>
   </div>
 </section>
 
 <style>
   @keyframes pulse-slow {
-    0%, 100% { opacity: 0.07; transform: scale(1); }
-    50% { opacity: 0.12; transform: scale(1.05); }
+    0%, 100% { opacity: 0.06; transform: scale(1); }
+    50% { opacity: 0.1; transform: scale(1.05); }
   }
   .animate-pulse-slow {
     animation: pulse-slow 8s ease-in-out infinite;
@@ -93,3 +90,25 @@ import PcEvolution from './PcEvolution.astro';
     animation: scroll-line 2s ease-in-out infinite;
   }
 </style>
+
+<!-- Lazy-load Three.js only when hero is visible -->
+<script>
+  import { createElement } from 'react';
+  import { createRoot } from 'react-dom/client';
+
+  const mount = document.getElementById('pixar-mount');
+  if (mount) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          import('./PixarComputer').then(({ default: PixarComputer }) => {
+            const root = createRoot(mount);
+            root.render(createElement(PixarComputer));
+          });
+          observer.disconnect();
+        }
+      });
+    }, { rootMargin: '100px' });
+    observer.observe(mount);
+  }
+</script>

@@ -54,12 +54,13 @@ const stackGroups = [
         </div>
 
         <!-- Stats -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-6 mt-12">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 mt-10 sm:mt-12">
           {stats.map((stat) => (
             <div class="text-center md:text-left">
               <div
                 data-count={stat.value}
-                class="font-[var(--font-display)] text-3xl md:text-4xl font-bold text-[var(--color-primary)]"
+                class="font-[var(--font-serif)] text-2xl sm:text-3xl md:text-4xl text-[var(--color-primary)]"
+                style="font-weight: 400;"
               >
                 0+
               </div>
