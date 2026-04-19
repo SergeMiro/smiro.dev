@@ -3,10 +3,29 @@
 ---
 
 <section class="relative min-h-[100svh] flex items-center pt-14 sm:pt-16 overflow-hidden">
-  <!-- Subtle warm gradient background -->
-  <div class="absolute inset-0 opacity-30" aria-hidden="true">
-    <div class="absolute top-1/4 -left-1/4 w-[500px] h-[500px] rounded-full bg-[var(--color-primary)] opacity-[0.06] blur-[120px] animate-pulse-slow"></div>
-    <div class="absolute bottom-1/4 -right-1/4 w-[400px] h-[400px] rounded-full bg-[var(--color-accent)] opacity-[0.04] blur-[100px] animate-pulse-slow" style="animation-delay: 2s"></div>
+  <!-- ═══ LAYER 1: Background video ═══ -->
+  <div class="hero-video-wrap" aria-hidden="true">
+    <video
+      class="hero-video"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="auto"
+      poster="/hero-poster.jpg"
+    >
+      <source src="/hero-bg.webm" type="video/webm" />
+      <source src="/hero-bg.mp4" type="video/mp4" />
+    </video>
+  </div>
+
+  <!-- ═══ LAYER 2: Color tint + readability overlay ═══ -->
+  <div class="hero-overlay" aria-hidden="true"></div>
+
+  <!-- ═══ LAYER 3: Animated gradient blobs (on top of video) ═══ -->
+  <div class="absolute inset-0 opacity-40 pointer-events-none" aria-hidden="true">
+    <div class="absolute top-1/4 -left-1/4 w-[500px] h-[500px] rounded-full bg-[var(--color-primary)] opacity-[0.08] blur-[120px] animate-pulse-slow"></div>
+    <div class="absolute bottom-1/4 -right-1/4 w-[400px] h-[400px] rounded-full bg-[var(--color-accent)] opacity-[0.06] blur-[100px] animate-pulse-slow" style="animation-delay: 2s"></div>
   </div>
 
   <div class="relative mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 md:py-20 w-full">
@@ -73,6 +92,69 @@
 </section>
 
 <style>
+  /* ═══ HERO BACKGROUND VIDEO ═══ */
+  .hero-video-wrap {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .hero-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    min-width: 100%;
+    min-height: 100%;
+    transform: translate(-50%, -50%);
+    object-fit: cover;
+    opacity: 0;
+    animation: hero-video-fade 1.2s 0.3s ease forwards;
+  }
+  @keyframes hero-video-fade {
+    to { opacity: 1; }
+  }
+
+  /* Readability overlay — warm-cream tint matching site palette */
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(245, 243, 237, 0.55) 0%,
+        rgba(245, 243, 237, 0.35) 30%,
+        rgba(245, 243, 237, 0.5) 70%,
+        rgba(245, 243, 237, 0.85) 100%
+      ),
+      radial-gradient(
+        ellipse at 30% 50%,
+        rgba(245, 243, 237, 0.2) 0%,
+        rgba(245, 243, 237, 0.6) 100%
+      );
+  }
+
+  /* Dark mode: invert to dark tint */
+  :global(html.dark) .hero-overlay {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(26, 24, 22, 0.6) 0%,
+        rgba(26, 24, 22, 0.4) 30%,
+        rgba(26, 24, 22, 0.55) 70%,
+        rgba(26, 24, 22, 0.9) 100%
+      );
+  }
+
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .hero-video { animation: none; opacity: 1; }
+  }
+
   @keyframes pulse-slow {
     0%, 100% { opacity: 0.06; transform: scale(1); }
     50% { opacity: 0.1; transform: scale(1.05); }

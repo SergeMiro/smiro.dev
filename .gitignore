@@ -23,3 +23,7 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 .vercel
+
+# original video sources — only keep optimized mp4/webm/jpg in public/
+public/*.mov
+public/video-source.*
