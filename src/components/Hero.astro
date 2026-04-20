@@ -37,49 +37,40 @@
       </div>
     </div>
 
-    <!-- Two-column: text + 3D computer -->
-    <div class="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
-      <!-- Left: Text -->
-      <div>
-        <h1
-          data-split="chars"
-          class="font-[var(--font-serif)] text-[length:var(--text-hero)] leading-[1.08] tracking-tight"
-          style="font-weight: 400;"
+    <div>
+      <h1
+        data-split="chars"
+        class="font-[var(--font-serif)] text-[length:var(--text-hero)] leading-[1.08] tracking-tight"
+        style="font-weight: 400;"
+      >
+        Full Stack Developer.<br />
+        <span class="text-[var(--color-primary)]" style="font-style: italic;">AI Whisperer.</span><br />
+        Automation Addict.
+      </h1>
+
+      <p class="mt-5 sm:mt-6 max-w-md font-[var(--font-mono)] text-[13px] sm:text-[14px] leading-[1.8] text-[var(--color-text-body)]">
+        I build web apps, teach LLMs to work for me, and automate everything else
+        — based in Dijon, France.
+      </p>
+
+      <div class="mt-6 sm:mt-8 flex flex-wrap gap-3 sm:gap-4">
+        <a
+          href="/projects"
+          class="inline-flex items-center gap-2 px-7 py-3.5 sm:py-4 bg-[var(--color-text)] text-[var(--color-bg)] font-[var(--font-mono)] text-[14px] font-medium tracking-[0.02em] rounded-[10px] hover:opacity-90 transition-all duration-300 active:scale-[0.97]"
+          data-prefetch
         >
-          Full Stack Developer.<br />
-          <span class="text-[var(--color-primary)]" style="font-style: italic;">AI Whisperer.</span><br />
-          Automation Addict.
-        </h1>
-
-        <p class="mt-5 sm:mt-6 max-w-md font-[var(--font-mono)] text-[13px] sm:text-[14px] leading-[1.8] text-[var(--color-text-body)]">
-          I build web apps, teach LLMs to work for me, and automate everything else
-          — based in Dijon, France.
-        </p>
-
-        <div class="mt-6 sm:mt-8 flex flex-wrap gap-3 sm:gap-4">
-          <a
-            href="/projects"
-            class="inline-flex items-center gap-2 px-7 py-3.5 sm:py-4 bg-[var(--color-text)] text-[var(--color-bg)] font-[var(--font-mono)] text-[14px] font-medium tracking-[0.02em] rounded-[10px] hover:opacity-90 transition-all duration-300 active:scale-[0.97]"
-            data-prefetch
-          >
-            View Projects
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </a>
-          <a
-            href="/contact"
-            class="inline-flex items-center gap-2 px-7 py-3.5 sm:py-4 border border-[var(--color-border)] text-[var(--color-text)] font-[var(--font-mono)] text-[14px] font-medium tracking-[0.02em] rounded-[10px] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-all duration-300 active:scale-[0.97]"
-            data-prefetch
-          >
-            Contact Me
-          </a>
-        </div>
-      </div>
-
-      <!-- Right: 3D Pixar Computer -->
-      <div class="order-first lg:order-last" data-reveal id="pixar-mount">
-        <!-- Three.js mounts here via client-side script -->
+          View Projects
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </a>
+        <a
+          href="/contact"
+          class="inline-flex items-center gap-2 px-7 py-3.5 sm:py-4 border border-[var(--color-border)] text-[var(--color-text)] font-[var(--font-mono)] text-[14px] font-medium tracking-[0.02em] rounded-[10px] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-all duration-300 active:scale-[0.97]"
+          data-prefetch
+        >
+          Contact Me
+        </a>
       </div>
     </div>
   </div>
@@ -173,24 +164,3 @@
   }
 </style>
 
-<!-- Lazy-load Three.js only when hero is visible -->
-<script>
-  import { createElement } from 'react';
-  import { createRoot } from 'react-dom/client';
-
-  const mount = document.getElementById('pixar-mount');
-  if (mount) {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          import('./PixarComputer').then(({ default: PixarComputer }) => {
-            const root = createRoot(mount);
-            root.render(createElement(PixarComputer));
-          });
-          observer.disconnect();
-        }
-      });
-    }, { rootMargin: '100px' });
-    observer.observe(mount);
-  }
-</script>
