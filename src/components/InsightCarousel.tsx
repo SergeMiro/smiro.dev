@@ -41,6 +41,7 @@ const TTSReader: FC<{ text: string; lang: string }> = ({ text, lang }) => {
   const queueRef = useRef<string[]>([]);
   const chunkIdxRef = useRef(0);
   const chunkUrlsRef = useRef<string[]>([]);
+  const webSpeechTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const cleanup = useCallback(() => {
     if (audioRef.current) {
@@ -53,6 +54,10 @@ const TTSReader: FC<{ text: string; lang: string }> = ({ text, lang }) => {
     chunkUrlsRef.current = [];
     queueRef.current = [];
     chunkIdxRef.current = 0;
+    if (webSpeechTickRef.current) {
+      clearInterval(webSpeechTickRef.current);
+      webSpeechTickRef.current = null;
+    }
     speechSynthesis.cancel();
   }, []);
 
@@ -63,36 +68,77 @@ const TTSReader: FC<{ text: string; lang: string }> = ({ text, lang }) => {
     setProgress(0);
   }, [cleanup]);
 
+  const speakNow = useCallback(
+    (plain: string) => {
+      const u = new SpeechSynthesisUtterance(plain);
+      u.lang = lang;
+      u.rate = rate;
+      const voices = speechSynthesis.getVoices();
+      const pref = voices.find(
+        (v) =>
+          v.lang.startsWith(lang.slice(0, 2)) &&
+          (v.name.includes('Google') ||
+            v.name.includes('Microsoft') ||
+            v.name.includes('Samantha') ||
+            v.name.includes('Daniel'))
+      );
+      if (pref) u.voice = pref;
+      else {
+        const fb = voices.find((v) => v.lang.startsWith(lang.slice(0, 2)));
+        if (fb) u.voice = fb;
+      }
+      u.onend = () => {
+        setPlaying(false);
+        setLoading(false);
+        setProgress(100);
+        if (webSpeechTickRef.current) clearInterval(webSpeechTickRef.current);
+      };
+      u.onerror = () => {
+        setPlaying(false);
+        setLoading(false);
+        if (webSpeechTickRef.current) clearInterval(webSpeechTickRef.current);
+      };
+      u.onboundary = (e) => {
+        if (e.charIndex && plain.length) setProgress((e.charIndex / plain.length) * 100);
+      };
+      speechSynthesis.cancel();
+      speechSynthesis.speak(u);
+      // Chrome Web Speech cuts off at ~15s — pause/resume keeps it alive.
+      if (webSpeechTickRef.current) clearInterval(webSpeechTickRef.current);
+      webSpeechTickRef.current = setInterval(() => {
+        if (!speechSynthesis.speaking) {
+          if (webSpeechTickRef.current) clearInterval(webSpeechTickRef.current);
+          return;
+        }
+        speechSynthesis.pause();
+        speechSynthesis.resume();
+      }, 10000);
+      setPlaying(true);
+      setLoading(false);
+      setUsingAI(false);
+    },
+    [lang, rate]
+  );
+
   const playWebSpeech = useCallback(() => {
     const plain = stripMarkdown(text);
-    const u = new SpeechSynthesisUtterance(plain);
-    u.lang = lang;
-    u.rate = rate;
     const voices = speechSynthesis.getVoices();
-    const pref = voices.find(
-      (v) =>
-        v.lang.startsWith(lang.slice(0, 2)) &&
-        (v.name.includes('Google') ||
-          v.name.includes('Microsoft') ||
-          v.name.includes('Samantha') ||
-          v.name.includes('Daniel'))
-    );
-    if (pref) u.voice = pref;
-    else {
-      const fb = voices.find((v) => v.lang.startsWith(lang.slice(0, 2)));
-      if (fb) u.voice = fb;
+    if (voices.length === 0) {
+      // Voices load async in Chrome; wait once.
+      const onVoices = () => {
+        speechSynthesis.removeEventListener('voiceschanged', onVoices);
+        speakNow(plain);
+      };
+      speechSynthesis.addEventListener('voiceschanged', onVoices);
+      // Safety timeout — fire anyway after 500ms
+      setTimeout(() => {
+        speechSynthesis.removeEventListener('voiceschanged', onVoices);
+        speakNow(plain);
+      }, 500);
+    } else {
+      speakNow(plain);
     }
-    u.onend = () => {
-      setPlaying(false);
-      setProgress(0);
-    };
-    u.onboundary = (e) => {
-      if (e.charIndex && plain.length) setProgress((e.charIndex / plain.length) * 100);
-    };
-    speechSynthesis.speak(u);
-    setPlaying(true);
-    setUsingAI(false);
-  }, [text, lang, rate]);
+  }, [text, speakNow]);
 
   const playChunkAt = useCallback(
     async (idx: number) => {
@@ -122,7 +168,10 @@ const TTSReader: FC<{ text: string; lang: string }> = ({ text, lang }) => {
         } catch (err) {
           if ((err as Error).name !== 'AbortError') {
             console.warn('[TTS] falling back to Web Speech:', err);
+            setLoading(false);
             playWebSpeech();
+          } else {
+            setLoading(false);
           }
           return;
         }
@@ -143,6 +192,7 @@ const TTSReader: FC<{ text: string; lang: string }> = ({ text, lang }) => {
       });
       audio.addEventListener('error', () => {
         console.warn('[TTS] audio error, falling back');
+        setLoading(false);
         playWebSpeech();
       });
 
