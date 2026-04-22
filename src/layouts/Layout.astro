@@ -70,6 +70,20 @@ const fullTitle = `${title} | smiro.dev`;
 
     <title>{fullTitle}</title>
 
+    <!-- Theme bootstrap — runs before first paint to avoid FOUC -->
+    <script is:inline>
+      (function () {
+        try {
+          var t = localStorage.getItem('theme');
+          if (!t) {
+            t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          if (t === 'dark') document.documentElement.classList.add('dark');
+          else document.documentElement.classList.remove('dark');
+        } catch (_) {}
+      })();
+    </script>
+
     <ClientRouter />
   </head>
   <body class="grain bg-[var(--color-bg)] text-[var(--color-text)] antialiased min-h-screen flex flex-col">

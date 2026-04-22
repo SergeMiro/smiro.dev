@@ -80,15 +80,6 @@ if (!prefersReduced) {
   }
 }
 
-// Theme toggle (default = light, toggle adds 'dark')
-const toggle = document.querySelector('[data-theme-toggle]');
-if (toggle) {
-  const saved = localStorage.getItem('theme');
-  if (saved === 'dark') document.documentElement.classList.add('dark');
-
-  toggle.addEventListener('click', () => {
-    document.documentElement.classList.toggle('dark');
-    const isDark = document.documentElement.classList.contains('dark');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  });
-}
+// Theme toggle is bound inside Nav.astro so it re-binds after Astro
+// ClientRouter navigations. Init (localStorage -> html.dark) happens
+// inline in Layout.astro <head> to avoid FOUC.
