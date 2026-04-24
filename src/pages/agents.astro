@@ -1,0 +1,103 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AgentGallery from '../components/AgentGallery';
+import OrchestratorPipeline from '../components/OrchestratorPipeline';
+import N8nWorkflowViewer from '../components/N8nWorkflowViewer';
+import { agents, divisions } from '../data/agents.generated';
+
+const counts = divisions.map((d) => ({ d, n: agents.filter((a) => a.division === d).length }));
+---
+
+<Layout title="Agents" description="Sergiy Mirochnyk — AI agent systems: 50+ specialized Claude Code agents, orchestrator pipeline with executor/reviewer loop, and production n8n workflows." pageColor="agents">
+  <!-- ═══ HERO ═══ -->
+  <section class="relative pt-28 pb-14 md:pt-36 md:pb-20 overflow-hidden">
+    <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
+      <div class="absolute top-1/3 -left-[10%] w-[500px] h-[500px] rounded-full bg-[var(--color-primary)] opacity-[0.05] blur-[120px]"></div>
+      <div class="absolute bottom-1/4 -right-[10%] w-[400px] h-[400px] rounded-full bg-[#8b5cf6] opacity-[0.06] blur-[100px]"></div>
+    </div>
+
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 relative">
+      <div class="max-w-3xl" data-reveal>
+        <span class="section-label mb-4 block">[ agency ]</span>
+        <h1 class="font-[var(--font-serif)] text-[length:var(--text-hero)] leading-[1.05] tracking-tight" style="font-weight: 400;" data-split="chars">
+          I build agent <span class="text-[var(--color-primary)]" style="font-style: italic;">systems</span>,<br />
+          not prompts.
+        </h1>
+
+        <p class="mt-6 max-w-xl font-mono text-[13px] sm:text-[14px] leading-[1.85] text-[var(--color-text-muted)]">
+          A production stack of {agents.length}+ specialized Claude Code agents, routed by a Smart Orchestrator,
+          executed through a reviewer-gated retry loop, with state and logging owned by n8n.
+          This page is the live repo — every agent shown below is a file you can open on GitHub, and
+          you can talk to any of them right now.
+        </p>
+
+        <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {counts.map((c) => (
+            <div class="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-4">
+              <div class="text-2xl font-[var(--font-serif)]" style="font-weight: 400;">{c.n}</div>
+              <div class="text-[10px] font-mono tracking-wider uppercase text-[var(--color-text-faint)] mt-1">{c.d}</div>
+            </div>
+          ))}
+        </div>
+
+        <div class="mt-8 flex flex-wrap gap-3">
+          <a href="#gallery" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[var(--color-text)] text-[var(--color-bg)] font-mono text-[12px] tracking-wider uppercase hover:opacity-90 transition-opacity">
+            Browse agents
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+          </a>
+          <a href="#pipeline" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] font-mono text-[12px] tracking-wider uppercase hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors">
+            See the pipeline
+          </a>
+          <a href="https://github.com/SergeMiro/ai-agents-config" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] font-mono text-[12px] tracking-wider uppercase hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors">
+            Source ↗
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ GALLERY ═══ -->
+  <section id="gallery" class="py-16 md:py-20 scroll-mt-20">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 mb-8 text-center" data-reveal>
+      <span class="section-label mb-4 block">[ agents ]</span>
+      <h2 class="font-[var(--font-serif)] text-[length:var(--text-2xl)] leading-tight" style="font-weight: 400;">
+        Each one is a <span class="text-[var(--color-primary)]" style="font-style: italic;">specialist</span>
+      </h2>
+      <p class="mt-4 mx-auto max-w-lg text-[13px] font-mono text-[var(--color-text-muted)] leading-relaxed">
+        Click a card to read the role, the full system prompt, and talk to the agent in-page.
+      </p>
+    </div>
+    <AgentGallery client:load />
+  </section>
+
+  <!-- ═══ PIPELINE ═══ -->
+  <section id="pipeline" class="py-16 md:py-20 scroll-mt-20">
+    <OrchestratorPipeline client:visible />
+  </section>
+
+  <!-- ═══ N8N WORKFLOW ═══ -->
+  <section id="n8n" class="py-16 md:py-20 scroll-mt-20">
+    <N8nWorkflowViewer client:visible />
+  </section>
+
+  <!-- ═══ CTA ═══ -->
+  <section class="py-20 md:py-28">
+    <div class="mx-auto max-w-3xl px-4 sm:px-6 text-center" data-reveal>
+      <h2 class="font-[var(--font-serif)] text-[length:var(--text-2xl)] leading-tight" style="font-weight: 400;">
+        Need this shipped for <span class="text-[var(--color-primary)]" style="font-style: italic;">your team</span>?
+      </h2>
+      <p class="mt-5 text-[14px] font-mono text-[var(--color-text-muted)] leading-relaxed">
+        I build custom agent pipelines on Claude Code SDK, LangGraph, and n8n — wired to your actual tools,
+        your actual data, your actual review gates. No generic chatbots, no demos-for-investors.
+      </p>
+      <div class="mt-8 flex justify-center gap-3 flex-wrap">
+        <a href="/contact" class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[var(--color-primary)] text-white font-mono text-[12px] tracking-wider uppercase hover:opacity-90 transition-opacity">
+          Start a conversation
+        </a>
+        <a href="/projects" class="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] font-mono text-[12px] tracking-wider uppercase hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors">
+          See prior work
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>

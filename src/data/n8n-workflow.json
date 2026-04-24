@@ -1,0 +1,436 @@
+{
+  "name": "OrchestrAgent — Plan Executor",
+  "active": false,
+  "isArchived": false,
+  "description": "Receives a project plan via webhook, bootstraps workspace + SQLite state, runs each step through run-step.sh (executor → reviewer retry loop), then applies 3D scoring (objective + review + policy) as the final pass gate before advancing. Pings Telegram on start, on any blocked step (with score breakdown), and on final success.",
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timezone": "Europe/Paris",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "saveManualExecutions": true
+  },
+  "nodes": [
+    {
+      "id": "0a28b7e0-1111-4001-9a01-000000000001",
+      "name": "Webhook Plan",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        400
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "orchestragent/plan",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "oa-plan-webhook-01"
+    },
+    {
+      "id": "0a28b7e0-1111-4001-9a01-000000000002",
+      "name": "Prepare",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        400
+      ],
+      "parameters": {
+        "jsCode": "const src = $input.first().json;\nconst body = src.body && typeof src.body === 'object' ? src.body : src;\n\nif (!body.project_id) throw new Error('payload missing project_id');\nif (!body.telegram_chat_id) throw new Error('payload missing telegram_chat_id');\nif (!Array.isArray(body.plan) || body.plan.length === 0) throw new Error('payload.plan must be a non-empty array');\n\nfor (const step of body.plan) {\n  if (typeof step.step_no !== 'number') throw new Error('each plan step needs a numeric step_no');\n  if (!step.title) throw new Error(`step ${step.step_no} missing title`);\n}\n\nconst payload_b64 = Buffer.from(JSON.stringify(body)).toString('base64');\n\nreturn [{ json: {\n  project_id: String(body.project_id),\n  telegram_chat_id: String(body.telegram_chat_id),\n  plan: body.plan,\n  plan_length: body.plan.length,\n  brief_summary: (body.brief && body.brief.summary) || '',\n  payload_b64\n}}];"
+      }
+    },
+    {
+      "id": "0a28b7e0-1111-4001-9a01-000000000003",
+      "name": "Respond Accepted",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        680,
+        260
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"accepted\",\n  \"project_id\": \"{{ $json.project_id }}\",\n  \"steps\": {{ $json.plan_length }}\n}",
+        "options": {
+          "responseCode": 202
+        }
+      }
+    },
+    {
+      "id": "0a28b7e0-1111-4001-9a01-000000000004",
+      "name": "Init Project",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        900,
+        520
+      ],
+      "parameters": {
+        "command": "=printf %s '{{ $json.payload_b64 }}' | base64 -d | /home/dev/orchestragent/scripts/db-init-project.sh"
+      }
+    },
+    {
+      "id": "0a28b7e0-1111-4001-9a01-000000000005",
+      "name": "Telegram Start",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1120,
+        520
+      ],
+      "parameters": {
+        "chatId": "={{ $('Prepare').item.json.telegram_chat_id }}",
+        "text": "=🚀 <b>OrchestrAgent</b> starting project <code>{{ $('Prepare').item.json.project_id }}</code>\n{{ $('Prepare').item.json.plan_length }} steps queued.",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML",
+          "disable_web_page_preview": true
+        }
+      }
+    },
+    {
+      "id": "0a28b7e0-1111-4001-9a01-000000000006",
+      "name": "Expand Steps",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        520
+      ],
+      "parameters": {
+        "jsCode": "const prep = $('Prepare').item.json;\nreturn prep.plan.map(step => ({ json: {\n  project_id: prep.project_id,\n  telegram_chat_id: prep.telegram_chat_id,\n  step_no: step.step_no,\n  title: step.title,\n  description: step.description || '',\n  acceptance: step.acceptance || ''\n}}));"
+      }
+    },
+    {
+      "id": "0a28b7e0-1111-4001-9a01-000000000007",
+      "name": "Split Steps",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1560,
+        520
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "0a28b7e0-1111-4001-9a01-000000000008",
+      "name": "Run Step",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1780,
+        640
+      ],
+      "parameters": {
+        "command": "=/home/dev/orchestragent/scripts/run-step.sh {{ $json.project_id }} {{ $json.step_no }}"
+      }
+    },
+    {
+      "id": "0a28b7e0-1111-4001-9a01-000000000009",
+      "name": "Parse Outcome",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        640
+      ],
+      "parameters": {
+        "jsCode": "const stdout = ($json.stdout || '').trim();\nconst lines  = stdout.split('\\n').filter(Boolean);\nconst last   = lines.length ? lines[lines.length - 1] : '';\nlet outcome;\ntry {\n  outcome = JSON.parse(last);\n} catch (e) {\n  throw new Error(`run-step.sh stdout was not JSON: ${last}`);\n}\nconst prep = $('Prepare').item.json;\nreturn [{ json: { ...outcome, telegram_chat_id: prep.telegram_chat_id }}];"
+      }
+    },
+    {
+      "id": "0a28b7e0-1111-4001-9a01-00000000000f",
+      "name": "Read Reports",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        2220,
+        640
+      ],
+      "parameters": {
+        "command": "=/home/dev/orchestragent/scripts/read-reports.sh {{ $json.project_id }} {{ $json.step_no }}"
+      }
+    },
+    {
+      "id": "0a28b7e0-1111-4001-9a01-000000000010",
+      "name": "Score 3D",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2440,
+        640
+      ],
+      "parameters": {
+        "jsCode": "// Score 3D is now METRICS-ONLY. The pass/fail decision lives in\n// run-step.sh (score >= OA_SCORE_PASS AND critical_issues == 0). This node\n// just computes breakdown for Telegram visibility — never blocks.\nconst prev = $('Parse Outcome').item.json;\nlet data = { executor: {}, reviewer: {} };\ntry {\n  data = JSON.parse(($json.stdout || '').trim()) || data;\n} catch (_) { /* report may be absent on early-block paths — degrade */ }\nconst executor    = data.executor || {};\nconst reviewerRaw = data.reviewer || {};\nconst reviewer    = reviewerRaw.full_review || reviewerRaw;\n\nlet obj = 0;\nconst qg = executor.quality_gates || {};\nif (qg.build     && qg.build.passed)     obj += 25;\nif (qg.lint      && qg.lint.passed)      obj += 5;\nif (qg.typecheck && qg.typecheck.passed) obj += 5;\nconst tests = qg.tests || {};\nconst testRatio = (tests.passed_count || 0) / Math.max(tests.total || 1, 1);\nobj += Math.round(testRatio * 20);\nconst acStatus = executor.acceptance_criteria_status || {};\nconst acMet   = Object.values(acStatus).filter(ac => ac && ac.passed).length;\nconst acTotal = Object.keys(acStatus).length || 1;\nobj += Math.round((acMet / acTotal) * 15);\nconst issues = reviewer.issues || [];\nconst critSec = issues.filter(i => i.severity === 'critical' && i.category === 'security').length;\nif (critSec === 0) obj += 10;\nobj += 10;\nobj = Math.min(obj, 100);\n\nconst rev = reviewer.review_score || 0;\nlet pol = 100;\nfor (const issue of issues) {\n  if      (issue.severity === 'critical') pol -= 25;\n  else if (issue.severity === 'major')    pol -= 10;\n  else if (issue.severity === 'minor')    pol -= 3;\n}\npol = Math.max(pol, 0);\nconst finalScore    = (obj * 0.5) + (rev * 0.35) + (pol * 0.15);\nconst criticalCount = issues.filter(i => i.severity === 'critical').length;\n\nreturn [{ json: {\n  ...prev,\n  objective_score: obj,\n  review_score: rev,\n  policy_score: pol,\n  final_score: Math.round(finalScore * 100) / 100,\n  critical_issues: criticalCount,\n  verdict: reviewer.review_verdict || null,\n  retry_instructions: reviewer.retry_instructions || ''\n}}];"
+      }
+    },
+    {
+      "id": "0a28b7e0-1111-4001-9a01-00000000000a",
+      "name": "Step Passed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2660,
+        640
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-status-done",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "done",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "0a28b7e0-1111-4001-9a01-00000000000b",
+      "name": "Telegram Blocked",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2880,
+        800
+      ],
+      "parameters": {
+        "chatId": "={{ $json.telegram_chat_id }}",
+        "text": "=🛑 <b>OrchestrAgent</b> stopped — project <code>{{ $('Prepare').item.json.project_id }}</code> blocked at step {{ $json.step_no }}\nattempts: {{ $json.attempts }} · score: <b>{{ $json.score }}</b> · cost: <code>${{ $json.cost_usd }}</code>\nreason: <code>{{ $json.block_reason }}</code>\nobjective {{ $json.objective_score }} · review {{ $json.review_score }} · policy {{ $json.policy_score }} · final {{ $json.final_score }}/100\ncritical issues: {{ $json.critical_issues }} · verdict: <code>{{ $json.verdict }}</code>\n\nReports:\n<code>workspace/{{ $('Prepare').item.json.project_id }}/step_{{ $json.step_no }}_executor.json</code>\n<code>workspace/{{ $('Prepare').item.json.project_id }}/step_{{ $json.step_no }}_reviewer.json</code>\n\n<i>Recovery:</i> <code>/oa-retry {{ $('Prepare').item.json.project_id }} {{ $json.step_no }}</code> · <code>/oa-skip {{ $('Prepare').item.json.project_id }} {{ $json.step_no }}</code>",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML",
+          "disable_web_page_preview": true
+        }
+      }
+    },
+    {
+      "id": "0a28b7e0-1111-4001-9a01-00000000000c",
+      "name": "Mark Blocked",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        3100,
+        800
+      ],
+      "parameters": {
+        "command": "=/home/dev/orchestragent/scripts/mark-project.sh {{ $('Prepare').item.json.project_id }} blocked"
+      }
+    },
+    {
+      "id": "0a28b7e0-1111-4001-9a01-00000000000d",
+      "name": "Mark Done",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1780,
+        340
+      ],
+      "parameters": {
+        "command": "=/home/dev/orchestragent/scripts/mark-project.sh {{ $('Prepare').item.json.project_id }} done"
+      }
+    },
+    {
+      "id": "0a28b7e0-1111-4001-9a01-00000000000e",
+      "name": "Telegram Success",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2000,
+        340
+      ],
+      "parameters": {
+        "chatId": "={{ $('Prepare').item.json.telegram_chat_id }}",
+        "text": "=✅ <b>OrchestrAgent</b> finished project <code>{{ $('Prepare').item.json.project_id }}</code> — all {{ $('Prepare').item.json.plan_length }} steps passed 3D review.",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML",
+          "disable_web_page_preview": true
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Plan": {
+      "main": [
+        [
+          {
+            "node": "Prepare",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare": {
+      "main": [
+        [
+          {
+            "node": "Respond Accepted",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Init Project",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init Project": {
+      "main": [
+        [
+          {
+            "node": "Telegram Start",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Start": {
+      "main": [
+        [
+          {
+            "node": "Expand Steps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expand Steps": {
+      "main": [
+        [
+          {
+            "node": "Split Steps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Steps": {
+      "main": [
+        [
+          {
+            "node": "Mark Done",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Run Step",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Step": {
+      "main": [
+        [
+          {
+            "node": "Parse Outcome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Outcome": {
+      "main": [
+        [
+          {
+            "node": "Read Reports",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Reports": {
+      "main": [
+        [
+          {
+            "node": "Score 3D",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score 3D": {
+      "main": [
+        [
+          {
+            "node": "Step Passed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step Passed?": {
+      "main": [
+        [
+          {
+            "node": "Split Steps",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram Blocked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Blocked": {
+      "main": [
+        [
+          {
+            "node": "Mark Blocked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Done": {
+      "main": [
+        [
+          {
+            "node": "Telegram Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

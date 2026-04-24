@@ -1,0 +1,182 @@
+#!/usr/bin/env node
+// Syncs selected agents from /home/dev/agents/ into smiro.dev as a TS module.
+// Picks dev-relevant subset: engineering (full), testing, selected specialized/core.
+
+import fs from 'node:fs';
+import path from 'node:path';
+
+const AGENCY_ROOT = process.env.AGENCY_ROOT || '/home/dev/agents';
+const OUT_FILE = path.resolve(process.cwd(), 'src/data/agents.generated.ts');
+
+const DIVISIONS = [
+  { dir: 'engineering', label: 'Engineering', all: true },
+  { dir: 'testing', label: 'Testing', all: true },
+  {
+    dir: 'specialized',
+    label: 'Specialized',
+    all: false,
+    allowlist: [
+      'specialized-mcp-builder',
+      'specialized-workflow-architect',
+      'specialized-developer-advocate',
+      'specialized-document-generator',
+      'specialized-model-qa',
+      'automation-governance-architect',
+      'blockchain-security-auditor',
+      'lsp-index-engineer',
+      'agents-orchestrator',
+      'agentic-identity-trust',
+    ],
+  },
+  {
+    dir: '.',
+    label: 'Core',
+    all: false,
+    allowlist: [
+      'architect',
+      'backend',
+      'frontend',
+      'devops',
+      'reviewer',
+      'security',
+      'tester',
+      'orchestrator',
+    ],
+  },
+];
+
+function parseFrontmatter(raw) {
+  const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
+  if (!m) return { meta: {}, body: raw };
+  const metaRaw = m[1];
+  const body = m[2];
+  const meta = {};
+  let key = null;
+  let multiLineBuf = [];
+  for (const line of metaRaw.split(/\r?\n/)) {
+    const kv = line.match(/^([a-zA-Z0-9_-]+)\s*:\s*(.*)$/);
+    if (kv) {
+      if (key && multiLineBuf.length) meta[key] = multiLineBuf.join(' ').trim();
+      key = kv[1];
+      const v = kv[2];
+      if (v === '>' || v === '|') {
+        multiLineBuf = [];
+      } else if (v === '') {
+        meta[key] = '';
+        key = null;
+      } else {
+        meta[key] = v.replace(/^["']|["']$/g, '').trim();
+        key = null;
+        multiLineBuf = [];
+      }
+    } else if (key) {
+      multiLineBuf.push(line.trim());
+    }
+  }
+  if (key && multiLineBuf.length) meta[key] = multiLineBuf.join(' ').trim();
+  return { meta, body };
+}
+
+function pickDesc(meta) {
+  return (meta.description || meta.vibe || '').replace(/\s+/g, ' ').trim();
+}
+
+function toSlug(file) {
+  return file.replace(/\.md$/, '');
+}
+
+// Deterministic accent color from slug — falls back if frontmatter has no color
+const COLOR_PALETTE = [
+  '#e86830', '#8b5cf6', '#06b6d4', '#10b981', '#ec4899',
+  '#f59e0b', '#3b82f6', '#ef4444', '#14b8a6', '#a855f7',
+];
+function colorFromSlug(slug, override) {
+  const known = {
+    blue: '#3b82f6', cyan: '#06b6d4', teal: '#14b8a6', green: '#10b981',
+    red: '#ef4444', orange: '#e86830', amber: '#f59e0b', yellow: '#eab308',
+    purple: '#a855f7', pink: '#ec4899', indigo: '#6366f1', violet: '#8b5cf6',
+  };
+  if (override && known[override.toLowerCase()]) return known[override.toLowerCase()];
+  let h = 0;
+  for (let i = 0; i < slug.length; i++) h = (h * 31 + slug.charCodeAt(i)) >>> 0;
+  return COLOR_PALETTE[h % COLOR_PALETTE.length];
+}
+
+const EMOJI_FALLBACKS = {
+  engineering: '⚙️',
+  testing: '🧪',
+  specialized: '🧩',
+  core: '🎯',
+};
+
+function collect() {
+  const agents = [];
+  for (const div of DIVISIONS) {
+    const dirPath = path.join(AGENCY_ROOT, div.dir === '.' ? '' : div.dir);
+    if (!fs.existsSync(dirPath)) continue;
+    const files = fs.readdirSync(dirPath).filter((f) => f.endsWith('.md') && !f.startsWith('_'));
+    for (const file of files) {
+      const slug = toSlug(file);
+      if (!div.all && div.allowlist && !div.allowlist.includes(slug)) continue;
+      const full = path.join(dirPath, file);
+      const stat = fs.statSync(full);
+      if (!stat.isFile()) continue;
+      const raw = fs.readFileSync(full, 'utf8');
+      const { meta, body } = parseFrontmatter(raw);
+      const name = (meta.name || slug)
+        .replace(/[-_]/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+        .trim();
+      const description = pickDesc(meta);
+      if (!description) continue;
+      agents.push({
+        slug,
+        name,
+        description,
+        division: div.label,
+        color: colorFromSlug(slug, meta.color),
+        emoji: meta.emoji || EMOJI_FALLBACKS[div.dir] || '🤖',
+        vibe: meta.vibe || '',
+        tools: meta.tools || '',
+        model: meta.model || 'sonnet',
+        tagline: meta.vibe || description.split(/\.\s/)[0] + '.',
+        systemPrompt: body.trim(),
+        githubPath: path.relative('/home/dev', full),
+      });
+    }
+  }
+  // Dedup by slug (Core may overlap)
+  const byId = new Map();
+  for (const a of agents) if (!byId.has(a.slug)) byId.set(a.slug, a);
+  return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function main() {
+  const agents = collect();
+  const divisions = [...new Set(agents.map((a) => a.division))];
+  const body = `// AUTO-GENERATED by scripts/sync-agents.mjs — do not edit.
+export interface Agent {
+  slug: string;
+  name: string;
+  description: string;
+  division: string;
+  color: string;
+  emoji: string;
+  vibe: string;
+  tools: string;
+  model: string;
+  tagline: string;
+  systemPrompt: string;
+  githubPath: string;
+}
+
+export const divisions: string[] = ${JSON.stringify(divisions)};
+
+export const agents: Agent[] = ${JSON.stringify(agents, null, 2)};
+`;
+  fs.mkdirSync(path.dirname(OUT_FILE), { recursive: true });
+  fs.writeFileSync(OUT_FILE, body, 'utf8');
+  console.log(`wrote ${agents.length} agents (${divisions.length} divisions) → ${OUT_FILE}`);
+}
+
+main();
