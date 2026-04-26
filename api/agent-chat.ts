@@ -31,16 +31,19 @@ interface ModelDef {
   free: boolean;
 }
 
+// Ordering matters: first wired-up entry is used as the fallback when a
+// requested model's provider isn't configured. Keep fast/reliable ones first.
 const MODELS: ModelDef[] = [
-  { id: 'glm-4.5-air',     upstreamId: 'z-ai/glm-4.5-air:free',                  provider: 'openrouter', label: 'GLM 4.5 Air',           free: true },
-  { id: 'deepseek-v3.1',   upstreamId: 'deepseek/deepseek-chat-v3.1:free',       provider: 'openrouter', label: 'DeepSeek V3.1',         free: true },
-  { id: 'qwen3-coder',     upstreamId: 'qwen/qwen3-coder:free',                  provider: 'openrouter', label: 'Qwen3 Coder',           free: true },
-  { id: 'llama-3.3-70b',   upstreamId: 'meta-llama/llama-3.3-70b-instruct:free', provider: 'openrouter', label: 'Llama 3.3 70B',         free: true },
-  { id: 'groq-llama-3.3',  upstreamId: 'llama-3.3-70b-versatile',                provider: 'groq',       label: 'Llama 3.3 70B (Groq)',  free: true },
-  { id: 'gemini-2.5-flash',upstreamId: 'gemini-2.5-flash',                       provider: 'gemini',     label: 'Gemini 2.5 Flash',      free: true },
+  { id: 'gpt-oss-120b',    upstreamId: 'openai/gpt-oss-120b:free',                provider: 'openrouter', label: 'GPT-OSS 120B',          free: true },
+  { id: 'nemotron-super',  upstreamId: 'nvidia/nemotron-3-super-120b-a12b:free',  provider: 'openrouter', label: 'Nemotron Super 120B',   free: true },
+  { id: 'glm-4.5-air',     upstreamId: 'z-ai/glm-4.5-air:free',                   provider: 'openrouter', label: 'GLM 4.5 Air (slow)',    free: true },
+  { id: 'qwen3-coder',     upstreamId: 'qwen/qwen3-coder:free',                   provider: 'openrouter', label: 'Qwen3 Coder',           free: true },
+  { id: 'llama-3.3-70b',   upstreamId: 'meta-llama/llama-3.3-70b-instruct:free',  provider: 'openrouter', label: 'Llama 3.3 70B',         free: true },
+  { id: 'groq-llama-3.3',  upstreamId: 'llama-3.3-70b-versatile',                 provider: 'groq',       label: 'Llama 3.3 70B (Groq)',  free: true },
+  { id: 'gemini-2.5-flash',upstreamId: 'gemini-2.5-flash',                        provider: 'gemini',     label: 'Gemini 2.5 Flash',      free: true },
 ];
 
-const DEFAULT_MODEL_ID = 'glm-4.5-air';
+const DEFAULT_MODEL_ID = 'gpt-oss-120b';
 
 const PROVIDER_ENV: Record<ProviderId, string> = {
   openrouter: 'OPENROUTER_API_KEY',
@@ -152,16 +155,20 @@ export default async function handler(req: Request): Promise<Response> {
         headers['X-Title'] = 'smiro.dev agent sandbox';
       }
 
+      const reqBody: Record<string, unknown> = {
+        model: wiredUp.upstreamId,
+        stream: true,
+        max_tokens: 800,
+        temperature: 0.7,
+        messages: [{ role: 'system', content: fullSystem }, ...history],
+      };
+      // OpenRouter — strip reasoning tokens so the visible reply isn't truncated by them.
+      if (wiredUp.provider === 'openrouter') reqBody.reasoning = { exclude: true };
+
       upstream = await fetch(endpoint, {
         method: 'POST',
         headers,
-        body: JSON.stringify({
-          model: wiredUp.upstreamId,
-          stream: true,
-          max_tokens: 600,
-          temperature: 0.7,
-          messages: [{ role: 'system', content: fullSystem }, ...history],
-        }),
+        body: JSON.stringify(reqBody),
       });
     } else {
       // Gemini REST streaming
