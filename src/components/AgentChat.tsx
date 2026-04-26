@@ -6,6 +6,14 @@ interface Message {
   content: string;
 }
 
+interface ModelMeta {
+  id: string;
+  label: string;
+  provider: string;
+  free: boolean;
+  ready: boolean;
+}
+
 const SUGGESTIONS: Record<string, string[]> = {
   default: [
     'What would you do first on a new project?',
@@ -20,8 +28,22 @@ const AgentChat: FC<{ agent: Agent }> = ({ agent }) => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [remaining, setRemaining] = useState<number | null>(null);
+  const [models, setModels] = useState<ModelMeta[]>([]);
+  const [model, setModel] = useState<string>('glm-4.5-air');
   const abortRef = useRef<AbortController | null>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetch('/api/agent-chat')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d || !Array.isArray(d.models)) return;
+        setModels(d.models);
+        const first = d.models.find((m: ModelMeta) => m.ready);
+        if (first) setModel(first.id);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (scrollerRef.current) scrollerRef.current.scrollTop = scrollerRef.current.scrollHeight;
@@ -47,6 +69,7 @@ const AgentChat: FC<{ agent: Agent }> = ({ agent }) => {
           agentName: agent.name,
           systemPrompt: agent.systemPrompt,
           messages: next,
+          model,
         }),
         signal: ctrl.signal,
       });
@@ -184,8 +207,23 @@ const AgentChat: FC<{ agent: Agent }> = ({ agent }) => {
         </button>
       </form>
 
-      <div className="px-6 sm:px-8 pb-3 flex items-center justify-between text-[10px] font-mono text-[var(--color-text-faint)] tracking-wider">
-        <span>gemini-2.5-flash · 600 tokens max</span>
+      <div className="px-6 sm:px-8 pb-3 flex items-center justify-between gap-3 text-[10px] font-mono text-[var(--color-text-faint)] tracking-wider">
+        {models.length > 0 ? (
+          <select
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            className="bg-transparent border border-[var(--color-border)] rounded px-2 py-1 text-[10px] font-mono text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)]"
+            disabled={busy}
+          >
+            {models.map((m) => (
+              <option key={m.id} value={m.id} disabled={!m.ready}>
+                {m.label}{m.free ? ' · free' : ''}{!m.ready ? ' (offline)' : ''}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <span>· 600 tokens max</span>
+        )}
         {remaining !== null && <span>{remaining} messages left this hour</span>}
       </div>
     </div>
