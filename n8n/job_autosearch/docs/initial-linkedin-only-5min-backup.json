@@ -1,0 +1,234 @@
+{
+  "id": "2Zpk5qEVwjbHHnXk",
+  "name": "LinkedIn Job Search — Auto 5min",
+  "active": true,
+  "isArchived": false,
+  "versionId": "3217c159-f81e-434c-8aa3-9551d646dd9c",
+  "description": "Searches LinkedIn jobs every 5min, deduplicates via Data Table, filters by allowed locations, and sends grouped notifications to Telegram.",
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Europe/Paris",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "timeSavedPerExecution": 5,
+    "saveManualExecutions": true
+  },
+  "nodes": [
+    {
+      "id": "92749f11-ad32-46dc-81ea-e668c45ac4f0",
+      "name": "Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [192, 304],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "2167bf68-fe17-4659-a553-e2dffdd874b8",
+      "name": "Config Filters",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [432, 304],
+      "parameters": {
+        "jsCode": "const config = {\n  keywords: [\n    \"Developpeur fullstack\",\n    \"developpeur front end\",\n    \"integrateur IA\",\n    \"vibecoder\"\n  ],\n  remoteLocations: [\"France\", \"Luxembourg\", \"Suisse\", \"Belgique\"],\n  hybridLocations: [\"Dijon\", \"Ahuy\", \"Fontaine-les-dijon\", \"Luxembourg\"],\n  officeLocations: [\"Dijon\", \"Ahuy\", \"Fontaine-les-dijon\", \"Luxembourg\"],\n  dateSincePosted: \"24hr\",\n  jobType: \"full time\",\n  salary: \"60000\",\n  experienceLevel: \"\",\n  sortBy: \"recent\",\n  limit: 0,\n  page: 0,\n  has_verification: false,\n  under_10_applicants: true,\n  host: \"www.linkedin.com\",\n  allowedLocations: [\n    \"France\",\n    \"Luxembourg\",\n    \"Suisse\",\n    \"Belgique\",\n    \"Belgium\",\n    \"Dijon\",\n    \"Ahuy\",\n    \"Fontaine-les-dijon\",\n    \"Fontaine-lès-Dijon\",\n    \"Bourgogne\",\n    \"Burgundy\",\n    \"Côte-d\",\n    \"Bruxelles\",\n    \"Brussels\",\n    \"Genève\",\n    \"Geneva\",\n    \"Zurich\",\n    \"Zürich\",\n    \"Bern\",\n    \"Basel\",\n    \"Lausanne\",\n    \"Paris\",\n    \"Lyon\",\n    \"Marseille\",\n    \"Toulouse\",\n    \"Nantes\",\n    \"Strasbourg\",\n    \"Lille\",\n    \"Bordeaux\",\n    \"Nice\",\n    \"Rennes\",\n    \"Grenoble\",\n    \"Montpellier\",\n    \"Metz\",\n    \"Nancy\",\n    \"Besançon\",\n    \"Reims\",\n    \"Liège\",\n    \"Namur\",\n    \"Antwerpen\",\n    \"Gent\",\n    \"Charleroi\",\n    \"Kirchberg\",\n    \"Esch\",\n    \"Capellen\",\n    \"Pontpierre\",\n    \"Koerich\",\n    \"Lacaussade\",\n    \"Niort\",\n    \"Fully\",\n    \"Valais\"\n  ]\n};\nreturn [{ json: config }];"
+      }
+    },
+    {
+      "id": "70ef0d25-07fa-4a14-aa5b-a1e468f1bbd1",
+      "name": "LinkedIn Job Search",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [656, 304],
+      "parameters": {
+        "jsCode": "const config = $input.first().json;\n\nconst DM = { \"past month\": \"r2592000\", \"past week\": \"r604800\", \"24hr\": \"r86400\" };\nconst JM = { \"full time\": \"F\", \"part time\": \"P\", \"contract\": \"C\", \"temporary\": \"T\", \"volunteer\": \"V\", \"internship\": \"I\" };\nconst RM = { \"on site\": \"1\", \"remote\": \"2\", \"hybrid\": \"3\" };\nconst EM = { \"internship\": \"1\", \"entry level\": \"2\", \"associate\": \"3\", \"senior\": \"4\", \"director\": \"5\", \"executive\": \"6\" };\nconst SM = { \"40000\": \"1\", \"60000\": \"2\", \"80000\": \"3\", \"100000\": \"4\", \"120000\": \"5\" };\n\nfunction ep(obj) {\n  return Object.entries(obj).filter(([,v]) => v !== \"\" && v != null).map(([k,v]) => encodeURIComponent(k) + \"=\" + encodeURIComponent(v)).join(\"&\");\n}\n\nfunction bUrl(kw, loc, rf) {\n  const p = {};\n  p.keywords = kw;\n  p.location = loc;\n  if (config.dateSincePosted) p.f_TPR = DM[config.dateSincePosted] || \"\";\n  if (config.jobType) p.f_JT = JM[config.jobType] || \"\";\n  p.f_WT = RM[rf] || \"\";\n  if (config.salary) p.f_SB2 = SM[config.salary] || \"\";\n  if (config.experienceLevel) p.f_E = EM[config.experienceLevel] || \"\";\n  p.sortBy = config.sortBy === \"recent\" ? \"DD\" : \"R\";\n  p.start = String((config.page || 0) * 25);\n  if (config.under_10_applicants) p.f_EA = \"true\";\n  if (config.has_verification) p.f_VJ = \"true\";\n  return \"https://\" + (config.host || \"www.linkedin.com\") + \"/jobs-guest/jobs/api/seeMoreJobPostings/search?\" + ep(p);\n}\n\nconst queries = [];\nfor (const kw of config.keywords) {\n  for (const loc of config.remoteLocations) {\n    queries.push({ keyword: kw, location: loc, remoteFilter: \"remote\", url: bUrl(kw, loc, \"remote\") });\n  }\n  for (const loc of config.hybridLocations) {\n    queries.push({ keyword: kw, location: loc, remoteFilter: \"hybrid\", url: bUrl(kw, loc, \"hybrid\") });\n  }\n  for (const loc of config.officeLocations) {\n    queries.push({ keyword: kw, location: loc, remoteFilter: \"on site\", url: bUrl(kw, loc, \"on site\") });\n  }\n}\n\nconst UAs = [\n  \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36\",\n  \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36\",\n  \"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36\"\n];\nfunction rUA() { return UAs[Math.floor(Math.random() * UAs.length)]; }\n\nfunction parse(html) {\n  const jobs = [];\n  const parts = html.split(/<\\/li>/gi);\n  for (const card of parts) {\n    const t = card.match(/base-search-card__title[^>]*>\\s*([^<]+)/i);\n    const co = card.match(/hidden-nested-link[^>]*>\\s*([^<]+)/i);\n    const lo = card.match(/job-search-card__location[^>]*>\\s*([^<]+)/i);\n    const u = card.match(/href=\"(https:\\/\\/[^\"]*linkedin\\.com\\/jobs\\/view\\/[^\"]+)\"/i);\n    const d = card.match(/<time[^>]*datetime=\"([^\"]+)\"/i);\n    const a = card.match(/<time[^>]*>\\s*([^<]+)/i);\n    const s = card.match(/job-search-card__salary-info[^>]*>\\s*([^<]+)/i);\n    const pos = t ? t[1].trim() : \"\";\n    const comp = co ? co[1].trim() : \"\";\n    if (!pos || !comp) continue;\n    jobs.push({ position: pos, company: comp, location: lo ? lo[1].trim() : \"\", date: d ? d[1].trim() : \"\", salary: s ? s[1].trim() : \"\", jobUrl: u ? u[1].split(\"?\")[0].trim() : \"\", agoTime: a ? a[1].trim() : \"\" });\n  }\n  return jobs;\n}\n\nconst sl = ms => new Promise(r => setTimeout(r, ms));\nconst allJobs = [];\nlet err = 0;\n\nfor (const q of queries) {\n  try {\n    const r = await this.helpers.httpRequest({\n      method: \"GET\", url: q.url,\n      headers: { \"User-Agent\": rUA(), \"Accept\": \"text/html\", \"Accept-Language\": \"fr-FR,fr;q=0.9\", \"Referer\": \"https://www.linkedin.com/jobs/search/\" },\n      returnFullResponse: true, ignoreHttpStatusErrors: true\n    });\n    if (r.statusCode === 429) { err++; await sl(Math.pow(2, err) * 1000); continue; }\n    if (r.statusCode === 200 && r.body) {\n      const jobs = parse(typeof r.body === \"string\" ? r.body : \"\");\n      for (const j of jobs) { j.searchKeyword = q.keyword; j.searchLocation = q.location; j.searchRemoteFilter = q.remoteFilter; }\n      allJobs.push(...jobs);\n      err = 0;\n    }\n  } catch (e) { err++; if (err >= 3) break; }\n  await sl(2000 + Math.random() * 1000);\n}\n\nconst seen = new Set();\nconst unique = [];\nfor (const j of allJobs) {\n  if (j.jobUrl && !seen.has(j.jobUrl)) { seen.add(j.jobUrl); unique.push(j); }\n}\n\nconst allowed = (config.allowedLocations || []).map(s => s.toLowerCase());\nconst filtered = unique.filter(j => {\n  if (!j.location) return false;\n  const loc = j.location.toLowerCase();\n  return allowed.some(a => loc.includes(a));\n});\n\nreturn filtered.map(j => ({ json: j }));"
+      }
+    },
+    {
+      "id": "0459a9ca-598c-4e72-8a2c-52c128fe8b32",
+      "name": "Check Duplicates",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [928, 176],
+      "parameters": {
+        "operation": "rowNotExists",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "oF0q52yUm9Da7t0D"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "jobUrl",
+              "keyValue": "={{ $json.jobUrl }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "eccf5433-2880-4e1e-bb93-afdc48f3f7d4",
+      "name": "Group by Type",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1328, 304],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst groups = { remote: [], hybrid: [], \"on site\": [] };\nfor (const item of items) {\n  const rf = item.json.searchRemoteFilter;\n  if (groups[rf]) groups[rf].push(item.json);\n}\nconst results = [];\nfor (const [type, jobs] of Object.entries(groups)) {\n  if (jobs.length === 0) continue;\n  const label = type === \"remote\" ? \"REMOTE\" : type === \"hybrid\" ? \"HYBRIDE\" : \"OFFICE\";\n  let msg = \"<b>\" + label + \" — \" + jobs.length + \" nouvelle(s) offre(s)</b>\\n\\n\";\n  for (const j of jobs) {\n    msg += \"<b>\" + j.position + \"</b>\\n\";\n    msg += j.company + \" | \" + j.location + \"\\n\";\n    if (j.salary) msg += j.salary + \"\\n\";\n    msg += j.agoTime + \" | \" + j.searchKeyword + \"\\n\";\n    if (j.jobUrl) msg += '<a href=\"' + j.jobUrl + '\">Voir sur LinkedIn</a>\\n';\n    msg += \"\\n\";\n  }\n  results.push({ json: { chatId: \"387442030\", message: msg, jobCount: jobs.length } });\n}\nif (results.length === 0) {\n  results.push({ json: { chatId: \"387442030\", message: \"\", jobCount: 0 } });\n}\nreturn results;"
+      }
+    },
+    {
+      "id": "a0d30d12-1074-4412-a1dd-9901c23ee67f",
+      "name": "Has New Jobs",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [1552, 304],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.jobCount }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "rightValue": 0
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "01c5209b-fb66-43a8-b56b-2d3b019de10a",
+      "name": "Send to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1808, 192],
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_web_page_preview": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "webhookId": "2eb253a1-c9bf-4633-84df-a9d30e040eeb"
+    },
+    {
+      "id": "69af2c31-805e-4cd3-862c-c0eff8505650",
+      "name": "Save New Jobs",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [1344, 480],
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "oF0q52yUm9Da7t0D"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "jobUrl": "={{ $json.jobUrl }}",
+            "position": "={{ $json.position }}",
+            "company": "={{ $json.company }}",
+            "addedAt": "={{ $now.toISO() }}"
+          }
+        },
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Every 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Config Filters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config Filters": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn Job Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Job Search": {
+      "main": [
+        [
+          {
+            "node": "Check Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Group by Type",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save New Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Group by Type": {
+      "main": [
+        [
+          {
+            "node": "Has New Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has New Jobs": {
+      "main": [
+        [
+          {
+            "node": "Send to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "meta": {
+    "aiBuilderAssisted": true
+  },
+  "tags": []
+}
