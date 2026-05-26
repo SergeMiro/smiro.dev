@@ -1,28 +1,78 @@
 # job_prospect
 
-*(placeholder — workflow not yet built)*
+Hourly scan for **companies hiring in IT/AI** around Dijon → Telegram alerts.
 
-Goal: hourly scan for **companies that hire** in IT/AI roles → Telegram alerts when a new prospect appears. Complement to [`../job_autosearch`](../job_autosearch) which finds individual postings; this one finds companies to approach directly.
+## Live workflow
 
-## Planned sources
+- ID: `TEvyg76X8keK4y4j`
+- Name: *Job Prospect — Auto 1h*
+- URL: https://n8n.smiro.dev/workflow/TEvyg76X8keK4y4j
+- Schedule: every 1 hour
+
+## Pipeline
+
+```
+[Every 1 Hour]
+  ↓
+[Config Targets]   ← NAF IT codes, dept 21, min ≥ 6 employees, pagination cap
+  ↓
+[Recherche Entreprises Fetch]   recherche-entreprises.api.gouv.fr
+                                paginates, picks etablissement in dept 21
+  ↓
+[Dedup by SIREN]   $workflow.staticData (auto-trims to 10k entries)
+  ↓
+[Format Telegram Prospects]   groups by NAF, chunks at 8 per message
+  ↓
+[Has New Prospects]   only fire if jobCount > 0
+  ↓
+[Send to Telegram]
+```
+
+## Output schema (per company)
+
+```js
+{
+  siren, name, naf, sector,
+  local_address, local_commune, local_postal,
+  employees_range,  // e.g. "50-99"
+  date_creation,
+  prospect_url,     // annuaire-entreprises.data.gouv.fr/entreprise/{siren}
+  source: 'rech-entreprises'
+}
+```
+
+## Sources
 
 | Source | Status | Notes |
 |---|---|---|
-| `recherche-entreprises.api.gouv.fr` | ✅ ready — open, no auth, NAF+dept filter, `est_employeur` flag | Primary source |
-| France Travail — La Bonne Boite v2 | ⚠️ blocked — `403 Invalid scope` despite auth ok | Needs resource scope to be enabled on the FT app config |
-| Place de l'Emploi Public (embassies/consulates) | 🔜 Phase 2 — separate scraping branch | For French diplomatic IT roles abroad |
+| `recherche-entreprises.api.gouv.fr` | ✅ live | Open, no auth. NAF codes use dot format (`62.01Z`). Filter by `code_postal` prefix in `matching_etablissements` to actually land in dept 21 (`departement` field is unreliable). |
+| France Travail — La Bonne Boite v2 | ⛔ blocked | All endpoints return `403 Invalid scope` despite `api_labonneboitev2` token. Needs resource-level scope toggle on FT app config — unblock via francetravail.io app settings. |
 
-## Planned filters
+## Files
 
-- ROME codes: `M1805` (Études/dev info), `M1806` (Conseil/MOA), `M1810` (Production SI)
-- NAF codes: `62.01Z` (Programmation), `62.02A` (Conseil SI), `63.11Z` (Traitement de données), `70.22Z`, `73.20Z`
-- Departments: `21` (Côte-d'Or — Dijon/Ahuy/Fontaine-lès-Dijon) for office/hybrid
-- All France for 100%-remote opportunities; targeting also for relocation if salary ≥ 8000€/month
+- `nodes/config-targets.js` — NAF codes, target depts, employee size threshold
+- `nodes/rech-entreprises-fetch.js` — API paginator with etablissement matching
+- `nodes/dedup-prospects.js` — in-memory dedup via `$workflow.staticData`
+- `nodes/format-telegram-prospects.js` — message composer, grouped by NAF
+- `scripts/build_sdk.cjs` — regenerate + push via n8n MCP (use `.cjs` because `smiro.dev` root has `"type": "module"`)
 
-## Schedule
+## One-time manual setup needed
 
-Every 1 hour.
+n8n's auto-credential assignment for the Telegram node didn't pick the right account on workflow creation. **Open the workflow in the n8n UI once and re-pick the Telegram credential** in the "Send to Telegram" node — same one that the `job_autosearch` workflow uses. This only needs to be done once.
 
-## Dedup key
+## Dedup behaviour
 
-SIREN — companies don't disappear, so once notified we never re-notify unless data materially changes.
+- `staticData` persists between executions (survives `update_workflow`).
+- First execution emits all matched companies; subsequent runs only **new** SIRENs.
+- Store auto-trims at 20k entries, keeping the 10k newest.
+- To reset (e.g. for re-testing): open workflow → settings → "Clear workflow static data" (or unpublish + re-publish).
+
+## Tuning knobs (in `nodes/config-targets.js`)
+
+| Var | Default | Meaning |
+|---|---|---|
+| `nafCodes` | 10 IT NAF codes | Add `58.21Z` for game publishers, drop `70.22Z` if too noisy |
+| `departementsOffice` | `['21']` | Add `'25'` (Doubs) etc. for wider radius |
+| `minTrancheEffectif` | `'03'` (6-9 sal) | Bump to `'11'` (10-19) to skip very small companies |
+| `maxPagesPerRequest` | `5` | × `perPage:25` = max 125 prospects scanned per run |
+| `perPage` | `25` | Per-page size |
