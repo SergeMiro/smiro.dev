@@ -20,10 +20,12 @@ const configCode = read('config-targets.js');
 const fetchCode  = read('rech-entreprises-fetch.js');
 const dedupCode  = read('dedup-prospects.js');
 const formatCode = read('format-telegram-prospects.js');
+const lbbCode    = read('lbb-fetch.js');
+const ftCredsPlaceholder = 'return [{ json: { client_id: "REPLACE_ME", client_secret: "REPLACE_ME" } }];';
 
 const J = s => JSON.stringify(s);
 
-const sdk = `import { workflow, node, trigger, ifElse } from '@n8n/workflow-sdk';
+const sdk = `import { workflow, node, trigger, ifElse, merge } from '@n8n/workflow-sdk';
 
 const everyHour = trigger({
   type: 'n8n-nodes-base.scheduleTrigger',
@@ -56,13 +58,43 @@ const rechFetch = node({
   }
 });
 
+const ftCredentials = node({
+  type: 'n8n-nodes-base.code',
+  version: 2,
+  config: {
+    name: 'FT Credentials',
+    parameters: { jsCode: ${J(ftCredsPlaceholder)} },
+    position: [432, 480]
+  }
+});
+
+const lbbFetch = node({
+  type: 'n8n-nodes-base.code',
+  version: 2,
+  config: {
+    name: 'LBB Fetch',
+    parameters: { jsCode: ${J(lbbCode)} },
+    position: [656, 480],
+    onError: 'continueRegularOutput'
+  }
+});
+
+const mergeAll = merge({
+  version: 3.2,
+  config: {
+    name: 'Merge Sources',
+    parameters: { mode: 'append' },
+    position: [800, 392]
+  }
+});
+
 const dedup = node({
   type: 'n8n-nodes-base.code',
   version: 2,
   config: {
     name: 'Dedup by SIREN',
     parameters: { jsCode: ${J(dedupCode)} },
-    position: [880, 304]
+    position: [1024, 392]
   }
 });
 
@@ -72,7 +104,7 @@ const formatTg = node({
   config: {
     name: 'Format Telegram Prospects',
     parameters: { jsCode: ${J(formatCode)} },
-    position: [1104, 304]
+    position: [1248, 392]
   }
 });
 
@@ -90,7 +122,7 @@ const hasNew = ifElse({
       },
       options: {}
     },
-    position: [1328, 304]
+    position: [1472, 392]
   }
 });
 
@@ -104,14 +136,17 @@ const sendTelegram = node({
       text: '={{ $json.message }}',
       additionalFields: { appendAttribution: false, disable_web_page_preview: true, parse_mode: 'HTML' }
     },
-    position: [1584, 192]
+    position: [1728, 280]
   }
 });
 
 export default workflow('job-prospect', 'Job Prospect — Auto 1h')
   .add(everyHour)
   .to(configTargets)
-  .to(rechFetch)
+  .to(rechFetch.to(mergeAll.input(0)))
+  .add(configTargets)
+  .to(ftCredentials.to(lbbFetch.to(mergeAll.input(1))))
+  .add(mergeAll)
   .to(dedup)
   .to(formatTg)
   .to(hasNew.onTrue(sendTelegram));
@@ -157,12 +192,41 @@ if (process.argv.includes('--push')) {
   });
 
   (async () => {
+    // Inject real FT creds from the job_autosearch workflow (single source of truth
+    // on the server; this repo stays clean of secrets).
+    const FT_DONOR_WORKFLOW = '2Zpk5qEVwjbHHnXk';
+    let sdkPatched = sdk;
+    try {
+      console.log('[creds] pulling FT Credentials from donor workflow…');
+      const donor = (await mcp('get_workflow_details', { workflowId: FT_DONOR_WORKFLOW })).workflow;
+      const donorNode = (donor.nodes || []).find(n => n.name === 'FT Credentials');
+      const donorJs = donorNode?.parameters?.jsCode || '';
+      const idM = donorJs.match(/client_id:\s*"([^"]+)"/);
+      const secM = donorJs.match(/client_secret:\s*"([^"]+)"/);
+      if (idM && secM && idM[1] !== 'REPLACE_ME' && secM[1] !== 'REPLACE_ME') {
+        // SDK text has the placeholder as a JSON-stringified literal, e.g.
+        //   parameters: { jsCode: "return [{ json: { client_id: \"REPLACE_ME\", ... } }];" }
+        // so we substitute the JSON-stringified form on both sides.
+        const oldEscaped = JSON.stringify(ftCredsPlaceholder);
+        const newEscaped = JSON.stringify(
+          `return [{ json: { client_id: "${idM[1]}", client_secret: "${secM[1]}" } }];`
+        );
+        if (!sdk.includes(oldEscaped)) throw new Error('placeholder literal not found in SDK');
+        sdkPatched = sdk.replace(oldEscaped, newEscaped);
+        console.log(`  ✓ injected (client_id=${idM[1].slice(0,30)}…)`);
+      } else {
+        console.log('  ⚠ donor has placeholder too — pushing with REPLACE_ME (LBB branch will skip)');
+      }
+    } catch (e) {
+      console.log('  ⚠ cred fetch failed, pushing with placeholder:', e.message);
+    }
+
     console.log('[validate]…');
-    const v = await mcp('validate_workflow', { code: sdk });
+    const v = await mcp('validate_workflow', { code: sdkPatched });
     console.log(`  valid=${v.valid} nodeCount=${v.nodeCount} warnings=${(v.warnings||[]).length}`);
     if (!v.valid) { console.error(v); process.exit(1); }
     console.log('[update]…');
-    const u = await mcp('update_workflow', { workflowId: WORKFLOW_ID, code: sdk });
+    const u = await mcp('update_workflow', { workflowId: WORKFLOW_ID, code: sdkPatched });
     console.log(`  → ${u.url}`);
     console.log('[publish]…');
     const p = await mcp('publish_workflow', { workflowId: WORKFLOW_ID });

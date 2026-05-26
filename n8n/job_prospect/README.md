@@ -46,12 +46,13 @@ Hourly scan for **companies hiring in IT/AI** around Dijon → Telegram alerts.
 | Source | Status | Notes |
 |---|---|---|
 | `recherche-entreprises.api.gouv.fr` | ✅ live | Open, no auth. NAF codes use dot format (`62.01Z`). Filter by `code_postal` prefix in `matching_etablissements` to actually land in dept 21 (`departement` field is unreliable). |
-| France Travail — La Bonne Boite v2 | ⛔ blocked | All endpoints return `403 Invalid scope` despite `api_labonneboitev2` token. Needs resource-level scope toggle on FT app config — unblock via francetravail.io app settings. |
+| France Travail — La Bonne Boite v2 | ✅ live | OAuth2 client_credentials with scopes `api_labonneboitev2 search office`. Endpoint `GET /partenaire/labonneboite/v2/recherche` with `latitude+longitude+distance` + `rome`. Returns `siret`, `headcount_min/max`, `hiring_potential` and more. See [docs/la-bonne-boite-scope.md](docs/la-bonne-boite-scope.md). FT credentials are auto-injected into the live workflow from the job_autosearch donor by `scripts/build_sdk.cjs --push`. |
 
 ## Files
 
 - `nodes/config-targets.js` — NAF codes, target depts, employee size threshold
 - `nodes/rech-entreprises-fetch.js` — API paginator with etablissement matching
+- `nodes/lbb-fetch.js` — La Bonne Boite v2 paginator (OAuth2 + ROME×centers)
 - `nodes/dedup-prospects.js` — in-memory dedup via `$workflow.staticData`
 - `nodes/format-telegram-prospects.js` — message composer, grouped by NAF
 - `scripts/build_sdk.cjs` — regenerate + push via n8n MCP (use `.cjs` because `smiro.dev` root has `"type": "module"`)
