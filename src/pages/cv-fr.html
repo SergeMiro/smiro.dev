@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sergiy Mirochnyk — Développeur Full-Stack & Ingénieur IA · CV</title>
+<meta name="description" content="Sergiy (Serge) Mirochnyk — Développeur Full-Stack et Ingénieur IA basé à Dijon, France. 5+ ans en production : systèmes multi-agents (boucles exécuteur/réviseur), automatisations n8n, fine-tuning de LLM et applications web full-stack avec React, Next.js, Node.js et Python.">
+<meta name="author" content="Sergiy Mirochnyk">
+<meta name="keywords" content="Développeur Full-Stack, Ingénieur IA, Systèmes Multi-Agents, LLM, Grands Modèles de Langage, Prompt Engineering, Fine-tuning, LoRA, Unsloth, RAG, LangChain, LangGraph, n8n, Automatisation, React, Next.js, Node.js, TypeScript, Python, PostgreSQL, SQL Server, T-SQL, Docker, OpenAI, Anthropic Claude, Mistral, Auto-hébergé, On-premise, Dijon, France">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..600&family=Quicksand:wght@300;400;500;600;700&family=Geist+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- JSON-LD structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Sergiy Mirochnyk",
+  "alternateName": "Serge Miro",
+  "jobTitle": "Développeur Full-Stack & Ingénieur IA",
+  "email": "mirochnyk.sergiy@gmail.com",
+  "telephone": "+33-7-54-38-67-68",
+  "url": "https://smiro.dev",
+  "sameAs": [
+    "https://github.com/SergeMiro",
+    "https://www.linkedin.com/in/sergemiro"
+  ],
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Dijon",
+    "addressCountry": "FR"
+  },
+  "knowsLanguage": ["French", "Ukrainian", "English", "Russian"],
+  "knowsAbout": [
+    "Systèmes Multi-Agents IA",
+    "Fine-tuning LLM",
+    "Prompt Engineering",
+    "Automatisation n8n",
+    "Développement Full-Stack",
+    "React", "Next.js", "Node.js", "Python", "TypeScript",
+    "PostgreSQL", "SQL Server", "Docker"
+  ],
+  "alumniOf": [
+    { "@type": "EducationalOrganization", "name": "RNCP niveau 6 — Développeur d'application JavaScript / React" }
+  ],
+  "worksFor": {
+    "@type": "Organization",
+    "name": "FIMAINFO — Développement Informatique & Solutions Cloud"
+  }
+}
+</script>
+
+<style>
+:root{
+  --bg:       #f4f1e8;
+  --bg-2:     #ebe6d6;
+  --paper:    #fbf8f0;
+  --ink:      #1b1a18;
+  --ink-2:    #3a3630;
+  --muted:    #6b655a;
+  --faint:    #9a9385;
+  --line:     rgba(27,26,24,0.10);
+  --line-2:   rgba(27,26,24,0.18);
+  --brick:    oklch(0.62 0.16 38);
+  --olive:    oklch(0.58 0.11 115);
+  --plum:     oklch(0.50 0.12 340);
+  --sky:      oklch(0.56 0.12 235);
+
+  --font-serif: 'Fraunces', 'Instrument Serif', Georgia, serif;
+  --font-mono:  'Geist Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  --font-body:  'Quicksand', ui-sans-serif, system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);-webkit-font-smoothing:antialiased}
+body{
+  background:
+    radial-gradient(800px 500px at 85% -10%, oklch(0.92 0.06 60 / 0.45), transparent 60%),
+    radial-gradient(600px 400px at -5% 50%, oklch(0.88 0.06 340 / 0.28), transparent 60%),
+    var(--bg);
+  min-height:100vh;
+}
+a{color:inherit}
+
+/* ───── top action bar (hidden in print) ───── */
+.action-bar{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 28px;
+  background:linear-gradient(180deg, rgba(244,241,232,.95), rgba(244,241,232,.7));
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.ab-back{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.02em;
+  color:var(--ink-2);text-decoration:none;
+  display:inline-flex;align-items:center;gap:8px;
+  padding:8px 12px;border-radius:999px;
+  transition:all .15s;
+}
+.ab-back:hover{background:var(--ink);color:var(--bg)}
+.ab-actions{display:flex;gap:8px;flex-wrap:wrap}
+.ab-btn{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.02em;
+  padding:9px 14px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line-2);background:var(--paper);color:var(--ink);
+  display:inline-flex;align-items:center;gap:8px;text-decoration:none;
+  transition:all .15s;
+}
+.ab-btn:hover{border-color:var(--ink);transform:translateY(-1px)}
+.ab-btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.ab-btn.primary:hover{background:var(--brick);border-color:var(--brick)}
+.ab-btn svg{width:14px;height:14px}
+
+/* ───── CV PAGE ───── */
+.cv-page{
+  max-width:1080px;margin:32px auto;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:18px;
+  box-shadow:0 30px 60px -20px rgba(27,26,24,.15), 0 4px 14px -6px rgba(27,26,24,.08);
+  position:relative;
+}
+.cv-page::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:6px;
+  background:linear-gradient(180deg, var(--brick), oklch(0.5 0.18 28));
+  pointer-events:none;
+}
+
+/* header */
+.cv-head{
+  padding:42px 48px 28px;
+  border-bottom:1px solid var(--line);
+  display:grid;grid-template-columns: auto 1fr auto;gap:28px;align-items:center;
+  overflow:visible;
+}
+.cv-photo{
+  width:130px;height:158px;
+  flex-shrink:0;position:relative;
+}
+.cv-photo-svg{
+  width:100%;height:100%;display:block;
+  filter:drop-shadow(0 10px 16px oklch(0.55 0.16 38 / .35));
+}
+.cv-id{min-width:0}
+.cv-name{
+  font-family:var(--font-serif);font-weight:400;
+  font-size:46px;line-height:1;letter-spacing:-.025em;
+  margin:0 0 6px;
+}
+.cv-name em{font-style:italic;color:var(--brick);font-weight:300}
+.cv-title{
+  font-family:var(--font-mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);font-weight:500;
+  margin:0 0 10px;
+}
+.cv-tag{
+  font-family:var(--font-serif);font-style:italic;font-size:17px;line-height:1.4;color:var(--ink-2);
+  max-width:520px;margin:0;
+}
+.cv-contacts{
+  display:flex;flex-direction:column;gap:6px;
+  font-family:var(--font-mono);font-size:11.5px;color:var(--ink-2);
+  text-align:right;
+}
+.cv-contacts a{
+  text-decoration:none;color:inherit;
+  display:inline-flex;gap:6px;align-items:center;justify-content:flex-end;
+  transition:color .15s;
+}
+.cv-contacts a:hover{color:var(--brick)}
+.cv-contacts .ic{
+  width:14px;height:14px;color:var(--muted);flex-shrink:0;
+}
+
+/* body grid */
+.cv-body{
+  display:grid;
+  grid-template-columns: 280px 1fr;
+  gap:0;
+}
+.cv-side{
+  padding:32px 24px 32px 48px;
+  border-right:1px dashed var(--line-2);
+  background:rgba(235,230,214,.35);
+}
+.cv-main{
+  padding:32px 48px;
+}
+
+/* section headers */
+.cv-sec{margin-bottom:26px}
+.cv-sec:last-child{margin-bottom:0}
+.cv-sec-h{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--brick);font-weight:600;
+  margin:0 0 12px;padding-bottom:6px;
+  border-bottom:1px solid var(--line-2);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.cv-sec-h .count{
+  font-family:var(--font-mono);font-size:10px;color:var(--muted);
+  letter-spacing:.08em;font-weight:400;
+}
+
+/* sidebar bits */
+.cv-pill-grp{
+  display:flex;flex-wrap:wrap;gap:5px;
+}
+.cv-pill{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.02em;
+  padding:4px 9px;border-radius:5px;
+  background:var(--paper);
+  border:1px solid var(--line-2);
+  color:var(--ink-2);
+  display:inline-block;
+}
+.cv-pill.strong{
+  background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:500;
+}
+.cv-pill.accent{
+  background:oklch(0.62 0.16 38 / .12);
+  border-color:oklch(0.62 0.16 38 / .3);
+  color:var(--brick);font-weight:500;
+}
+
+.cv-skill-grp{margin-bottom:14px}
+.cv-skill-grp:last-child{margin-bottom:0}
+.cv-skill-lbl{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;
+  margin:0 0 6px;
+}
+
+/* languages */
+.cv-langs{display:flex;flex-direction:column;gap:8px}
+.cv-lang{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  font-size:13px;
+}
+.cv-lang .lname{font-weight:500;color:var(--ink)}
+.cv-lang .llvl{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;
+  color:var(--muted);
+}
+.cv-lang .lbar{
+  flex:1;height:3px;background:var(--line-2);border-radius:99px;overflow:hidden;
+  max-width:80px;
+}
+.cv-lang .lbar span{
+  display:block;height:100%;background:var(--brick);border-radius:99px;
+}
+
+/* edu items */
+.cv-edu{display:flex;flex-direction:column;gap:14px}
+.cv-edu-item .yr{
+  font-family:var(--font-mono);font-size:10.5px;color:var(--brick);font-weight:600;
+  letter-spacing:.04em;
+}
+.cv-edu-item .ti{
+  font-family:var(--font-serif);font-weight:500;font-size:15px;line-height:1.25;
+  letter-spacing:-.005em;margin:2px 0 1px;color:var(--ink);
+}
+.cv-edu-item .sub{font-size:12px;color:var(--muted);line-height:1.4}
+
+/* summary block */
+.cv-summary{
+  font-size:14.5px;line-height:1.6;color:var(--ink-2);
+  margin:0;
+}
+.cv-summary strong{color:var(--ink);font-weight:600}
+.cv-summary em{font-style:italic;color:var(--brick);font-weight:400;font-family:var(--font-serif);font-size:15.5px}
+
+/* experience timeline */
+.cv-xp{display:flex;flex-direction:column;gap:22px}
+.cv-xp-item{
+  position:relative;padding-left:22px;
+}
+.cv-xp-item::before{
+  content:"";position:absolute;left:0;top:8px;
+  width:9px;height:9px;border-radius:50%;background:var(--brick);
+  box-shadow:0 0 0 3px var(--paper), 0 0 0 4px var(--line-2);
+}
+.cv-xp-item::after{
+  content:"";position:absolute;left:4px;top:18px;bottom:-14px;
+  width:1px;background:var(--line-2);
+}
+.cv-xp-item:last-child::after{display:none}
+.cv-xp-top{
+  display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  margin-bottom:2px;
+}
+.cv-xp-role{
+  font-family:var(--font-serif);font-weight:500;font-size:18px;line-height:1.2;letter-spacing:-.01em;
+  margin:0;color:var(--ink);
+}
+.cv-xp-role em{font-style:italic;color:var(--brick);font-weight:400}
+.cv-xp-when{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);font-weight:500;
+  flex-shrink:0;
+}
+.cv-xp-co{
+  font-family:var(--font-mono);font-size:12px;color:var(--ink-2);letter-spacing:.02em;
+  margin:0 0 8px;
+}
+.cv-xp-co .sep{color:var(--faint);margin:0 6px}
+.cv-xp-co .loc{color:var(--muted)}
+.cv-xp ul{
+  margin:8px 0 0;padding:0;list-style:none;
+  display:flex;flex-direction:column;gap:4px;
+}
+.cv-xp ul li{
+  position:relative;padding-left:16px;
+  font-size:13.5px;line-height:1.55;color:var(--ink-2);
+}
+.cv-xp ul li::before{
+  content:"▸";position:absolute;left:0;top:0;color:var(--brick);font-size:11px;
+}
+.cv-xp ul li strong{color:var(--ink);font-weight:600}
+.cv-xp ul li em{color:var(--brick);font-style:normal;font-family:var(--font-mono);font-size:12px;background:oklch(0.62 0.16 38 / .1);padding:1px 5px;border-radius:3px;font-weight:500}
+
+/* selected projects */
+.cv-projects{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+}
+.cv-proj{
+  border:1px solid var(--line-2);border-radius:8px;padding:10px 12px;
+  background:var(--paper);
+}
+.cv-proj-h{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:4px;
+}
+.cv-proj .n{
+  font-family:var(--font-serif);font-weight:500;font-size:14px;letter-spacing:-.005em;color:var(--ink);
+}
+.cv-proj .cat{
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--brick);
+}
+.cv-proj .d{
+  font-size:12px;line-height:1.45;color:var(--ink-2);margin:0;
+}
+
+/* certifications */
+.cv-cert{display:flex;flex-direction:column;gap:6px}
+.cv-cert-item{
+  display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  font-size:13px;color:var(--ink-2);
+  padding:6px 0;border-bottom:1px dashed var(--line);
+}
+.cv-cert-item:last-child{border:none}
+.cv-cert-item .nm{font-weight:500;color:var(--ink)}
+.cv-cert-item .yr{font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:.06em}
+
+/* footer note (screen only) */
+.cv-foot{
+  padding:18px 48px 24px;border-top:1px dashed var(--line-2);
+  font-family:var(--font-mono);font-size:10.5px;color:var(--muted);letter-spacing:.04em;
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
+}
+.cv-foot a{color:var(--brick);text-decoration:none}
+.cv-foot a:hover{text-decoration:underline}
+
+/* ─── responsive ─── */
+@media (max-width:880px){
+  .cv-head{grid-template-columns:1fr;text-align:left}
+  .cv-contacts{text-align:left}
+  .cv-contacts a{justify-content:flex-start}
+  .cv-body{grid-template-columns:1fr}
+  .cv-side{border-right:none;border-bottom:1px dashed var(--line-2);padding:28px 24px}
+  .cv-main{padding:28px 24px}
+  .cv-head{padding:28px 24px 20px}
+  .cv-foot{padding:18px 24px}
+  .cv-projects{grid-template-columns:1fr}
+}
+
+/* ═════════════════ IMPRESSION — compatible ATS, mono-colonne ═════════════════ */
+@media print{
+  @page{
+    size:A4;
+    margin:14mm 14mm 14mm 14mm;
+  }
+  html,body{
+    background:#fff !important;color:#000;
+  }
+  body{
+    background:none !important;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+    font-family:'Quicksand','Helvetica Neue',Arial,sans-serif;
+  }
+  .action-bar,.cv-foot,.print-hide{display:none !important}
+
+  .cv-page{
+    max-width:none;margin:0;border:none;border-radius:0;box-shadow:none;
+    background:#fff;
+  }
+  .cv-page::before{
+    width:4px;background:#000;
+  }
+  .cv-head{
+    padding:0 0 14pt;border-bottom:1pt solid #000;grid-template-columns:auto 1fr auto;gap:18pt;
+    page-break-after:avoid;
+  }
+  .cv-photo{
+    width:90pt;height:108pt;box-shadow:none;border:none;background:none;
+  }
+  .cv-photo-svg{filter:none}
+  .cv-name{font-size:26pt;color:#000}
+  .cv-name em{color:#000;font-weight:500}
+  .cv-title{font-size:9pt;color:#000;letter-spacing:.08em}
+  .cv-tag{font-size:10.5pt;color:#222}
+  .cv-contacts{font-size:9pt;color:#000;gap:3pt}
+  .cv-contacts a{color:#000}
+
+  .cv-body{
+    grid-template-columns:1fr;gap:0;
+  }
+  .cv-side{
+    border-right:none;border-bottom:1pt solid #000;
+    padding:14pt 0;background:none;
+    display:grid;grid-template-columns:1fr 1fr;gap:14pt;
+  }
+  .cv-main{padding:14pt 0}
+
+  .cv-sec{margin-bottom:14pt}
+  .cv-sec-h{
+    color:#000;font-size:9pt;letter-spacing:.14em;
+    border-bottom:1pt solid #000;padding-bottom:3pt;margin-bottom:7pt;
+  }
+  .cv-pill{
+    background:#fff;border:1pt solid #000;color:#000;
+    padding:2pt 6pt;font-size:8.5pt;border-radius:2pt;
+  }
+  .cv-pill.strong{background:#000;color:#fff}
+  .cv-pill.accent{background:#fff;border-color:#000;color:#000;font-weight:600}
+
+  .cv-summary{font-size:10.5pt;color:#000;line-height:1.45}
+  .cv-summary em{color:#000;font-style:italic;font-weight:600;font-family:inherit}
+  .cv-summary strong{color:#000}
+
+  .cv-xp{gap:11pt}
+  .cv-xp-item{padding-left:0}
+  .cv-xp-item::before,.cv-xp-item::after{display:none}
+  .cv-xp-role{font-size:12pt;color:#000;font-weight:600}
+  .cv-xp-role em{color:#000;font-style:italic}
+  .cv-xp-when{color:#000;font-size:8.5pt;letter-spacing:.04em}
+  .cv-xp-co{color:#000;font-size:9.5pt;margin-bottom:4pt}
+  .cv-xp ul li{font-size:9.5pt;color:#000;line-height:1.4;padding-left:11pt}
+  .cv-xp ul li::before{content:"•";color:#000;font-size:10pt;top:0}
+  .cv-xp ul li strong{color:#000}
+  .cv-xp ul li em{
+    background:none;border:none;padding:0;color:#000;
+    font-style:italic;font-family:inherit;font-size:inherit;font-weight:600;
+  }
+
+  .cv-projects{grid-template-columns:1fr 1fr;gap:6pt}
+  .cv-proj{border:1pt solid #000;border-radius:0;background:none;padding:6pt 8pt}
+  .cv-proj .n{color:#000;font-size:10pt}
+  .cv-proj .cat{color:#000;font-size:7.5pt;letter-spacing:.06em}
+  .cv-proj .d{color:#000;font-size:8.5pt}
+
+  .cv-edu-item .yr{color:#000;font-weight:600}
+  .cv-edu-item .ti{color:#000;font-size:10pt}
+  .cv-edu-item .sub{color:#000;font-size:8.5pt}
+
+  .cv-lang .lname{color:#000;font-size:10pt}
+  .cv-lang .llvl{color:#000}
+  .cv-lang .lbar{display:none}
+
+  .cv-cert-item{color:#000;font-size:9.5pt}
+  .cv-cert-item .nm{color:#000}
+  .cv-cert-item .yr{color:#000}
+
+  .cv-xp-item, .cv-edu-item, .cv-sec, .cv-proj{
+    page-break-inside:avoid;
+    break-inside:avoid;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="action-bar print-hide">
+  <a class="ab-back" href="/">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    retour sur smiro.dev
+  </a>
+  <div class="ab-actions">
+    <a class="ab-btn" href="/cv">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"></path></svg>
+      version EN · AI Engineer
+    </a>
+    <button class="ab-btn primary" onclick="window.print()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+      télécharger en PDF
+    </button>
+  </div>
+</div>
+
+<article class="cv-page" itemscope itemtype="https://schema.org/Person">
+  <header class="cv-head">
+    <div class="cv-photo">
+      <svg class="cv-photo-svg" viewBox="0 0 140 170" aria-hidden="true">
+        <defs>
+          <linearGradient id="avGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="oklch(0.62 0.16 38)"/>
+            <stop offset="100%" stop-color="oklch(0.50 0.18 28)"/>
+          </linearGradient>
+          <clipPath id="avClip">
+            <!-- the union of circle (body) + narrow rect (head) — image is shown only inside this shape -->
+            <circle cx="70" cy="100" r="60"/>
+            <rect x="33" y="0" width="70" height="100"/>
+          </clipPath>
+        </defs>
+        <!-- orange medallion background -->
+        <circle cx="70" cy="100" r="60" fill="url(#avGrad)"/>
+        <circle cx="70" cy="100" r="57" fill="none" stroke="rgba(251,248,240,0.42)" stroke-width="1.5"/>
+        <!-- avatar image, clipped to circle+head-rect -->
+        <image href="/assets/avatar-serge.png" x="5" y="0" width="130" height="130"
+               clip-path="url(#avClip)" preserveAspectRatio="xMidYMin meet"/>
+      </svg>
+      <span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Sergiy Mirochnyk</span>
+    </div>
+    <div class="cv-id">
+      <h1 class="cv-name"><em>Sergiy</em> Mirochnyk</h1>
+      <p class="cv-title" itemprop="jobTitle">Développeur Full-Stack · Ingénieur IA · Orchestration d'agents</p>
+      <p class="cv-tag">5+ ans en production. Conçoit des systèmes multi-agents (boucles exécuteur + réviseur), des automatisations n8n et des applications full-stack natives IA. Basé à Dijon, FR.</p>
+    </div>
+    <div class="cv-contacts">
+      <a href="mailto:mirochnyk.sergiy@gmail.com" itemprop="email">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        mirochnyk.sergiy@gmail.com
+      </a>
+      <a href="tel:+33754386768" itemprop="telephone">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.8 19.8 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.37 1.9.72 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0122 16.92z"></path></svg>
+        +33 7 54 38 67 68
+      </a>
+      <a href="https://github.com/SergeMiro" target="_blank" rel="noopener">
+        <svg class="ic" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .3a12 12 0 00-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 016 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0012 .3"></path></svg>
+        github.com/SergeMiro
+      </a>
+      <a href="https://www.linkedin.com/in/sergemiro" target="_blank" rel="noopener">
+        <svg class="ic" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S.02 4.88.02 3.5C.02 2.12 1.13 1 2.5 1s2.48 1.12 2.48 2.5zM.22 8h4.56v14H.22V8zm7.7 0h4.37v1.92h.06c.61-1.16 2.1-2.38 4.32-2.38 4.62 0 5.47 3.04 5.47 7v7.46h-4.56v-6.62c0-1.58-.03-3.62-2.21-3.62-2.21 0-2.55 1.72-2.55 3.5V22H7.92V8z"></path></svg>
+        linkedin/in/sergemiro
+      </a>
+      <a href="https://smiro.dev" target="_blank" rel="noopener">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"></path></svg>
+        smiro.dev
+      </a>
+      <span style="color:var(--muted);font-size:11px;margin-top:4px;">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        Dijon, FR · ouvert au télétravail / hybride (FR + UE)
+      </span>
+    </div>
+  </header>
+
+  <div class="cv-body">
+
+    <!-- ──────────────────── SIDEBAR ──────────────────── -->
+    <aside class="cv-side">
+
+      <!-- IA / Agents -->
+      <section class="cv-sec">
+        <h2 class="cv-sec-h">IA &amp; Agents</h2>
+        <div class="cv-pill-grp">
+          <span class="cv-pill accent">Systèmes Multi-Agents</span>
+          <span class="cv-pill accent">Boucles Exécuteur / Réviseur</span>
+          <span class="cv-pill accent">Fine-tuning LLM</span>
+          <span class="cv-pill accent">Prompt Engineering</span>
+          <span class="cv-pill accent">RAG</span>
+          <span class="cv-pill">LangChain</span>
+          <span class="cv-pill">LangGraph</span>
+          <span class="cv-pill">Unsloth</span>
+          <span class="cv-pill">LoRA / QLoRA</span>
+          <span class="cv-pill">OpenAI API</span>
+          <span class="cv-pill">Anthropic Claude</span>
+          <span class="cv-pill">Mistral</span>
+          <span class="cv-pill">Llama (open-source)</span>
+          <span class="cv-pill">TensorFlow</span>
+          <span class="cv-pill">Base vectorielle / pgvector</span>
+          <span class="cv-pill">Embeddings</span>
+          <span class="cv-pill strong">n8n</span>
+        </div>
+      </section>
+
+      <!-- Ingénierie -->
+      <section class="cv-sec">
+        <h2 class="cv-sec-h">Ingénierie</h2>
+        <div class="cv-skill-grp">
+          <div class="cv-skill-lbl">Frontend</div>
+          <div class="cv-pill-grp">
+            <span class="cv-pill">React</span>
+            <span class="cv-pill">Next.js</span>
+            <span class="cv-pill">Redux</span>
+            <span class="cv-pill">TypeScript</span>
+            <span class="cv-pill">JavaScript</span>
+            <span class="cv-pill">HTML5</span>
+            <span class="cv-pill">CSS3 / Sass</span>
+            <span class="cv-pill">Tailwind</span>
+            <span class="cv-pill">Bootstrap</span>
+          </div>
+        </div>
+        <div class="cv-skill-grp">
+          <div class="cv-skill-lbl">Backend</div>
+          <div class="cv-pill-grp">
+            <span class="cv-pill">Node.js</span>
+            <span class="cv-pill">Python</span>
+            <span class="cv-pill">PHP</span>
+            <span class="cv-pill">API REST</span>
+            <span class="cv-pill">WebSockets</span>
+            <span class="cv-pill">PostgreSQL</span>
+            <span class="cv-pill">SQL Server</span>
+            <span class="cv-pill">T-SQL</span>
+            <span class="cv-pill">Supabase</span>
+          </div>
+        </div>
+        <div class="cv-skill-grp">
+          <div class="cv-skill-lbl">DevOps / Infra</div>
+          <div class="cv-pill-grp">
+            <span class="cv-pill">Docker</span>
+            <span class="cv-pill">Serveurs GPU auto-hébergés</span>
+            <span class="cv-pill">Linux / CLI</span>
+            <span class="cv-pill">CI/CD</span>
+            <span class="cv-pill">Grafana</span>
+            <span class="cv-pill">Metabase</span>
+            <span class="cv-pill">Sécurité &amp; durcissement</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Langues -->
+      <section class="cv-sec">
+        <h2 class="cv-sec-h">Langues</h2>
+        <div class="cv-langs">
+          <div class="cv-lang"><span class="lname">Français</span> <span class="lbar"><span style="width:96%"></span></span> <span class="llvl">C2</span></div>
+          <div class="cv-lang"><span class="lname">Ukrainien</span> <span class="lbar"><span style="width:100%"></span></span> <span class="llvl">natif</span></div>
+          <div class="cv-lang"><span class="lname">Russe</span> <span class="lbar"><span style="width:100%"></span></span> <span class="llvl">natif</span></div>
+          <div class="cv-lang"><span class="lname">Anglais</span> <span class="lbar"><span style="width:75%"></span></span> <span class="llvl">B2 · technique</span></div>
+        </div>
+      </section>
+
+      <!-- Formation -->
+      <section class="cv-sec">
+        <h2 class="cv-sec-h">Formation</h2>
+        <div class="cv-edu">
+          <div class="cv-edu-item">
+            <div class="yr">2021 — 2022 · France</div>
+            <div class="ti">Développeur d'application JavaScript / React</div>
+            <div class="sub">Titre RNCP niveau 6 (Bac+3/4) · OpenClassrooms</div>
+          </div>
+          <div class="cv-edu-item">
+            <div class="yr">Formation continue · 2011 — aujourd'hui</div>
+            <div class="ti">Programmation &amp; Systèmes informatiques</div>
+            <div class="sub">Autodidacte · LLM, agents IA, full-stack, DevOps</div>
+          </div>
+          <div class="cv-edu-item">
+            <div class="yr">Bac+4 · Ukraine</div>
+            <div class="ti">Diplôme universitaire — Informatique de gestion</div>
+            <div class="sub">Systèmes d'information &amp; bases de données</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Qualités -->
+      <section class="cv-sec">
+        <h2 class="cv-sec-h">Qualités</h2>
+        <div class="cv-pill-grp">
+          <span class="cv-pill">Autonome</span>
+          <span class="cv-pill">Polyvalent</span>
+          <span class="cv-pill">Pragmatique</span>
+          <span class="cv-pill">Livre en production</span>
+          <span class="cv-pill">Biais auto-hébergement</span>
+        </div>
+      </section>
+
+    </aside>
+
+    <!-- ──────────────────── MAIN ──────────────────── -->
+    <main class="cv-main">
+
+      <!-- Profil -->
+      <section class="cv-sec">
+        <h2 class="cv-sec-h">Profil</h2>
+        <p class="cv-summary">
+          Développeur Full-Stack avec <strong>5+ ans</strong> en production et une spécialisation poussée sur les <em>systèmes natifs IA</em>.
+          Je conçois et livre des <strong>architectures multi-agents</strong> où un <strong>agent exécuteur</strong> réalise la tâche et un <strong>agent réviseur</strong> la note &mdash; la boucle itère jusqu'à un score <strong>≥ 90 %</strong>. Autour de ce noyau, j'ajoute des <strong>agents statistiques</strong> (télémétrie, KPIs), des <strong>agents sécurité</strong> (auth, contrôles OWASP, détection d'anomalies) et orchestre l'ensemble via <strong>n8n</strong>.
+          À l'aise sur toute la stack : <strong>React / Next.js / Node.js / Python</strong>, <strong>PostgreSQL / SQL Server</strong>, fine-tuning de LLM open-source avec <strong>Unsloth</strong> et hébergement sur infrastructure interne pour la maîtrise des coûts et de la donnée. Allergique au vendor lock-in.
+        </p>
+      </section>
+
+      <!-- Expérience -->
+      <section class="cv-sec">
+        <h2 class="cv-sec-h">Expérience</h2>
+        <div class="cv-xp">
+
+          <article class="cv-xp-item">
+            <div class="cv-xp-top">
+              <h3 class="cv-xp-role">Développeur Full-Stack &amp; <em>Ingénieur IA</em></h3>
+              <span class="cv-xp-when">2023 — aujourd'hui</span>
+            </div>
+            <p class="cv-xp-co"><strong>FIMAINFO</strong> — Développement informatique &amp; solutions cloud<span class="sep">·</span><span class="loc">Dijon, France</span></p>
+            <ul>
+              <li>Conception et mise en production de <strong>systèmes IA multi-agents</strong> pour campagnes de centres d'appels : agents <em>exécuteurs</em> traitent les tâches, agents <em>réviseurs</em> évaluent le résultat et bouclent jusqu'à un score ≥ <em>90 %</em> — réduction de <strong>80 %</strong> des heures de back-office sur les équipes couvertes.</li>
+              <li>Création d'<strong>automatisations n8n</strong> pour les processus administratifs récurrents (parsing email, routage de tickets, facturation, déclarations URSSAF, notifications internes).</li>
+              <li>Mise en place d'<strong>agents de statistiques &amp; supervision</strong> collectant les KPIs sur une infrastructure multi-tenant ; visualisation Grafana / Metabase avec alertes SLA + anomalies.</li>
+              <li><strong>Fine-tuning</strong> de LLM open-source (Unsloth, LoRA / QLoRA) sur des cas d'usage métier ; hébergement sur serveurs GPU internes et exposition via API REST pour la maîtrise des coûts et la souveraineté des données.</li>
+              <li><strong>Prompt engineering</strong> système et utilisateur sur modèles commerciaux (OpenAI, Claude) et auto-hébergés ; routage modèles légers spécialisés vs. modèles lourds pour optimiser le coût en tokens.</li>
+              <li>Développement de <strong>scripts et outils de téléphonie</strong> pour campagnes Hermes.net : flux d'appels responsives et accessibles (Tailwind / Bootstrap / JS).</li>
+              <li>Conception et maintenance de <strong>bases SQL Server / T-SQL</strong>, APIs REST en Node.js et tests Jest / DevTools.</li>
+            </ul>
+          </article>
+
+          <article class="cv-xp-item">
+            <div class="cv-xp-top">
+              <h3 class="cv-xp-role">Développeur Web</h3>
+              <span class="cv-xp-when">2022 — 2023</span>
+            </div>
+            <p class="cv-xp-co"><strong>Novileads Co.</strong><span class="sep">·</span><span class="loc">Ukraine · à distance</span></p>
+            <ul>
+              <li>Conception et développement de sites marketing et d'applications web responsives à partir de maquettes Figma (HTML, CSS, JavaScript, PHP).</li>
+              <li>Optimisation des performances front-end et compatibilité multi-écrans ; collaboration avec les développeurs back-end et designers sur des bibliothèques de composants partagées.</li>
+              <li>Pilotage des cycles de tests &amp; debug sur l'ensemble des navigateurs / appareils.</li>
+            </ul>
+          </article>
+
+          <article class="cv-xp-item">
+            <div class="cv-xp-top">
+              <h3 class="cv-xp-role">Développeur Web — <em>Légion Étrangère</em></h3>
+              <span class="cv-xp-when">2017 — 2021</span>
+            </div>
+            <p class="cv-xp-co"><strong>Légion Étrangère française</strong> — magazine <em>Képi Blanc</em> &amp; autres sites de la Légion<span class="sep">·</span><span class="loc">France</span></p>
+            <ul>
+              <li>Conception et développement de composants de site, gestion de contenu, coordination avec l'équipe éditoriale du magazine <em>Képi Blanc</em>.</li>
+              <li>SEO technique, intégration réseaux sociaux, optimisation des performances.</li>
+            </ul>
+          </article>
+
+          <article class="cv-xp-item">
+            <div class="cv-xp-top">
+              <h3 class="cv-xp-role">Technicien Informatique</h3>
+              <span class="cv-xp-when">2011 — 2017</span>
+            </div>
+            <p class="cv-xp-co"><strong>Légion Étrangère française</strong> — 1<sup>er</sup> R.E.G. / 1<sup>er</sup> R.E.<span class="sep">·</span><span class="loc">France</span></p>
+            <ul>
+              <li>Installation, configuration, maintenance et réparation des parcs matériels et logiciels.</li>
+              <li>Sécurité réseau : administration pare-feu &amp; antivirus, durcissement, support utilisateurs.</li>
+              <li>Support technique N1 / N2 aux unités opérationnelles.</li>
+            </ul>
+          </article>
+
+          <article class="cv-xp-item">
+            <div class="cv-xp-top">
+              <h3 class="cv-xp-role">Intégrateur Web</h3>
+              <span class="cv-xp-when">2011 — 2012</span>
+            </div>
+            <p class="cv-xp-co"><strong>Eindesein Co.</strong><span class="sep">·</span><span class="loc">Ukraine</span></p>
+            <ul>
+              <li>Intégration de sites à partir de maquettes (HTML / CSS) sous WordPress ; QA multi-navigateurs.</li>
+            </ul>
+          </article>
+
+        </div>
+      </section>
+
+      <!-- Projets Sélectionnés -->
+      <section class="cv-sec">
+        <h2 class="cv-sec-h">Projets Sélectionnés</h2>
+        <div class="cv-projects">
+          <div class="cv-proj">
+            <div class="cv-proj-h">
+              <span class="n">Vistalid</span>
+              <span class="cat">multi-agent · n8n</span>
+            </div>
+            <p class="d">Boucle exécuteur / réviseur pour back-offices de centres d'appels. Économise 30+ h/semaine par équipe. <em>Next.js · Claude API · Postgres · Docker</em></p>
+          </div>
+          <div class="cv-proj">
+            <div class="cv-proj-h">
+              <span class="n">SimplifyEU</span>
+              <span class="cat">IA · conformité</span>
+            </div>
+            <p class="d">Automatisation de workflow de conformité UE en plusieurs langues. <em>Python · LangChain · Supabase</em></p>
+          </div>
+          <div class="cv-proj">
+            <div class="cv-proj-h">
+              <span class="n">Parser&nbsp;AI</span>
+              <span class="cat">documents · agents</span>
+            </div>
+            <p class="d">Boîte mail → JSON structuré. Exécuteur extrait, réviseur valide, n8n route. <em>Python · OpenAI · n8n</em></p>
+          </div>
+          <div class="cv-proj">
+            <div class="cv-proj-h">
+              <span class="n">Supervision</span>
+              <span class="cat">stats · sécurité</span>
+            </div>
+            <p class="d">Agents statistiques &amp; sécurité sur infra multi-tenant. Suivi SLA, alertes anomalies. <em>Node · Grafana · Postgres</em></p>
+          </div>
+          <div class="cv-proj">
+            <div class="cv-proj-h">
+              <span class="n">API SDA</span>
+              <span class="cat">téléphonie</span>
+            </div>
+            <p class="d">API téléphonie temps réel + analytics. <em>T-SQL · REST · Node</em></p>
+          </div>
+          <div class="cv-proj">
+            <div class="cv-proj-h">
+              <span class="n">Bot de Trading</span>
+              <span class="cat">labo personnel</span>
+            </div>
+            <p class="d">Bot crypto multi-exchanges — génération de signaux, gestion du risque, back-tests. <em>Python · WebSockets · Postgres</em></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Certifications -->
+      <section class="cv-sec">
+        <h2 class="cv-sec-h">Certifications &amp; Diplômes</h2>
+        <div class="cv-cert">
+          <div class="cv-cert-item">
+            <span class="nm">Développeur d'application JavaScript / React — RNCP niveau 6 (Bac+3/4)</span>
+            <span class="yr">2022 · FR</span>
+          </div>
+          <div class="cv-cert-item">
+            <span class="nm">Diplôme universitaire — Informatique de gestion · Bac+4</span>
+            <span class="yr">UA</span>
+          </div>
+          <div class="cv-cert-item">
+            <span class="nm">Unsloth — fine-tuning LLM open-source (×2 / ×5)</span>
+            <span class="yr">auto-formation</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer class="cv-foot print-hide">
+    <span>Dernière mise à jour · Mai 2026 · <a href="/">smiro.dev</a></span>
+    <span>Généré depuis le profil en ligne</span>
+  </footer>
+</article>
+
+<script src="/settings.js"></script>
+</body>
+</html>
