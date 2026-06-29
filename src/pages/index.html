@@ -2182,6 +2182,25 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
   canvas.orb{width:280px;height:280px}
 }
 </style>
+<style id="pc3d-style">
+  .hero-r.pc-stage{
+    background: radial-gradient(125% 95% at 62% 28%, rgba(255,251,242,.55), rgba(222,214,192,.22) 70%, rgba(222,214,192,0));
+    border: 1px solid var(--line); border-radius: 22px; padding: 0; min-height: 460px;
+    position: relative; overflow: hidden; display: block;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 18px 40px -28px rgba(27,26,24,.45);
+  }
+  .pc3d-mount{ position:absolute; inset:0; touch-action:none; }
+  .pc3d-mount canvas{ display:block; width:100% !important; height:100% !important; }
+  .pc3d-hint{
+    position:absolute; left:50%; top:14px; transform:translateX(-50%); z-index:3;
+    font:500 12px/1 "Geist Mono",ui-monospace,monospace; color:var(--muted); letter-spacing:.3px;
+    background:rgba(244,241,232,.72); padding:7px 13px; border-radius:999px; border:1px solid var(--line);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); opacity:.9;
+    transition:opacity .45s ease; pointer-events:none; white-space:nowrap;
+  }
+  .pc3d-mount.is-engaged .pc3d-hint{ opacity:0; }
+  @media (max-width: 900px){ .hero-r.pc-stage{ min-height: 360px; } }
+</style>
 </head>
 <body style="font-family: Quicksand">
 
@@ -2314,6 +2333,56 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
         <div class="hm"><span class="lbl">based in</span><span class="v">Dijon</span></div>
       </div>
     </div>
+    <aside class="hero-r pc-stage" aria-label="Interactive 3D computer — bring your cursor toward the keyboard">
+      <div id="pc3d-mount" class="pc3d-mount" data-i18n-skip>
+        <div class="pc3d-hint" id="pc3d-hint" data-i18n="pc.hint">move closer to the keyboard →</div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="pillars">
+    <div class="pillar">
+      <div class="num">01</div>
+      <h3>Full-stack at <em>AI speed</em></h3>
+      <p>I prototype with Claude Code &amp; Cursor and harden with 15 years of engineering. Frontend, backend, infrastructure — idea to production in days, not sprints.</p>
+      <div class="tags"><span>Claude Code</span><span>Cursor</span><span>TypeScript</span><span>React</span><span>Node</span><span>Python</span></div>
+    </div>
+    <div class="pillar">
+      <div class="num">02</div>
+      <h3>AI <em>agents</em></h3>
+      <p>Agentic systems that do real work — not chatbots. An executor performs, a reviewer scores, the loop runs until ≥90% quality. RAG, MCP, evals, fallbacks.</p>
+      <div class="tags"><span>Claude</span><span>OpenAI</span><span>RAG</span><span>MCP</span><span>Fine-tuning</span></div>
+    </div>
+    <div class="pillar">
+      <div class="num">03</div>
+      <h3>n8n <em>automation</em></h3>
+      <p>Self-hosted n8n on a VPS I provision, deploy and harden myself. Workflows that run 24/7, integrate 50+ services, and replace 90% of manual ops.</p>
+      <div class="tags"><span>n8n</span><span>VPS</span><span>Docker</span><span>OWASP</span><span>Webhooks</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== PRISTINE HERO CLONE — reference copy, do NOT experiment here ===== -->
+<header class="hero">
+  <div class="hero-grid">
+    <div>
+      <div class="eyebrow"><span class="pulse"></span>for <span style="color:var(--brick);font-weight:600">recruiters &amp; hiring managers</span></div>
+      <h1 class="ht" style="font-size: 64px">
+        I don't <span class="crossed">apply</span><br>
+        for jobs.<br>
+        I <em>build a system</em><br>
+        to find them.
+      </h1>
+      <p class="sub">
+        While other candidates refresh job boards and miss windows, my n8n+AI pipeline sees a vacancy 4–8 minutes after it's posted, filters it, drafts the application, and pings me on Telegram. <br><strong style="color:var(--ink)">You're reading this because the system worked.</strong>
+      </p>
+      <div class="hero-meta">
+        <div class="hm"><span class="lbl">avg. detection</span><span class="v"><em>~6</em> min</span></div>
+        <div class="hm"><span class="lbl">platforms</span><span class="v"><em>3</em></span></div>
+        <div class="hm"><span class="lbl">years building</span><span class="v"><em>15</em></span></div>
+        <div class="hm"><span class="lbl">based in</span><span class="v">Dijon</span></div>
+      </div>
+    </div>
     <aside class="hero-r">
       <div class="eyebrow">tl;dr — what you get</div>
       <h2>A senior who <em>ships</em>, not just talks.</h2>
@@ -2350,6 +2419,8 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
     </div>
   </div>
 </header>
+<!-- ===== /PRISTINE HERO CLONE ===== -->
+
 
 <!-- THE WORKFLOW -->
 <section id="workflow">
@@ -4941,6 +5012,7 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
 <script src="/i18n-fr.js"></script>
 <script src="/i18n.js"></script>
 <script src="/settings.js"></script>
+<script type="module" src="/pc3d.js"></script>
 </html>
 
 <style id="__om-edit-overrides">

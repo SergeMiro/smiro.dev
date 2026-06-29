@@ -12,6 +12,7 @@ window.I18N_FR = {
 
   /* ──────────────── keyed (smiro-v2.html) ──────────────── */
   KEYS: {
+    "pc.hint":            "rapprochez-vous du clavier →",
     "nav.about":          "à propos",
     "nav.work":           "réalisations",
     "nav.ideas":          "idées",
