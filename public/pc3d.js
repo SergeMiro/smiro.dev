@@ -1,24 +1,28 @@
 /* ════════════════════════════════════════════════════════════════════════
    pc3d.js — interactive retro 3D PC for the hero (smiro.dev)
 
-   Art direction: WARM PREMIUM retro workstation, tuned to match the site
-   (cream / editorial / brick-orange #e86830). Not a dark cyberpunk demo.
-     · cream plastic case + warm brushed-metal trim + glossy CRT glass
-     · PBR materials lit by an environment map (RoomEnvironment PMREM) so
-       metal & glass actually reflect — the biggest "premium render" lever
-     · restrained warm 3-light rig + soft contact shadows, no acid neon
-     · larger, high-contrast screen; code is already visible at rest
+   The PC is a single authored GLB model (public/models/pc.glb, DRACO-
+   compressed). There is NO procedural geometry — the GLB is the only model.
+   On top of the GLB we place two things the model can't provide:
+     · a live CanvasTexture "screen" plane over the monitor face — this is
+       what shows the editor / terminal / CV, and what raycasting reads for
+       hover + click on the CV card.
+     · an invisible Enter-key raycast zone + a glowing ring over the GLB
+       keyboard's Enter key — the interaction affordance.
+
+   Rendering: Three.js (CDN ESM), PBR lit by RoomEnvironment (PMREM) so the
+   model's metal & glass reflect. Warm 3-light rig + soft contact shadows.
 
    Story / state machine, driven by cursor proximity to the Enter key:
      idle      → cursor far. Editor at rest, first lines already typed.
      typing    → cursor approaches. Screen auto-types. Speed ∝ proximity.
-     ready     → cursor near keyboard. Enter key glows + rises.
+     ready     → cursor near keyboard. Enter ring glows + rises.
      building  → user clicked Enter. Terminal runs a fake `build`.
      result    → a "browser" pops up with a clickable CV preview.
 
-   Rendering: Three.js (CDN ESM). Monitor screen = high-res CanvasTexture;
-   clicks/hover on the screen resolved via raycasting → UV → canvas pixels.
+   Screen clicks/hover resolved via raycasting → UV → canvas pixels.
    Bilingual (EN/FR) via window.I18N.getLang() — re-read every frame.
+   Live tuning: window.__pc3d (TUNE + apply()).
    ════════════════════════════════════════════════════════════════════════ */
 
 import * as THREE from 'three';
@@ -140,75 +144,22 @@ function boot(container) {
   scene.environment = envTex;
   if ('environmentIntensity' in scene) scene.environmentIntensity = 0.42;
 
-  // ─────────────────────────────────────────── warm premium palette
-  // procedural warm wood for the desk
-  function makeWoodTex(cw, ch) {
-    const c = document.createElement('canvas'); c.width = cw; c.height = ch;
-    const g = c.getContext('2d');
-    g.fillStyle = '#c9a878'; g.fillRect(0, 0, cw, ch);
-    for (let i = 0; i < 620; i++) {
-      const y = Math.random() * ch, alpha = Math.random() * 0.10;
-      g.strokeStyle = `rgba(120,80,40,${alpha})`;
-      g.lineWidth = 1 + Math.random() * 2.2;
-      g.beginPath();
-      g.moveTo(0, y);
-      const cx = cw / 2 + (Math.random() - 0.5) * cw * 0.6;
-      g.quadraticCurveTo(cx, y + (Math.random() - 0.5) * 16, cw, y + (Math.random() - 0.5) * 6);
-      g.stroke();
-    }
-    const grad = g.createRadialGradient(cw / 2, ch / 2, cw * 0.35, cw / 2, ch / 2, cw * 0.85);
-    grad.addColorStop(0, 'rgba(255,240,215,0.10)');
-    grad.addColorStop(1, 'rgba(60,35,10,0.18)');
-    g.fillStyle = grad; g.fillRect(0, 0, cw, ch);
-    const tex = new THREE.CanvasTexture(c);
-    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(2, 1);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    return tex;
-  }
-  const woodTex = makeWoodTex(512, 256);
+  // ─────────────────────────────────────────── live-tuning values
+  const TUNE = {
+    fitHeight: 3.4,             // world-units tall the GLB is auto-scaled to
+    pos: { x: 0, y: 0, z: 0 },  // extra offset after auto-centre + grounding
+    rotY: 0,                    // extra yaw (radians)
+    deskTop: 0.22,              // surface height the model base rests on
+    cam: { x: 3.1, y: 2.35, z: 6.7 },
+    look: { x: 0, y: 1.32, z: 0.2 },
+    // screen overlay pose (fallback when no named screen mesh is in the GLB)
+    screen: { x: 0, y: 1.75, z: 0.55, w: 3.3, h: 2.2, rotY: 0.1, push: 0.02 },
+    // invisible Enter-key raycast zone + glowing ring over the GLB keyboard
+    enter: { x: 0.55, y: 0.5, z: 1.5 },
+  };
 
-  // materials — cream plastic, warm metal, glossy glass
-  const matCase   = new THREE.MeshStandardMaterial({ color: 0xece2cf, roughness: 0.52, metalness: 0.06 });
-  const matCase2  = new THREE.MeshStandardMaterial({ color: 0xddd0b6, roughness: 0.58, metalness: 0.05 });
-  const matMetal  = new THREE.MeshStandardMaterial({ color: 0xb7a98d, roughness: 0.34, metalness: 0.85 });
-  const matGlass  = new THREE.MeshStandardMaterial({ color: 0x14120f, roughness: 0.14, metalness: 0.2 });
-  const matDesk   = new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.6, metalness: 0.0, color: 0xd8b98c });
-  const matKey    = new THREE.MeshStandardMaterial({ color: 0xe5dcc6, roughness: 0.52, metalness: 0.05 });
-  const matKeyDk  = new THREE.MeshStandardMaterial({ color: 0xcbbd9d, roughness: 0.5, metalness: 0.06 });
-  const matMouse  = new THREE.MeshStandardMaterial({ color: 0xe7ddc7, roughness: 0.42, metalness: 0.08 });
-  const matCord   = new THREE.MeshStandardMaterial({ color: 0x2c2620, roughness: 0.7, metalness: 0.0 });
-  const matOutline = new THREE.MeshBasicMaterial({ color: 0x6b5f48, side: THREE.BackSide });
-  const matEnter  = new THREE.MeshStandardMaterial({ color: 0xe9e0cb, emissive: 0xe86830, emissiveIntensity: 0, roughness: 0.45, metalness: 0.08 });
-  const matEnterRing = new THREE.MeshBasicMaterial({ color: 0xe86830, transparent: true, opacity: 0 });
-
-  function roundedBox(bw, bh, bd, r) {
-    const sh = new THREE.Shape();
-    const x = -bw / 2, y = -bh / 2;
-    sh.moveTo(x + r, y);
-    sh.lineTo(x + bw - r, y); sh.quadraticCurveTo(x + bw, y, x + bw, y + r);
-    sh.lineTo(x + bw, y + bh - r); sh.quadraticCurveTo(x + bw, y + bh, x + bw - r, y + bh);
-    sh.lineTo(x + r, y + bh); sh.quadraticCurveTo(x, y + bh, x, y + bh - r);
-    sh.lineTo(x, y + r); sh.quadraticCurveTo(x, y, x + r, y);
-    const g = new THREE.ExtrudeGeometry(sh, { depth: bd, bevelEnabled: true, bevelThickness: r * 0.5, bevelSize: r * 0.5, bevelSegments: 4 });
-    g.center();
-    return g;
-  }
-
-  // ═══════════════════════════ DESK ═══════════════════════════
-  const desk = new THREE.Mesh(new THREE.BoxGeometry(9, 0.24, 4.6), matDesk);
-  desk.position.set(0, 0.1, 0.55);
-  desk.receiveShadow = true;
-  scene.add(desk);
-
-  // ═══════════════════════════ MONITOR ═══════════════════════════
-  const mon = new THREE.Group();
-  mon.position.set(0, 1.5, -0.3);
-  mon.rotation.y = 0.1;
-  scene.add(mon);
-
-  // screen canvas texture (HIGH-RES)
-  const SC_W = 1600, SC_H = 1067;
+  // ─────────────────────────────────────────── screen (CanvasTexture plane)
+  const SC_W = 1600, SC_H = 1067;      // canvas resolution the drawing code uses
   const sc = document.createElement('canvas');
   sc.width = SC_W; sc.height = SC_H;
   const g2 = sc.getContext('2d');
@@ -217,189 +168,37 @@ function boot(container) {
   screenTex.magFilter = THREE.LinearFilter;
   screenTex.colorSpace = THREE.SRGBColorSpace;
 
-  // LARGE screen mesh (3:2, matches canvas ratio)
+  // reference plane size (3:2, matches canvas ratio). Scaled to fit the GLB.
   const SCREEN_W = 3.3, SCREEN_H = 2.2;
-  const screenMat = new THREE.MeshBasicMaterial({ map: screenTex });
-  // chunky cream frame around the screen (SOLID slab — screen mounts on its face)
-  const frameThick = 0.16;
-  const frameW = SCREEN_W + frameThick * 2;
-  const frameH = SCREEN_H + frameThick * 2;
-  const frameDepth = 0.3;
-  const frameR = 0.16;
-  const frontZ = frameDepth / 2 + frameR * 0.5; // true front face of the extruded slab
-  const monFrame = new THREE.Mesh(roundedBox(frameW, frameH, frameDepth, frameR), matCase);
-  monFrame.castShadow = true; monFrame.receiveShadow = true;
-  mon.add(monFrame);
-
-  // crisp silhouette outline
-  const outline = new THREE.Mesh(roundedBox(frameW, frameH, frameDepth, frameR), matOutline);
-  outline.scale.set(1.012, 1.012, 1.0);
-  mon.add(outline);
-
-  // glossy black glass bezel on the front face (forms a thin dark border)
-  const bezel = new THREE.Mesh(new THREE.BoxGeometry(SCREEN_W + 0.12, SCREEN_H + 0.12, 0.04), matGlass);
-  bezel.position.z = frontZ + 0.005;
-  mon.add(bezel);
-
-  // the screen sits proud of the bezel (glass surface)
+  const screenMat = new THREE.MeshBasicMaterial({ map: screenTex, toneMapped: false });
   const screen = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN_W, SCREEN_H), screenMat);
-  screen.position.z = frontZ + 0.03;
   screen.name = 'screen';
-  mon.add(screen);
+  screen.visible = false;               // shown once the GLB (or fallback) is placed
+  scene.add(screen);
 
-  // bottom chin + brushed-metal brand strip + LED (on the front face)
-  const chin = new THREE.Mesh(new THREE.BoxGeometry(frameW * 0.9, 0.16, 0.05), matCase2);
-  chin.position.set(0, -frameH / 2 + 0.16, frontZ - 0.02);
-  mon.add(chin);
-  const brand = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.02), matMetal);
-  brand.position.set(-frameW * 0.28, -frameH / 2 + 0.16, frontZ + 0.02);
-  mon.add(brand);
-  const ledMat = new THREE.MeshStandardMaterial({ color: 0x7ee787, emissive: 0x6cd67a, emissiveIntensity: 2.2 });
-  const led = new THREE.Mesh(new THREE.SphereGeometry(0.028, 16, 16), ledMat);
-  led.position.set(frameW * 0.3, -frameH / 2 + 0.16, frontZ + 0.02);
-  mon.add(led);
-
-  // tapered CRT back
-  const backBody = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 0.5, 1.25, 4), matCase2);
-  backBody.rotation.set(Math.PI / 2, Math.PI / 4, 0);
-  backBody.position.z = -0.7;
-  backBody.scale.set(1.5, 1, 1);
-  backBody.castShadow = true;
-  mon.add(backBody);
-  // ventilation slits
-  for (let i = 0; i < 6; i++) {
-    const slit = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.02, 0.03),
-      new THREE.MeshStandardMaterial({ color: 0xbdb096, roughness: 0.85 }));
-    slit.position.set(0, 0.6 - i * 0.2, -0.78);
-    slit.rotation.x = -0.5;
-    mon.add(slit);
-  }
-
-  // subtle warm point light from the screen onto the scene
+  // warm point light spilling from the screen onto the scene
   const screenGlow = new THREE.PointLight(0xffe9c8, 0.7, 6);
-  screenGlow.position.set(0, 0, 1.6);
-  mon.add(screenGlow);
+  scene.add(screenGlow);
 
-  // ═══════════════════════════ STAND ═══════════════════════════
-  const standGroup = new THREE.Group();
-  standGroup.position.set(0, 0.5, -0.2);
-  scene.add(standGroup);
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.19, 0.62, 24), matMetal);
-  neck.position.y = 0.32; neck.castShadow = true; standGroup.add(neck);
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.66, 0.74, 0.09, 40), matMetal);
-  base.position.y = 0.04; base.castShadow = true; base.receiveShadow = true; standGroup.add(base);
-
-  // ═══════════════════════════ KEYBOARD ═══════════════════════════
-  const kb = new THREE.Group();
-  kb.position.set(-0.1, 0.28, 1.62);
-  kb.rotation.x = -0.05;
-  scene.add(kb);
-
-  const kbBody = new THREE.Mesh(roundedBox(3.0, 0.16, 1.12, 0.07), matKey);
-  kbBody.castShadow = true; kbBody.receiveShadow = true;
-  kb.add(kbBody);
-
-  // real 3D keycaps in staggered rows (subset animates while typing)
-  const KEY = 0.185, GAP = 0.03, KH = 0.075;
-  const animKeys = [];
-  function keycap(cx, cz, units = 1, mat = matKeyDk) {
-    const kw = KEY * units + GAP * (units - 1);
-    const m = new THREE.Mesh(roundedBox(kw, KH, KEY, 0.028), mat);
-    m.position.set(cx, 0.12, cz);
-    m.userData.rest = 0.12;
-    m.castShadow = true;
-    kb.add(m);
-    return m;
-  }
-  const rows = [
-    { z: -0.38, n: 13, x0: -1.28 },
-    { z: -0.15, n: 13, x0: -1.28 },
-    { z: 0.08,  n: 12, x0: -1.28 },
-    { z: 0.31,  n: 11, x0: -1.18 },
-  ];
-  rows.forEach((r) => {
-    for (let i = 0; i < r.n; i++) animKeys.push(keycap(r.x0 + i * (KEY + GAP), r.z, 1));
-  });
-  // spacebar
-  const spaceBar = keycap(-0.1, 0.5, 6, matKey); animKeys.push(spaceBar);
-
-  // ── Enter key (hero, right of home row) ──
-  const enterKey = new THREE.Mesh(roundedBox(KEY * 2.3 + GAP, KH + 0.012, KEY, 0.03), matEnter);
-  enterKey.position.set(1.16, 0.125, 0.08);
-  enterKey.castShadow = true;
+  // ─────────────────────────────────────────── Enter-key interaction group
+  // Invisible raycast zone (GLB provides the visible key). matEnter is not
+  // rendered, but three's raycaster still tests invisible-material meshes.
+  const matEnter = new THREE.MeshStandardMaterial({ color: 0xe9e0cb, emissive: 0xe86830, emissiveIntensity: 0, roughness: 0.45, metalness: 0.08 });
+  matEnter.visible = false;
+  const enterKey = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.24), matEnter);
   enterKey.name = 'enter';
-  kb.add(enterKey);
-  const enterNub = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.02, 0.12),
-    new THREE.MeshStandardMaterial({ color: 0x9a8f74, roughness: 0.4, metalness: 0.3 }));
-  enterNub.position.set(1.16, 0.18, 0.08);
-  kb.add(enterNub);
+  enterKey.position.set(TUNE.enter.x, TUNE.enter.y, TUNE.enter.z);
+  scene.add(enterKey);
+
+  // glowing ring affordance
+  const matEnterRing = new THREE.MeshBasicMaterial({ color: 0xe86830, transparent: true, opacity: 0 });
   const enterRing = new THREE.Mesh(new THREE.TorusGeometry(0.29, 0.013, 12, 44), matEnterRing);
   enterRing.rotation.x = -Math.PI / 2;
-  enterRing.position.set(1.16, 0.2, 0.08);
-  kb.add(enterRing);
+  enterRing.position.set(TUNE.enter.x, TUNE.enter.y, TUNE.enter.z);
+  enterRing.visible = false;
+  scene.add(enterRing);
 
-  // ═══════════════════════════ MOUSE + PAD ═══════════════════════════
-  const mousepad = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.02, 0.9),
-    new THREE.MeshStandardMaterial({ color: 0x3a352c, roughness: 0.9, metalness: 0.0 }));
-  mousepad.position.set(2.05, 0.23, 1.35);
-  mousepad.receiveShadow = true;
-  scene.add(mousepad);
-
-  const mouse = new THREE.Group();
-  mouse.position.set(2.05, 0.28, 1.45);
-  scene.add(mouse);
-  const mBody = new THREE.Mesh(new THREE.CapsuleGeometry(0.15, 0.1, 8, 20), matMouse);
-  mBody.rotation.x = -Math.PI / 2; mBody.rotation.z = 0.08; mBody.scale.set(1, 1, 0.66);
-  mBody.castShadow = true; mouse.add(mBody);
-  const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.16, 12),
-    new THREE.MeshStandardMaterial({ color: 0x6a6050, roughness: 0.3, metalness: 0.5 }));
-  wheel.rotation.z = Math.PI / 2; wheel.position.set(0, 0.085, 0); mouse.add(wheel);
-  const mSplit = new THREE.Mesh(new THREE.BoxGeometry(0.003, 0.016, 0.15),
-    new THREE.MeshBasicMaterial({ color: 0xb6a987 }));
-  mSplit.position.set(0, 0.1, -0.02); mouse.add(mSplit);
-
-  const cordCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(2.05, 0.28, 1.2),
-    new THREE.Vector3(1.5, 0.26, 1.05),
-    new THREE.Vector3(0.85, 0.25, 1.1),
-    new THREE.Vector3(0.35, 0.29, 0.6),
-    new THREE.Vector3(0.05, 0.33, 0.1),
-  ]);
-  const cord = new THREE.Mesh(new THREE.TubeGeometry(cordCurve, 50, 0.017, 8, false), matCord);
-  scene.add(cord);
-
-  // ═══════════════════════════ DESK PROPS (curated) ═══════════════════════════
-  // coffee mug (on-brand orange)
-  const mug = new THREE.Group();
-  mug.position.set(-2.35, 0.23, 1.05);
-  scene.add(mug);
-  mug.add(new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.13, 0.3, 24),
-    new THREE.MeshStandardMaterial({ color: 0xe86830, roughness: 0.35, metalness: 0.05 })));
-  const handle = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.02, 10, 18, Math.PI),
-    new THREE.MeshStandardMaterial({ color: 0xe86830, roughness: 0.35, metalness: 0.05 }));
-  handle.position.set(0.16, 0, 0); handle.rotation.z = Math.PI / 2; mug.add(handle);
-  const coffee = new THREE.Mesh(new THREE.CircleGeometry(0.135, 24),
-    new THREE.MeshStandardMaterial({ color: 0x2a1810, roughness: 0.5 }));
-  coffee.position.y = 0.151; coffee.rotation.x = -Math.PI / 2; mug.add(coffee);
-  mug.children[0].castShadow = true;
-
-  // small notebook + pen (paper warmth)
-  const notebook = new THREE.Group();
-  notebook.position.set(2.5, 0.22, 0.55);
-  notebook.rotation.y = -0.22;
-  scene.add(notebook);
-  const nbBody = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.04, 0.74),
-    new THREE.MeshStandardMaterial({ color: 0xf3ecd9, roughness: 0.7 }));
-  nbBody.castShadow = true; nbBody.receiveShadow = true; notebook.add(nbBody);
-  const nbCover = new THREE.Mesh(new THREE.BoxGeometry(0.57, 0.015, 0.76),
-    new THREE.MeshStandardMaterial({ color: 0xb4502a, roughness: 0.5 }));
-  nbCover.position.y = -0.025; notebook.add(nbCover);
-  const pen = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, 0.5, 12),
-    new THREE.MeshStandardMaterial({ color: 0x2a2622, roughness: 0.4, metalness: 0.3 }));
-  pen.rotation.z = Math.PI / 2; pen.rotation.y = 0.35; pen.position.set(0.05, 0.05, -0.06);
-  pen.castShadow = true; notebook.add(pen);
-
-  // ═══════════════════════════ LIGHTING (warm, restrained) ═══════════════════════════
+  // ─────────────────────────────────────────── lighting (warm, restrained)
   scene.add(new THREE.AmbientLight(0xfff4e6, 0.28));
 
   const keyLight = new THREE.DirectionalLight(0xfff1de, 2.5);
@@ -420,21 +219,10 @@ function boot(container) {
   rimLight.position.set(-3.5, 2, 6.5);
   scene.add(rimLight);
 
-  // ═══════════════════════════ GLB MODEL (primary; procedural = fallback) ═══════
-  // Load the authored PC (public/models/pc.glb, DRACO-compressed). When it
-  // arrives it becomes the hero model and the procedural PC above is hidden.
-  // If the load fails, the procedural PC simply stays on screen — nothing to do.
+  // ═══════════════════════════ GLB MODEL (the only PC) ═══════════════════════
   let model = null;
+  let modelBaseY = 0;
   let glbScreenMesh = null;
-
-  const TUNE = {
-    fitHeight: 3.4,             // world-units tall the GLB is auto-scaled to
-    pos: { x: 0, y: 0, z: 0 },  // extra offset after auto-centre + grounding
-    rotY: 0,                    // extra yaw (radians)
-    deskTop: 0.22,              // desk surface height the model rests on
-    cam: { x: 3.1, y: 2.35, z: 6.7 },
-    look: { x: 0, y: 1.32, z: 0.2 },
-  };
 
   // auto-fit: centre on X/Z, scale to TUNE.fitHeight, sit base on the desk top
   function fitModel() {
@@ -451,43 +239,48 @@ function boot(container) {
     const c = box.getCenter(new THREE.Vector3());
     model.position.set(-c.x + TUNE.pos.x, (TUNE.deskTop - box.min.y) + TUNE.pos.y, -c.z + TUNE.pos.z);
     model.updateMatrixWorld(true);
+    modelBaseY = model.position.y;
+  }
+
+  // place the live screen plane over the GLB monitor. If the GLB exposes a
+  // named screen/display mesh we snap to its world box + orientation; otherwise
+  // we fall back to the tunable TUNE.screen pose.
+  function placeScreen() {
+    if (glbScreenMesh) {
+      glbScreenMesh.updateWorldMatrix(true, false);
+      const box = new THREE.Box3().setFromObject(glbScreenMesh);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      glbScreenMesh.getWorldQuaternion(screen.quaternion);
+      screen.position.copy(center);
+      screen.scale.set((size.x || SCREEN_W) / SCREEN_W, (size.y || SCREEN_H) / SCREEN_H, 1);
+      const fwd = new THREE.Vector3(0, 0, 1).applyQuaternion(screen.quaternion).multiplyScalar(TUNE.screen.push);
+      screen.position.add(fwd);
+    } else {
+      screen.quaternion.identity();
+      screen.rotation.set(0, TUNE.screen.rotY, 0);
+      screen.position.set(TUNE.screen.x, TUNE.screen.y, TUNE.screen.z);
+      screen.scale.set(TUNE.screen.w / SCREEN_W, TUNE.screen.h / SCREEN_H, 1);
+    }
+    screen.userData.baseY = screen.position.y;
+    // put the screen glow just in front of the plane
+    const glowFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(screen.quaternion).multiplyScalar(1.4);
+    screenGlow.position.copy(screen.position).add(glowFwd);
+  }
+
+  function placeEnter() {
+    enterKey.position.set(TUNE.enter.x, TUNE.enter.y, TUNE.enter.z);
+    enterRing.position.set(TUNE.enter.x, TUNE.enter.y, TUNE.enter.z);
   }
 
   // re-apply TUNE live from the console: __pc3d.TUNE.fitHeight = 3.6; __pc3d.apply()
   function apply() {
     fitModel();
+    placeScreen();
+    placeEnter();
     camera.position.set(TUNE.cam.x, TUNE.cam.y, TUNE.cam.z);
     camera.lookAt(TUNE.look.x, TUNE.look.y, TUNE.look.z);
     camera.updateProjectionMatrix();
-  }
-
-  function hideProcedural(hasGlbScreen) {
-    [desk, standGroup, mousepad, mouse, cord, mug, notebook].forEach((o) => { o.visible = false; });
-    [kbBody, enterNub, ...animKeys].forEach((o) => { o.visible = false; });
-    // keep enterKey + enterRing for raycast + affordance, but stop the cream
-    // keycap from rendering (Three's raycaster ignores .visible, so hits still land)
-    matEnter.visible = false;
-    // GLB carries its own monitor + screen → hide the procedural monitor group.
-    // If the GLB has no named screen, keep the procedural monitor as a live overlay.
-    if (hasGlbScreen) mon.visible = false;
-  }
-
-  // reparent the procedural screen plane onto the GLB screen's face, so the
-  // existing raycast/UV interactions (typing focus, CV click) keep working while
-  // the GLB mesh itself shows the same live CanvasTexture.
-  function attachScreenProxy(mesh) {
-    try {
-      scene.attach(screen); // keep world transform, then override to match GLB
-      const box = new THREE.Box3().setFromObject(mesh);
-      const size = box.getSize(new THREE.Vector3());
-      const center = box.getCenter(new THREE.Vector3());
-      mesh.getWorldQuaternion(screen.quaternion);
-      screen.position.copy(center);
-      screen.scale.set((size.x || SCREEN_W) / SCREEN_W, (size.y || SCREEN_H) / SCREEN_H, 1);
-      const fwd = new THREE.Vector3(0, 0, 1).applyQuaternion(screen.quaternion).multiplyScalar(0.02);
-      screen.position.add(fwd);
-    } catch (_) { /* leave proxy at its reparented pose */ }
-    screen.material = new THREE.MeshBasicMaterial({ visible: false }); // interaction-only
   }
 
   const draco = new DRACOLoader();
@@ -505,21 +298,29 @@ function boot(container) {
         if (!glbScreenMesh && /screen|display|monitor/i.test(o.name)) glbScreenMesh = o;
       });
       scene.add(model);
+      // if the GLB has its own screen surface, darken it so our live overlay
+      // reads cleanly on top of it.
+      if (glbScreenMesh) glbScreenMesh.material = new THREE.MeshBasicMaterial({ color: 0x05070a });
       apply();
-      hideProcedural(!!glbScreenMesh);
-      if (glbScreenMesh) {
-        glbScreenMesh.material = new THREE.MeshBasicMaterial({ map: screenTex, toneMapped: false });
-        attachScreenProxy(glbScreenMesh);
-      }
+      screen.visible = true;
+      enterRing.visible = true;
       window.__pc3d.model = model;
       window.__pc3d.screenMesh = glbScreenMesh;
     },
     undefined,
-    (err) => { console.warn('[pc3d] pc.glb failed to load — using procedural PC', err); }
+    (err) => {
+      // No procedural fallback — show the live screen overlay on its own so the
+      // hero still tells its story, and log the failure.
+      console.warn('[pc3d] pc.glb failed to load — showing screen-only fallback', err);
+      placeScreen();
+      placeEnter();
+      screen.visible = true;
+      enterRing.visible = true;
+    }
   );
 
   // live-tuning handle exposed for console fiddling
-  window.__pc3d = { model, mon, kb, screen, enterKey, enterRing, camera, TUNE, apply };
+  window.__pc3d = { model, screen, enterKey, enterRing, camera, TUNE, apply, placeScreen, placeEnter };
 
   // ─────────────────────────────────────────── state + interaction
   let state = 'idle';
@@ -586,7 +387,7 @@ function boot(container) {
   function onDown() {
     if (!hasPointer) return;
     if ((state === 'idle' || state === 'typing') && proximity > 0.3) {
-      const hit = rayHit().intersectObjects([enterKey, enterRing, kbBody], false).length > 0;
+      const hit = rayHit().intersectObjects([enterKey, enterRing], false).length > 0;
       if (hit || proximity > 0.5) startBuild();
     } else if (state === 'result' && hoverCV) {
       location.href = lang() === 'fr' ? '/cv-fr' : '/cv';
@@ -821,6 +622,9 @@ function boot(container) {
     prev = now;
     const elapsed = now - t0;
 
+    // shared, in-sync vertical float applied to model + screen + ring
+    const floatY = reduceMotion ? 0 : Math.sin(elapsed * 0.0009) * 0.02;
+
     if (hasPointer && (state === 'idle' || state === 'typing')) {
       const ep = enterScreenPx();
       const d = Math.hypot(mouseX - ep.x, mouseY - ep.y);
@@ -838,41 +642,33 @@ function boot(container) {
 
       const want = Math.max(0, Math.min(1, (proximity - 0.24) / 0.52));
       matEnter.emissiveIntensity += (want * 1.9 - matEnter.emissiveIntensity) * 0.16;
-      enterKey.position.y = 0.125 + (Math.sin(elapsed * 0.006) * 0.014 + 0.014) * want;
+      enterKey.position.y = TUNE.enter.y + floatY + (Math.sin(elapsed * 0.006) * 0.014 + 0.014) * want;
       enterRing.material.opacity += ((want > 0.15 ? 0.6 + Math.sin(elapsed * 0.006) * 0.3 : 0) - enterRing.material.opacity) * 0.18;
       enterRing.scale.setScalar(1 + want * 0.14);
-
-      // a realistic subset of keys "presses" while typing
-      if (!reduceMotion) {
-        const active = state === 'typing' && proximity > 0.06;
-        animKeys.forEach((k, i) => {
-          const rest = k.userData.rest;
-          const down = active && (Math.floor(elapsed * 0.02 + i * 2.3) % 7 === 0)
-            ? rest - 0.03 : rest;
-          k.position.y += (down - k.position.y) * 0.35;
-        });
-      }
       drawEditor(elapsed);
     } else if (state === 'building') {
       matEnter.emissiveIntensity = 1.9;
-      enterKey.position.y = 0.1;
+      enterKey.position.y = TUNE.enter.y + floatY - 0.02;
       const be = now - buildStart;
       drawTerminal(be);
       const total = TERM_PER_LINE * txt().term.length + TERM_HOLD;
       if (be > total) { state = 'result'; buildStart = now; }
     } else if (state === 'result') {
-      enterKey.position.y = 0.125;
+      enterKey.position.y = TUNE.enter.y + floatY;
       matEnter.emissiveIntensity += (0 - matEnter.emissiveIntensity) * 0.08;
       enterRing.material.opacity += (0 - enterRing.material.opacity) * 0.18;
       drawResult(now - buildStart);
     }
 
-    if (!reduceMotion) {
-      mon.position.y = 1.62 + Math.sin(elapsed * 0.0009) * 0.02;
-      ledMat.emissiveIntensity = 2.0 + Math.sin(elapsed * 0.004) * 0.8;
-    }
+    // monitor float (whole model) + screen + ring move together
+    if (model) model.position.y = modelBaseY + floatY;
+    if (screen.userData.baseY != null) screen.position.y = screen.userData.baseY + floatY;
+    enterRing.position.y = TUNE.enter.y + floatY;
+
+    // screen glow: breathing intensity stands in for the monitor's power LED
     screenGlow.color.set(state === 'result' ? 0xffe7c4 : 0xffe9c8);
-    screenGlow.intensity = state === 'result' ? 1.1 : 0.7;
+    screenGlow.intensity = (state === 'result' ? 1.1 : 0.7) +
+      (reduceMotion ? 0 : Math.sin(elapsed * 0.004) * 0.12);
 
     renderer.render(scene, camera);
   }
