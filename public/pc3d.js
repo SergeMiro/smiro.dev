@@ -11,13 +11,16 @@
                  preview of the real CV. Hover = orange border + pointer.
                  Click = navigate to /cv (or /cv-fr when the site is in French).
 
-   Rendering: Three.js (CDN ESM). The monitor screen is a high-res CanvasTexture;
-   clicks/hover on the screen are resolved by raycasting → UV → canvas pixels.
+   Rendering: Three.js (CDN ESM). The PC body is a DRACO-compressed GLB model
+   (public/models/pc.glb); the monitor screen is a high-res CanvasTexture overlaid
+   on the model, and clicks/hover are resolved by raycasting → UV → canvas pixels.
    Bilingual (EN/FR) via window.I18N.getLang(); re-read every frame so the
    language toggle (⚙ → Language) updates the screen live.
    ════════════════════════════════════════════════════════════════════════ */
 
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.module.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/loaders/DRACOLoader.js';
 
 const mount = document.getElementById('pc3d-mount');
 if (mount) boot(mount);
@@ -125,66 +128,21 @@ function boot(container) {
   renderer.toneMappingExposure = 1.12;
   container.appendChild(renderer.domElement);
 
-  // toon ramp (Pixar-ish banding)
-  const gradData = new Uint8Array([40, 90, 150, 200, 245]);
-  const ramp = new THREE.DataTexture(gradData, 5, 1, THREE.RedFormat);
-  ramp.minFilter = ramp.magFilter = THREE.NearestFilter;
-  ramp.needsUpdate = true;
-  const toon = (color) => new THREE.MeshToonMaterial({ color, gradientMap: ramp });
+  // ─────────────────────────────────────────── tunables (align overlays to the GLB)
+  // pc.glb is one merged, DRACO-compressed mesh with no named screen/keyboard parts,
+  // so the live screen and the Enter interaction zone are our own objects positioned
+  // over the model. Live-tune in devtools: window.__pc3d.TUNE.model.ry = 1.2; ...apply()
+  const TUNE = {
+    fitHeight: 3.4,                                 // world height the whole model scales to
+    model: { scale: 1, x: 0, y: 0, z: 0, ry: 0 },   // manual offset applied on top of auto-fit
+  };
 
-  // retro-beige palette ("старенький" PC)
-  const matCase   = toon(0xe6dcc6);   // warm beige plastic
-  const matCase2  = toon(0xd8ccae);   // shaded beige
-  const matBezel  = toon(0xcfc3a4);   // screen bezel
-  const matGlass  = new THREE.MeshBasicMaterial({ color: 0x0d1117 }); // fallback (screen uses canvas tex)
-  const matStand  = toon(0xcabd9c);
-  const matDesk   = toon(0xb89b76);
-  const matKey    = toon(0xe9e0cb);
-  const matKeyDk  = toon(0xcdbf9f);
-  const matMouse  = toon(0xe6dcc6);
-  const matCord   = toon(0x3a352c);
-  const matOutline = new THREE.MeshBasicMaterial({ color: 0x2a2622, side: THREE.BackSide });
-
-  function roundedBox(bw, bh, bd, r) {
-    const sh = new THREE.Shape();
-    const x = -bw / 2, y = -bh / 2;
-    sh.moveTo(x + r, y);
-    sh.lineTo(x + bw - r, y); sh.quadraticCurveTo(x + bw, y, x + bw, y + r);
-    sh.lineTo(x + bw, y + bh - r); sh.quadraticCurveTo(x + bw, y + bh, x + bw - r, y + bh);
-    sh.lineTo(x + r, y + bh); sh.quadraticCurveTo(x, y + bh, x, y + bh - r);
-    sh.lineTo(x, y + r); sh.quadraticCurveTo(x, y, x + r, y);
-    const g = new THREE.ExtrudeGeometry(sh, { depth: bd, bevelEnabled: true, bevelThickness: r * 0.5, bevelSize: r * 0.5, bevelSegments: 3 });
-    g.center();
-    return g;
-  }
-
-  // ─────────────────────────────────────────── monitor (chunky CRT)
+  // ─────────────────────────────────────────── monitor float anchor
+  // carries the live CanvasTexture screen + its glow; floats gently in the loop
   const mon = new THREE.Group();
   mon.position.set(0, 1.55, -0.15);
   mon.rotation.y = 0.16;
   scene.add(mon);
-
-  // shallow front frame (screen sits proudly in front of it)
-  const front = new THREE.Mesh(roundedBox(3.0, 2.35, 0.22, 0.14), matCase);
-  front.castShadow = true;
-  mon.add(front);
-
-  // tapered CRT back — overlaps the frame so there is no gap
-  const back = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 0.55, 1.3, 4), matCase2);
-  back.rotation.set(Math.PI / 2, Math.PI / 4, 0);
-  back.position.z = -0.55;
-  back.scale.set(1.3, 1, 1);
-  back.castShadow = true;
-  mon.add(back);
-
-  const outline = new THREE.Mesh(roundedBox(3.0, 2.35, 0.22, 0.14), matOutline);
-  outline.scale.set(1.02, 1.02, 1.0);
-  mon.add(outline);
-
-  // recessed bezel (thin flat box → predictable depth)
-  const bezel = new THREE.Mesh(new THREE.BoxGeometry(2.62, 2.0, 0.02), matBezel);
-  bezel.position.z = 0.19;
-  mon.add(bezel);
 
   // screen canvas texture (high-res for crisp text)
   const SC_W = 1024, SC_H = 768;
@@ -196,7 +154,7 @@ function boot(container) {
   screenTex.colorSpace = THREE.SRGBColorSpace;
   const screenMat = new THREE.MeshBasicMaterial({ map: screenTex });
   const SCREEN_W = 2.34, SCREEN_H = 1.78;
-  const screen = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN_W, SCREEN_H), screenMat);
+  let screen = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN_W, SCREEN_H), screenMat);
   screen.position.z = 0.215;
   screen.name = 'screen';
   mon.add(screen);
@@ -212,55 +170,32 @@ function boot(container) {
   led.position.set(1.2, -1.05, 0.2);
   mon.add(led);
 
-  // ─────────────────────────────────────────── stand + desk
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 0.5, 20), matStand);
-  neck.position.set(0, 0.55, -0.15); neck.castShadow = true; scene.add(neck);
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.7, 0.1, 28), matStand);
-  base.position.set(0, 0.3, -0.05); base.castShadow = true; base.receiveShadow = true; scene.add(base);
-
-  const desk = new THREE.Mesh(new THREE.BoxGeometry(8, 0.3, 4.2), matDesk);
-  desk.position.set(0, 0.12, 0.7); desk.receiveShadow = true; scene.add(desk);
-
-  // ─────────────────────────────────────────── keyboard (+ named Enter key)
+  // ─────────────────────────────────────────── keyboard anchor (Enter interaction)
+  // The GLB has no named key, so the Enter target is an invisible mesh and a glowing
+  // ring is the visible "press ⏎" affordance. Both live in a group whose local frame
+  // matches the old keyboard, so the loop's enterKey.position.y bob works unchanged.
   const kb = new THREE.Group();
   kb.position.set(-0.15, 0.32, 1.75);
   kb.rotation.x = -0.06;
   scene.add(kb);
 
-  const kbBody = new THREE.Mesh(roundedBox(2.7, 0.16, 1.0, 0.07), matKey);
-  kbBody.castShadow = true; kbBody.receiveShadow = true;
+  const KEY = 0.18, KH = 0.085;
+  // forgiving click zone over the keyboard (invisible; raycast target only)
+  const kbBody = new THREE.Mesh(
+    new THREE.BoxGeometry(2.7, 0.16, 1.0),
+    new THREE.MeshBasicMaterial({ visible: false })
+  );
   kb.add(kbBody);
 
-  const KEY = 0.18, GAP = 0.026, KH = 0.085;
-  function keycap(cx, cz, units = 1, mat = matKeyDk) {
-    const kw = KEY * units + GAP * (units - 1);
-    const m = new THREE.Mesh(roundedBox(kw, KH, KEY, 0.03), mat);
-    m.position.set(cx, 0.12, cz);
-    m.castShadow = true;
-    kb.add(m);
-    return m;
-  }
-  // 4 staggered rows of plain keys
-  const rows = [
-    { z: -0.34, n: 11, x0: -1.10 },
-    { z: -0.13, n: 11, x0: -1.10 },
-    { z: 0.08,  n: 10, x0: -1.10 },
-    { z: 0.30,  n: 9,  x0: -1.02 },
-  ];
-  rows.forEach((r) => {
-    for (let i = 0; i < r.n; i++) keycap(r.x0 + i * (KEY + GAP), r.z, 1);
-  });
-  // wide Enter key on the right of the home row — the hero of the keyboard
+  // Enter key — invisible interaction mesh, named for raycasting
   const matEnter = new THREE.MeshStandardMaterial({ color: 0xe9e0cb, emissive: 0xe86830, emissiveIntensity: 0, roughness: 0.6, metalness: 0.0 });
-  const enterKey = new THREE.Mesh(roundedBox(KEY * 2.2 + GAP, KH + 0.01, KEY, 0.035), matEnter);
+  const enterKey = new THREE.Mesh(new THREE.BoxGeometry(KEY * 2.2, KH, KEY), matEnter);
   enterKey.position.set(1.10, 0.122, 0.08);
-  enterKey.castShadow = true;
+  enterKey.visible = false;
   enterKey.name = 'enter';
   kb.add(enterKey);
-  // a little ↵ nub so it reads as Enter
-  const enterNub = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.02, 0.12), new THREE.MeshBasicMaterial({ color: 0x8a8068 }));
-  enterNub.position.set(1.10, 0.17, 0.08);
-  kb.add(enterNub);
+
+  // glowing ↵ ring affordance (opacity/scale animated in the loop)
   const enterRing = new THREE.Mesh(
     new THREE.TorusGeometry(0.34, 0.018, 10, 40),
     new THREE.MeshBasicMaterial({ color: 0xe86830, transparent: true, opacity: 0 })
@@ -268,34 +203,6 @@ function boot(container) {
   enterRing.rotation.x = -Math.PI / 2;
   enterRing.position.set(1.10, 0.2, 0.08);
   kb.add(enterRing);
-
-  // ─────────────────────────────────────────── mouse + cord
-  const mouse = new THREE.Group();
-  mouse.position.set(1.95, 0.34, 1.5);
-  scene.add(mouse);
-  const mBody = new THREE.Mesh(new THREE.CapsuleGeometry(0.13, 0.12, 8, 18), matMouse);
-  mBody.rotation.x = -Math.PI / 2; mBody.rotation.z = 0.08; mBody.scale.set(1, 1, 0.7); mBody.castShadow = true;
-  mouse.add(mBody);
-  const mSplit = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.02, 0.16), new THREE.MeshBasicMaterial({ color: 0xb6a987 }));
-  mSplit.position.set(0, 0.12, -0.04); mouse.add(mSplit);
-  // cord: curve from mouse up-front of the keyboard area toward the monitor base
-  const cordCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(1.95, 0.34, 1.35),
-    new THREE.Vector3(1.5, 0.3, 1.15),
-    new THREE.Vector3(0.9, 0.28, 1.2),
-    new THREE.Vector3(0.4, 0.3, 0.7),
-    new THREE.Vector3(0.05, 0.34, 0.2),
-  ]);
-  const cord = new THREE.Mesh(new THREE.TubeGeometry(cordCurve, 40, 0.02, 8, false), matCord);
-  scene.add(cord);
-
-  // ─────────────────────────────────────────── desk props (Pixar detail)
-  const mug = new THREE.Group(); mug.position.set(-2.05, 0.27, 1.25); scene.add(mug);
-  mug.add(new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.13, 0.3, 18), toon(0xe86830)));
-  const handle = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.02, 8, 14, Math.PI), toon(0xe86830));
-  handle.position.set(0.16, 0, 0); handle.rotation.z = Math.PI / 2; mug.add(handle);
-  const coffee = new THREE.Mesh(new THREE.CircleGeometry(0.14, 18), toon(0x3a2015));
-  coffee.position.y = 0.151; coffee.rotation.x = -Math.PI / 2; mug.add(coffee);
 
   // ─────────────────────────────────────────── lights (warm, cinematic)
   scene.add(new THREE.AmbientLight(0xfff6ea, 0.55));
@@ -308,6 +215,54 @@ function boot(container) {
   scene.add(key);
   const fill = new THREE.DirectionalLight(0x9aa6d6, 0.4); fill.position.set(-4, 3, 2); scene.add(fill);
   const rim = new THREE.DirectionalLight(0xe86830, 0.55); rim.position.set(-3, 2, 6); scene.add(rim);
+
+  // ─────────────────────────────────────────── GLB model (public/models/pc.glb)
+  // Replaces the old procedural PC. One merged DRACO + WebP mesh: auto-fit to the
+  // scene, then nudged to sit behind the screen/keyboard anchors above. Tune live via
+  // window.__pc3d (e.g. window.__pc3d.TUNE.model.ry = 1.2; window.__pc3d.apply()).
+  let pcModel = null;
+  const draco = new DRACOLoader();
+  draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/libs/draco/');
+  const gltfLoader = new GLTFLoader();
+  gltfLoader.setDRACOLoader(draco);
+
+  function fitModel(model) {
+    // reset, measure, uniformly scale to TUNE.fitHeight, recenter, then apply offsets
+    model.scale.setScalar(1);
+    model.position.set(0, 0, 0);
+    model.rotation.set(0, TUNE.model.ry, 0);
+    const size = new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3());
+    const s = (TUNE.fitHeight / (size.y || 1)) * TUNE.model.scale;
+    model.scale.setScalar(s);
+    const box = new THREE.Box3().setFromObject(model);
+    const c = box.getCenter(new THREE.Vector3());
+    model.position.set(-c.x + TUNE.model.x, -box.min.y + TUNE.model.y, -c.z + TUNE.model.z);
+    console.info('[pc3d] GLB fitted — raw size', size, 'scale', s.toFixed(3), 'pos', model.position);
+  }
+
+  gltfLoader.load('/models/pc.glb', (gltf) => {
+    pcModel = gltf.scene;
+    let namedScreen = null;
+    pcModel.traverse((o) => {
+      if (!o.isMesh) return;
+      o.castShadow = true;
+      o.receiveShadow = true;
+      const n = (o.name || '').toLowerCase();
+      if (!namedScreen && /screen|display|monitor/.test(n)) namedScreen = o;
+    });
+    // if a future GLB ships a real screen mesh, drive it with the CanvasTexture and
+    // raycast against it instead of the overlay plane
+    if (namedScreen) {
+      namedScreen.material = screenMat;
+      namedScreen.name = 'screen';
+      screen.visible = false;
+      screen = namedScreen;
+    }
+    fitModel(pcModel);
+    scene.add(pcModel);
+    // live-tuning handle for dialing in alignment without re-editing the file
+    window.__pc3d = { model: pcModel, mon, kb, screen, enterKey, enterRing, camera, TUNE, apply: () => fitModel(pcModel) };
+  }, undefined, (err) => console.error('[pc3d] failed to load /models/pc.glb', err));
 
   // ─────────────────────────────────────────── state + interaction
   let state = 'idle';            // idle | typing | building | result
