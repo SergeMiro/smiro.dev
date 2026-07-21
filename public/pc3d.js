@@ -1,24 +1,28 @@
 /* ════════════════════════════════════════════════════════════════════════
    pc3d.js — interactive retro 3D PC for the hero (smiro.dev)
 
-   Story / state machine, driven by cursor proximity to the Enter key:
-     idle      → cursor far. Screen shows an editor at rest.
-     typing    → cursor approaches. The screen auto-types the (joke) "employer
-                 persuasion" HTML. The closer the cursor to Enter, the faster.
-     ready     → cursor near the keyboard. The Enter key glows, inviting a click.
-     building  → user clicked Enter. Terminal runs a fake `build`.
-     result    → a "browser" pops up: "Thank you for your risk 😉 …" + a clickable
-                 preview of the real CV. Hover = orange border + pointer.
-                 Click = navigate to /cv (or /cv-fr when the site is in French).
+   Art direction: WARM PREMIUM retro workstation, tuned to match the site
+   (cream / editorial / brick-orange #e86830). Not a dark cyberpunk demo.
+     · cream plastic case + warm brushed-metal trim + glossy CRT glass
+     · PBR materials lit by an environment map (RoomEnvironment PMREM) so
+       metal & glass actually reflect — the biggest "premium render" lever
+     · restrained warm 3-light rig + soft contact shadows, no acid neon
+     · larger, high-contrast screen; code is already visible at rest
 
-   Rendering: Three.js (CDN ESM). The PC body is a DRACO-compressed GLB model
-   (public/models/pc.glb); the monitor screen is a high-res CanvasTexture overlaid
-   on the model, and clicks/hover are resolved by raycasting → UV → canvas pixels.
-   Bilingual (EN/FR) via window.I18N.getLang(); re-read every frame so the
-   language toggle (⚙ → Language) updates the screen live.
+   Story / state machine, driven by cursor proximity to the Enter key:
+     idle      → cursor far. Editor at rest, first lines already typed.
+     typing    → cursor approaches. Screen auto-types. Speed ∝ proximity.
+     ready     → cursor near keyboard. Enter key glows + rises.
+     building  → user clicked Enter. Terminal runs a fake `build`.
+     result    → a "browser" pops up with a clickable CV preview.
+
+   Rendering: Three.js (CDN ESM). Monitor screen = high-res CanvasTexture;
+   clicks/hover on the screen resolved via raycasting → UV → canvas pixels.
+   Bilingual (EN/FR) via window.I18N.getLang() — re-read every frame.
    ════════════════════════════════════════════════════════════════════════ */
 
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.module.js';
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/loaders/DRACOLoader.js';
 
@@ -26,12 +30,11 @@ const mount = document.getElementById('pc3d-mount');
 if (mount) boot(mount);
 
 function boot(container) {
-  // graceful bail if WebGL is unavailable
   try {
     const test = document.createElement('canvas');
     if (!(test.getContext('webgl2') || test.getContext('webgl'))) throw 0;
   } catch (_) {
-    container.classList.add('is-engaged'); // hide hint
+    container.classList.add('is-engaged');
     return;
   }
   const reduceMotion = window.matchMedia &&
@@ -106,18 +109,19 @@ function boot(container) {
       hintReady: 'appuyez  ⏎  Entrée',
     },
   };
-  const TOK = { c: '#7a8a6a', t: '#7ee787', a: '#79c0ff', p: '#c9d1d9', s: '#a5d6ff', x: '#f0ede6', k: '#d2a8ff', o: '#e86830' };
+  const TOK = { c: '#8a9678', t: '#3fb950', a: '#4b9fea', p: '#57606a', s: '#0a7ea4', x: '#1b1a18', k: '#8957e5', o: '#e86830' };
   const lang = () => (window.I18N && window.I18N.getLang && (window.I18N.getLang() === 'fr')) ? 'fr' : 'en';
   const txt = () => C[lang()];
 
   // ─────────────────────────────────────────── three core
-  let w = container.clientWidth || 480;
-  let h = container.clientHeight || 460;
+  let w = container.clientWidth || 520;
+  let h = container.clientHeight || 500;
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(32, w / h, 0.1, 100);
-  camera.position.set(3.2, 2.55, 6.4);
-  camera.lookAt(0, 1.05, 0.35);
+
+  const camera = new THREE.PerspectiveCamera(34, w / h, 0.1, 100);
+  camera.position.set(3.1, 2.35, 6.7);
+  camera.lookAt(0, 1.32, 0.2);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(w, h);
@@ -125,149 +129,402 @@ function boot(container) {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.12;
+  renderer.toneMappingExposure = 1.05;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
   container.appendChild(renderer.domElement);
 
-  // ─────────────────────────────────────────── tunables (align overlays to the GLB)
-  // pc.glb is one merged, DRACO-compressed mesh with no named screen/keyboard parts,
-  // so the live screen and the Enter interaction zone are our own objects positioned
-  // over the model. Live-tune in devtools: window.__pc3d.TUNE.model.ry = 1.2; ...apply()
-  const TUNE = {
-    fitHeight: 3.4,                                 // world height the whole model scales to
-    model: { scale: 1, x: 0, y: 0, z: 0, ry: 0 },   // manual offset applied on top of auto-fit
-  };
+  // environment map → realistic reflections on metal & glass (premium look)
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  pmrem.compileEquirectangularShader();
+  const envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.environment = envTex;
+  if ('environmentIntensity' in scene) scene.environmentIntensity = 0.42;
 
-  // ─────────────────────────────────────────── monitor float anchor
-  // carries the live CanvasTexture screen + its glow; floats gently in the loop
+  // ─────────────────────────────────────────── warm premium palette
+  // procedural warm wood for the desk
+  function makeWoodTex(cw, ch) {
+    const c = document.createElement('canvas'); c.width = cw; c.height = ch;
+    const g = c.getContext('2d');
+    g.fillStyle = '#c9a878'; g.fillRect(0, 0, cw, ch);
+    for (let i = 0; i < 620; i++) {
+      const y = Math.random() * ch, alpha = Math.random() * 0.10;
+      g.strokeStyle = `rgba(120,80,40,${alpha})`;
+      g.lineWidth = 1 + Math.random() * 2.2;
+      g.beginPath();
+      g.moveTo(0, y);
+      const cx = cw / 2 + (Math.random() - 0.5) * cw * 0.6;
+      g.quadraticCurveTo(cx, y + (Math.random() - 0.5) * 16, cw, y + (Math.random() - 0.5) * 6);
+      g.stroke();
+    }
+    const grad = g.createRadialGradient(cw / 2, ch / 2, cw * 0.35, cw / 2, ch / 2, cw * 0.85);
+    grad.addColorStop(0, 'rgba(255,240,215,0.10)');
+    grad.addColorStop(1, 'rgba(60,35,10,0.18)');
+    g.fillStyle = grad; g.fillRect(0, 0, cw, ch);
+    const tex = new THREE.CanvasTexture(c);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(2, 1);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+  const woodTex = makeWoodTex(512, 256);
+
+  // materials — cream plastic, warm metal, glossy glass
+  const matCase   = new THREE.MeshStandardMaterial({ color: 0xece2cf, roughness: 0.52, metalness: 0.06 });
+  const matCase2  = new THREE.MeshStandardMaterial({ color: 0xddd0b6, roughness: 0.58, metalness: 0.05 });
+  const matMetal  = new THREE.MeshStandardMaterial({ color: 0xb7a98d, roughness: 0.34, metalness: 0.85 });
+  const matGlass  = new THREE.MeshStandardMaterial({ color: 0x14120f, roughness: 0.14, metalness: 0.2 });
+  const matDesk   = new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.6, metalness: 0.0, color: 0xd8b98c });
+  const matKey    = new THREE.MeshStandardMaterial({ color: 0xe5dcc6, roughness: 0.52, metalness: 0.05 });
+  const matKeyDk  = new THREE.MeshStandardMaterial({ color: 0xcbbd9d, roughness: 0.5, metalness: 0.06 });
+  const matMouse  = new THREE.MeshStandardMaterial({ color: 0xe7ddc7, roughness: 0.42, metalness: 0.08 });
+  const matCord   = new THREE.MeshStandardMaterial({ color: 0x2c2620, roughness: 0.7, metalness: 0.0 });
+  const matOutline = new THREE.MeshBasicMaterial({ color: 0x6b5f48, side: THREE.BackSide });
+  const matEnter  = new THREE.MeshStandardMaterial({ color: 0xe9e0cb, emissive: 0xe86830, emissiveIntensity: 0, roughness: 0.45, metalness: 0.08 });
+  const matEnterRing = new THREE.MeshBasicMaterial({ color: 0xe86830, transparent: true, opacity: 0 });
+
+  function roundedBox(bw, bh, bd, r) {
+    const sh = new THREE.Shape();
+    const x = -bw / 2, y = -bh / 2;
+    sh.moveTo(x + r, y);
+    sh.lineTo(x + bw - r, y); sh.quadraticCurveTo(x + bw, y, x + bw, y + r);
+    sh.lineTo(x + bw, y + bh - r); sh.quadraticCurveTo(x + bw, y + bh, x + bw - r, y + bh);
+    sh.lineTo(x + r, y + bh); sh.quadraticCurveTo(x, y + bh, x, y + bh - r);
+    sh.lineTo(x, y + r); sh.quadraticCurveTo(x, y, x + r, y);
+    const g = new THREE.ExtrudeGeometry(sh, { depth: bd, bevelEnabled: true, bevelThickness: r * 0.5, bevelSize: r * 0.5, bevelSegments: 4 });
+    g.center();
+    return g;
+  }
+
+  // ═══════════════════════════ DESK ═══════════════════════════
+  const desk = new THREE.Mesh(new THREE.BoxGeometry(9, 0.24, 4.6), matDesk);
+  desk.position.set(0, 0.1, 0.55);
+  desk.receiveShadow = true;
+  scene.add(desk);
+
+  // ═══════════════════════════ MONITOR ═══════════════════════════
   const mon = new THREE.Group();
-  mon.position.set(0, 1.55, -0.15);
-  mon.rotation.y = 0.16;
+  mon.position.set(0, 1.5, -0.3);
+  mon.rotation.y = 0.1;
   scene.add(mon);
 
-  // screen canvas texture (high-res for crisp text)
-  const SC_W = 1024, SC_H = 768;
+  // screen canvas texture (HIGH-RES)
+  const SC_W = 1600, SC_H = 1067;
   const sc = document.createElement('canvas');
   sc.width = SC_W; sc.height = SC_H;
   const g2 = sc.getContext('2d');
   const screenTex = new THREE.CanvasTexture(sc);
   screenTex.minFilter = THREE.LinearFilter;
+  screenTex.magFilter = THREE.LinearFilter;
   screenTex.colorSpace = THREE.SRGBColorSpace;
+
+  // LARGE screen mesh (3:2, matches canvas ratio)
+  const SCREEN_W = 3.3, SCREEN_H = 2.2;
   const screenMat = new THREE.MeshBasicMaterial({ map: screenTex });
-  const SCREEN_W = 2.34, SCREEN_H = 1.78;
-  let screen = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN_W, SCREEN_H), screenMat);
-  screen.position.z = 0.215;
+  // chunky cream frame around the screen (SOLID slab — screen mounts on its face)
+  const frameThick = 0.16;
+  const frameW = SCREEN_W + frameThick * 2;
+  const frameH = SCREEN_H + frameThick * 2;
+  const frameDepth = 0.3;
+  const frameR = 0.16;
+  const frontZ = frameDepth / 2 + frameR * 0.5; // true front face of the extruded slab
+  const monFrame = new THREE.Mesh(roundedBox(frameW, frameH, frameDepth, frameR), matCase);
+  monFrame.castShadow = true; monFrame.receiveShadow = true;
+  mon.add(monFrame);
+
+  // crisp silhouette outline
+  const outline = new THREE.Mesh(roundedBox(frameW, frameH, frameDepth, frameR), matOutline);
+  outline.scale.set(1.012, 1.012, 1.0);
+  mon.add(outline);
+
+  // glossy black glass bezel on the front face (forms a thin dark border)
+  const bezel = new THREE.Mesh(new THREE.BoxGeometry(SCREEN_W + 0.12, SCREEN_H + 0.12, 0.04), matGlass);
+  bezel.position.z = frontZ + 0.005;
+  mon.add(bezel);
+
+  // the screen sits proud of the bezel (glass surface)
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN_W, SCREEN_H), screenMat);
+  screen.position.z = frontZ + 0.03;
   screen.name = 'screen';
   mon.add(screen);
 
-  // soft screen glow
-  const glow = new THREE.PointLight(0x6fd0ff, 0.35, 6);
-  glow.position.set(0, 0, 1.2);
-  mon.add(glow);
-
-  // power LED
-  const ledMat = new THREE.MeshStandardMaterial({ color: 0x7ee787, emissive: 0x7ee787, emissiveIntensity: 2 });
-  const led = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 12), ledMat);
-  led.position.set(1.2, -1.05, 0.2);
+  // bottom chin + brushed-metal brand strip + LED (on the front face)
+  const chin = new THREE.Mesh(new THREE.BoxGeometry(frameW * 0.9, 0.16, 0.05), matCase2);
+  chin.position.set(0, -frameH / 2 + 0.16, frontZ - 0.02);
+  mon.add(chin);
+  const brand = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.02), matMetal);
+  brand.position.set(-frameW * 0.28, -frameH / 2 + 0.16, frontZ + 0.02);
+  mon.add(brand);
+  const ledMat = new THREE.MeshStandardMaterial({ color: 0x7ee787, emissive: 0x6cd67a, emissiveIntensity: 2.2 });
+  const led = new THREE.Mesh(new THREE.SphereGeometry(0.028, 16, 16), ledMat);
+  led.position.set(frameW * 0.3, -frameH / 2 + 0.16, frontZ + 0.02);
   mon.add(led);
 
-  // ─────────────────────────────────────────── keyboard anchor (Enter interaction)
-  // The GLB has no named key, so the Enter target is an invisible mesh and a glowing
-  // ring is the visible "press ⏎" affordance. Both live in a group whose local frame
-  // matches the old keyboard, so the loop's enterKey.position.y bob works unchanged.
+  // tapered CRT back
+  const backBody = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 0.5, 1.25, 4), matCase2);
+  backBody.rotation.set(Math.PI / 2, Math.PI / 4, 0);
+  backBody.position.z = -0.7;
+  backBody.scale.set(1.5, 1, 1);
+  backBody.castShadow = true;
+  mon.add(backBody);
+  // ventilation slits
+  for (let i = 0; i < 6; i++) {
+    const slit = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.02, 0.03),
+      new THREE.MeshStandardMaterial({ color: 0xbdb096, roughness: 0.85 }));
+    slit.position.set(0, 0.6 - i * 0.2, -0.78);
+    slit.rotation.x = -0.5;
+    mon.add(slit);
+  }
+
+  // subtle warm point light from the screen onto the scene
+  const screenGlow = new THREE.PointLight(0xffe9c8, 0.7, 6);
+  screenGlow.position.set(0, 0, 1.6);
+  mon.add(screenGlow);
+
+  // ═══════════════════════════ STAND ═══════════════════════════
+  const standGroup = new THREE.Group();
+  standGroup.position.set(0, 0.5, -0.2);
+  scene.add(standGroup);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.19, 0.62, 24), matMetal);
+  neck.position.y = 0.32; neck.castShadow = true; standGroup.add(neck);
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.66, 0.74, 0.09, 40), matMetal);
+  base.position.y = 0.04; base.castShadow = true; base.receiveShadow = true; standGroup.add(base);
+
+  // ═══════════════════════════ KEYBOARD ═══════════════════════════
   const kb = new THREE.Group();
-  kb.position.set(-0.15, 0.32, 1.75);
-  kb.rotation.x = -0.06;
+  kb.position.set(-0.1, 0.28, 1.62);
+  kb.rotation.x = -0.05;
   scene.add(kb);
 
-  const KEY = 0.18, KH = 0.085;
-  // forgiving click zone over the keyboard (invisible; raycast target only)
-  const kbBody = new THREE.Mesh(
-    new THREE.BoxGeometry(2.7, 0.16, 1.0),
-    new THREE.MeshBasicMaterial({ visible: false })
-  );
+  const kbBody = new THREE.Mesh(roundedBox(3.0, 0.16, 1.12, 0.07), matKey);
+  kbBody.castShadow = true; kbBody.receiveShadow = true;
   kb.add(kbBody);
 
-  // Enter key — invisible interaction mesh, named for raycasting
-  const matEnter = new THREE.MeshStandardMaterial({ color: 0xe9e0cb, emissive: 0xe86830, emissiveIntensity: 0, roughness: 0.6, metalness: 0.0 });
-  const enterKey = new THREE.Mesh(new THREE.BoxGeometry(KEY * 2.2, KH, KEY), matEnter);
-  enterKey.position.set(1.10, 0.122, 0.08);
-  enterKey.visible = false;
+  // real 3D keycaps in staggered rows (subset animates while typing)
+  const KEY = 0.185, GAP = 0.03, KH = 0.075;
+  const animKeys = [];
+  function keycap(cx, cz, units = 1, mat = matKeyDk) {
+    const kw = KEY * units + GAP * (units - 1);
+    const m = new THREE.Mesh(roundedBox(kw, KH, KEY, 0.028), mat);
+    m.position.set(cx, 0.12, cz);
+    m.userData.rest = 0.12;
+    m.castShadow = true;
+    kb.add(m);
+    return m;
+  }
+  const rows = [
+    { z: -0.38, n: 13, x0: -1.28 },
+    { z: -0.15, n: 13, x0: -1.28 },
+    { z: 0.08,  n: 12, x0: -1.28 },
+    { z: 0.31,  n: 11, x0: -1.18 },
+  ];
+  rows.forEach((r) => {
+    for (let i = 0; i < r.n; i++) animKeys.push(keycap(r.x0 + i * (KEY + GAP), r.z, 1));
+  });
+  // spacebar
+  const spaceBar = keycap(-0.1, 0.5, 6, matKey); animKeys.push(spaceBar);
+
+  // ── Enter key (hero, right of home row) ──
+  const enterKey = new THREE.Mesh(roundedBox(KEY * 2.3 + GAP, KH + 0.012, KEY, 0.03), matEnter);
+  enterKey.position.set(1.16, 0.125, 0.08);
+  enterKey.castShadow = true;
   enterKey.name = 'enter';
   kb.add(enterKey);
-
-  // glowing ↵ ring affordance (opacity/scale animated in the loop)
-  const enterRing = new THREE.Mesh(
-    new THREE.TorusGeometry(0.34, 0.018, 10, 40),
-    new THREE.MeshBasicMaterial({ color: 0xe86830, transparent: true, opacity: 0 })
-  );
+  const enterNub = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.02, 0.12),
+    new THREE.MeshStandardMaterial({ color: 0x9a8f74, roughness: 0.4, metalness: 0.3 }));
+  enterNub.position.set(1.16, 0.18, 0.08);
+  kb.add(enterNub);
+  const enterRing = new THREE.Mesh(new THREE.TorusGeometry(0.29, 0.013, 12, 44), matEnterRing);
   enterRing.rotation.x = -Math.PI / 2;
-  enterRing.position.set(1.10, 0.2, 0.08);
+  enterRing.position.set(1.16, 0.2, 0.08);
   kb.add(enterRing);
 
-  // ─────────────────────────────────────────── lights (warm, cinematic)
-  scene.add(new THREE.AmbientLight(0xfff6ea, 0.55));
-  const key = new THREE.DirectionalLight(0xfff0dd, 1.5);
-  key.position.set(4, 7, 5); key.castShadow = true;
-  key.shadow.mapSize.set(1024, 1024);
-  key.shadow.camera.near = 1; key.shadow.camera.far = 24;
-  key.shadow.camera.left = -6; key.shadow.camera.right = 6; key.shadow.camera.top = 6; key.shadow.camera.bottom = -6;
-  key.shadow.radius = 5; key.shadow.bias = -0.0004;
-  scene.add(key);
-  const fill = new THREE.DirectionalLight(0x9aa6d6, 0.4); fill.position.set(-4, 3, 2); scene.add(fill);
-  const rim = new THREE.DirectionalLight(0xe86830, 0.55); rim.position.set(-3, 2, 6); scene.add(rim);
+  // ═══════════════════════════ MOUSE + PAD ═══════════════════════════
+  const mousepad = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.02, 0.9),
+    new THREE.MeshStandardMaterial({ color: 0x3a352c, roughness: 0.9, metalness: 0.0 }));
+  mousepad.position.set(2.05, 0.23, 1.35);
+  mousepad.receiveShadow = true;
+  scene.add(mousepad);
 
-  // ─────────────────────────────────────────── GLB model (public/models/pc.glb)
-  // Replaces the old procedural PC. One merged DRACO + WebP mesh: auto-fit to the
-  // scene, then nudged to sit behind the screen/keyboard anchors above. Tune live via
-  // window.__pc3d (e.g. window.__pc3d.TUNE.model.ry = 1.2; window.__pc3d.apply()).
-  let pcModel = null;
+  const mouse = new THREE.Group();
+  mouse.position.set(2.05, 0.28, 1.45);
+  scene.add(mouse);
+  const mBody = new THREE.Mesh(new THREE.CapsuleGeometry(0.15, 0.1, 8, 20), matMouse);
+  mBody.rotation.x = -Math.PI / 2; mBody.rotation.z = 0.08; mBody.scale.set(1, 1, 0.66);
+  mBody.castShadow = true; mouse.add(mBody);
+  const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.16, 12),
+    new THREE.MeshStandardMaterial({ color: 0x6a6050, roughness: 0.3, metalness: 0.5 }));
+  wheel.rotation.z = Math.PI / 2; wheel.position.set(0, 0.085, 0); mouse.add(wheel);
+  const mSplit = new THREE.Mesh(new THREE.BoxGeometry(0.003, 0.016, 0.15),
+    new THREE.MeshBasicMaterial({ color: 0xb6a987 }));
+  mSplit.position.set(0, 0.1, -0.02); mouse.add(mSplit);
+
+  const cordCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(2.05, 0.28, 1.2),
+    new THREE.Vector3(1.5, 0.26, 1.05),
+    new THREE.Vector3(0.85, 0.25, 1.1),
+    new THREE.Vector3(0.35, 0.29, 0.6),
+    new THREE.Vector3(0.05, 0.33, 0.1),
+  ]);
+  const cord = new THREE.Mesh(new THREE.TubeGeometry(cordCurve, 50, 0.017, 8, false), matCord);
+  scene.add(cord);
+
+  // ═══════════════════════════ DESK PROPS (curated) ═══════════════════════════
+  // coffee mug (on-brand orange)
+  const mug = new THREE.Group();
+  mug.position.set(-2.35, 0.23, 1.05);
+  scene.add(mug);
+  mug.add(new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.13, 0.3, 24),
+    new THREE.MeshStandardMaterial({ color: 0xe86830, roughness: 0.35, metalness: 0.05 })));
+  const handle = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.02, 10, 18, Math.PI),
+    new THREE.MeshStandardMaterial({ color: 0xe86830, roughness: 0.35, metalness: 0.05 }));
+  handle.position.set(0.16, 0, 0); handle.rotation.z = Math.PI / 2; mug.add(handle);
+  const coffee = new THREE.Mesh(new THREE.CircleGeometry(0.135, 24),
+    new THREE.MeshStandardMaterial({ color: 0x2a1810, roughness: 0.5 }));
+  coffee.position.y = 0.151; coffee.rotation.x = -Math.PI / 2; mug.add(coffee);
+  mug.children[0].castShadow = true;
+
+  // small notebook + pen (paper warmth)
+  const notebook = new THREE.Group();
+  notebook.position.set(2.5, 0.22, 0.55);
+  notebook.rotation.y = -0.22;
+  scene.add(notebook);
+  const nbBody = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.04, 0.74),
+    new THREE.MeshStandardMaterial({ color: 0xf3ecd9, roughness: 0.7 }));
+  nbBody.castShadow = true; nbBody.receiveShadow = true; notebook.add(nbBody);
+  const nbCover = new THREE.Mesh(new THREE.BoxGeometry(0.57, 0.015, 0.76),
+    new THREE.MeshStandardMaterial({ color: 0xb4502a, roughness: 0.5 }));
+  nbCover.position.y = -0.025; notebook.add(nbCover);
+  const pen = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, 0.5, 12),
+    new THREE.MeshStandardMaterial({ color: 0x2a2622, roughness: 0.4, metalness: 0.3 }));
+  pen.rotation.z = Math.PI / 2; pen.rotation.y = 0.35; pen.position.set(0.05, 0.05, -0.06);
+  pen.castShadow = true; notebook.add(pen);
+
+  // ═══════════════════════════ LIGHTING (warm, restrained) ═══════════════════════════
+  scene.add(new THREE.AmbientLight(0xfff4e6, 0.28));
+
+  const keyLight = new THREE.DirectionalLight(0xfff1de, 2.5);
+  keyLight.position.set(4.5, 7.5, 4.5);
+  keyLight.castShadow = true;
+  keyLight.shadow.mapSize.set(2048, 2048);
+  keyLight.shadow.camera.near = 1; keyLight.shadow.camera.far = 26;
+  keyLight.shadow.camera.left = -7; keyLight.shadow.camera.right = 7;
+  keyLight.shadow.camera.top = 7; keyLight.shadow.camera.bottom = -7;
+  keyLight.shadow.radius = 6; keyLight.shadow.bias = -0.0003;
+  scene.add(keyLight);
+
+  const fillLight = new THREE.DirectionalLight(0xdfe6f2, 0.35);
+  fillLight.position.set(-5, 3, 3);
+  scene.add(fillLight);
+
+  const rimLight = new THREE.DirectionalLight(0xe86830, 0.55);
+  rimLight.position.set(-3.5, 2, 6.5);
+  scene.add(rimLight);
+
+  // ═══════════════════════════ GLB MODEL (primary; procedural = fallback) ═══════
+  // Load the authored PC (public/models/pc.glb, DRACO-compressed). When it
+  // arrives it becomes the hero model and the procedural PC above is hidden.
+  // If the load fails, the procedural PC simply stays on screen — nothing to do.
+  let model = null;
+  let glbScreenMesh = null;
+
+  const TUNE = {
+    fitHeight: 3.4,             // world-units tall the GLB is auto-scaled to
+    pos: { x: 0, y: 0, z: 0 },  // extra offset after auto-centre + grounding
+    rotY: 0,                    // extra yaw (radians)
+    deskTop: 0.22,              // desk surface height the model rests on
+    cam: { x: 3.1, y: 2.35, z: 6.7 },
+    look: { x: 0, y: 1.32, z: 0.2 },
+  };
+
+  // auto-fit: centre on X/Z, scale to TUNE.fitHeight, sit base on the desk top
+  function fitModel() {
+    if (!model) return;
+    model.position.set(0, 0, 0);
+    model.rotation.set(0, TUNE.rotY, 0);
+    model.scale.setScalar(1);
+    model.updateMatrixWorld(true);
+    let box = new THREE.Box3().setFromObject(model);
+    const size = box.getSize(new THREE.Vector3());
+    model.scale.setScalar(TUNE.fitHeight / (size.y || 1));
+    model.updateMatrixWorld(true);
+    box = new THREE.Box3().setFromObject(model);
+    const c = box.getCenter(new THREE.Vector3());
+    model.position.set(-c.x + TUNE.pos.x, (TUNE.deskTop - box.min.y) + TUNE.pos.y, -c.z + TUNE.pos.z);
+    model.updateMatrixWorld(true);
+  }
+
+  // re-apply TUNE live from the console: __pc3d.TUNE.fitHeight = 3.6; __pc3d.apply()
+  function apply() {
+    fitModel();
+    camera.position.set(TUNE.cam.x, TUNE.cam.y, TUNE.cam.z);
+    camera.lookAt(TUNE.look.x, TUNE.look.y, TUNE.look.z);
+    camera.updateProjectionMatrix();
+  }
+
+  function hideProcedural(hasGlbScreen) {
+    [desk, standGroup, mousepad, mouse, cord, mug, notebook].forEach((o) => { o.visible = false; });
+    [kbBody, enterNub, ...animKeys].forEach((o) => { o.visible = false; });
+    // keep enterKey + enterRing for raycast + affordance, but stop the cream
+    // keycap from rendering (Three's raycaster ignores .visible, so hits still land)
+    matEnter.visible = false;
+    // GLB carries its own monitor + screen → hide the procedural monitor group.
+    // If the GLB has no named screen, keep the procedural monitor as a live overlay.
+    if (hasGlbScreen) mon.visible = false;
+  }
+
+  // reparent the procedural screen plane onto the GLB screen's face, so the
+  // existing raycast/UV interactions (typing focus, CV click) keep working while
+  // the GLB mesh itself shows the same live CanvasTexture.
+  function attachScreenProxy(mesh) {
+    try {
+      scene.attach(screen); // keep world transform, then override to match GLB
+      const box = new THREE.Box3().setFromObject(mesh);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      mesh.getWorldQuaternion(screen.quaternion);
+      screen.position.copy(center);
+      screen.scale.set((size.x || SCREEN_W) / SCREEN_W, (size.y || SCREEN_H) / SCREEN_H, 1);
+      const fwd = new THREE.Vector3(0, 0, 1).applyQuaternion(screen.quaternion).multiplyScalar(0.02);
+      screen.position.add(fwd);
+    } catch (_) { /* leave proxy at its reparented pose */ }
+    screen.material = new THREE.MeshBasicMaterial({ visible: false }); // interaction-only
+  }
+
   const draco = new DRACOLoader();
   draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/libs/draco/');
   const gltfLoader = new GLTFLoader();
   gltfLoader.setDRACOLoader(draco);
+  gltfLoader.load(
+    '/models/pc.glb',
+    (gltf) => {
+      model = gltf.scene;
+      model.traverse((o) => {
+        if (!o.isMesh) return;
+        o.castShadow = true;
+        o.receiveShadow = true;
+        if (!glbScreenMesh && /screen|display|monitor/i.test(o.name)) glbScreenMesh = o;
+      });
+      scene.add(model);
+      apply();
+      hideProcedural(!!glbScreenMesh);
+      if (glbScreenMesh) {
+        glbScreenMesh.material = new THREE.MeshBasicMaterial({ map: screenTex, toneMapped: false });
+        attachScreenProxy(glbScreenMesh);
+      }
+      window.__pc3d.model = model;
+      window.__pc3d.screenMesh = glbScreenMesh;
+    },
+    undefined,
+    (err) => { console.warn('[pc3d] pc.glb failed to load — using procedural PC', err); }
+  );
 
-  function fitModel(model) {
-    // reset, measure, uniformly scale to TUNE.fitHeight, recenter, then apply offsets
-    model.scale.setScalar(1);
-    model.position.set(0, 0, 0);
-    model.rotation.set(0, TUNE.model.ry, 0);
-    const size = new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3());
-    const s = (TUNE.fitHeight / (size.y || 1)) * TUNE.model.scale;
-    model.scale.setScalar(s);
-    const box = new THREE.Box3().setFromObject(model);
-    const c = box.getCenter(new THREE.Vector3());
-    model.position.set(-c.x + TUNE.model.x, -box.min.y + TUNE.model.y, -c.z + TUNE.model.z);
-    console.info('[pc3d] GLB fitted — raw size', size, 'scale', s.toFixed(3), 'pos', model.position);
-  }
-
-  gltfLoader.load('/models/pc.glb', (gltf) => {
-    pcModel = gltf.scene;
-    let namedScreen = null;
-    pcModel.traverse((o) => {
-      if (!o.isMesh) return;
-      o.castShadow = true;
-      o.receiveShadow = true;
-      const n = (o.name || '').toLowerCase();
-      if (!namedScreen && /screen|display|monitor/.test(n)) namedScreen = o;
-    });
-    // if a future GLB ships a real screen mesh, drive it with the CanvasTexture and
-    // raycast against it instead of the overlay plane
-    if (namedScreen) {
-      namedScreen.material = screenMat;
-      namedScreen.name = 'screen';
-      screen.visible = false;
-      screen = namedScreen;
-    }
-    fitModel(pcModel);
-    scene.add(pcModel);
-    // live-tuning handle for dialing in alignment without re-editing the file
-    window.__pc3d = { model: pcModel, mon, kb, screen, enterKey, enterRing, camera, TUNE, apply: () => fitModel(pcModel) };
-  }, undefined, (err) => console.error('[pc3d] failed to load /models/pc.glb', err));
+  // live-tuning handle exposed for console fiddling
+  window.__pc3d = { model, mon, kb, screen, enterKey, enterRing, camera, TUNE, apply };
 
   // ─────────────────────────────────────────── state + interaction
-  let state = 'idle';            // idle | typing | building | result
-  let typed = 0;                 // chars revealed
-  let proximity = 0;             // 0..1 (1 = cursor on Enter)
+  let state = 'idle';
+  let typed = 0;
+  let proximity = 0;
   let mouseX = -1e4, mouseY = -1e4, hasPointer = false;
   let hoverCV = false;
   let buildStart = 0;
@@ -275,18 +532,23 @@ function boot(container) {
   const ndc = new THREE.Vector2();
   const vWorld = new THREE.Vector3();
 
-  // total chars in the code (for completion checks)
   function totalChars() {
     return txt().code.reduce((a, line) => a + line.reduce((b, [t]) => b + t.length, 0), 0);
   }
+  // reveal the first few lines at rest so the screen is never empty
+  function restChars() {
+    const code = txt().code;
+    let n = 0;
+    for (let i = 0; i < Math.min(5, code.length); i++)
+      n += code[i].reduce((b, [t]) => b + t.length, 0);
+    return n;
+  }
+  typed = restChars();
 
   function enterScreenPx() {
     enterKey.getWorldPosition(vWorld);
     vWorld.project(camera);
-    return {
-      x: (vWorld.x * 0.5 + 0.5) * w,
-      y: (-vWorld.y * 0.5 + 0.5) * h,
-    };
+    return { x: (vWorld.x * 0.5 + 0.5) * w, y: (-vWorld.y * 0.5 + 0.5) * h };
   }
 
   function onMove(e) {
@@ -294,7 +556,6 @@ function boot(container) {
     mouseX = e.clientX - r.left;
     mouseY = e.clientY - r.top;
     hasPointer = true;
-    // raycast for CV hover in result mode
     if (state === 'result') updateHover();
   }
   function onLeave() { hasPointer = false; proximity = 0; }
@@ -305,14 +566,12 @@ function boot(container) {
     ray.setFromCamera(ndc, camera);
     return ray;
   }
-
   function screenUV() {
     const hit = rayHit().intersectObject(screen, false)[0];
     return hit ? hit.uv : null;
   }
 
-  // CV preview rectangle on the canvas (result mode), in canvas px
-  const CV_RECT = { x: 200, y: 420, w: 624, h: 300 };
+  const CV_RECT = { x: 280, y: 560, w: 1040, h: 400 };
   function updateHover() {
     const uv = screenUV();
     let over = false;
@@ -327,14 +586,12 @@ function boot(container) {
   function onDown() {
     if (!hasPointer) return;
     if ((state === 'idle' || state === 'typing') && proximity > 0.3) {
-      // pressing Enter — forgiving: the key, the keyboard, or just being close
       const hit = rayHit().intersectObjects([enterKey, enterRing, kbBody], false).length > 0;
       if (hit || proximity > 0.5) startBuild();
     } else if (state === 'result' && hoverCV) {
       location.href = lang() === 'fr' ? '/cv-fr' : '/cv';
     }
   }
-
   function startBuild() {
     state = 'building';
     buildStart = performance.now();
@@ -356,40 +613,58 @@ function boot(container) {
     c.arcTo(x, y, x + bw, y, r);
     c.closePath();
   }
+  // subtle CRT overlay: scanlines + vignette (dark screens only)
+  function crtOverlay() {
+    g2.save();
+    g2.globalAlpha = 0.05; g2.fillStyle = '#000';
+    for (let y = 0; y < SC_H; y += 4) g2.fillRect(0, y, SC_W, 2);
+    g2.restore();
+    const vg = g2.createRadialGradient(SC_W / 2, SC_H / 2, SC_H * 0.34, SC_W / 2, SC_H / 2, SC_H * 0.78);
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.30)');
+    g2.fillStyle = vg; g2.fillRect(0, 0, SC_W, SC_H);
+  }
+  // faint glass glare across the whole screen (all states)
+  function glassGlare() {
+    const gr = g2.createLinearGradient(0, 0, SC_W * 0.9, SC_H);
+    gr.addColorStop(0, 'rgba(255,255,255,0.07)');
+    gr.addColorStop(0.18, 'rgba(255,255,255,0.0)');
+    g2.fillStyle = gr; g2.fillRect(0, 0, SC_W, SC_H);
+  }
 
   function drawEditor(t) {
     const T = txt();
     g2.fillStyle = '#0d1117'; g2.fillRect(0, 0, SC_W, SC_H);
+
     // activity bar
-    g2.fillStyle = '#0a0d12'; g2.fillRect(0, 0, 54, SC_H);
-    g2.fillStyle = '#e86830'; g2.fillRect(0, 70, 3, 34);
+    g2.fillStyle = '#0a0d12'; g2.fillRect(0, 0, 78, SC_H);
+    g2.fillStyle = '#e86830'; g2.fillRect(0, 100, 4, 50);
+
     // tab bar
-    g2.fillStyle = '#10151c'; g2.fillRect(54, 0, SC_W - 54, 46);
-    g2.fillStyle = '#0d1117'; g2.fillRect(54, 0, 230, 46);
-    g2.fillStyle = '#e86830'; g2.fillRect(54, 0, 230, 3);
-    g2.fillStyle = '#e6edf3'; g2.font = '500 22px ui-monospace, monospace';
+    g2.fillStyle = '#10151c'; g2.fillRect(78, 0, SC_W - 78, 64);
+    g2.fillStyle = '#0d1117'; g2.fillRect(78, 0, 360, 64);
+    g2.fillStyle = '#e86830'; g2.fillRect(78, 0, 360, 4);
+    g2.fillStyle = '#e6edf3';
+    g2.font = '600 32px ui-monospace, monospace';
     g2.textBaseline = 'alphabetic';
-    g2.fillText('◗ ' + T.file, 74, 31);
+    g2.fillText('◗ ' + T.file, 110, 44);
 
     const reveal = Math.floor(typed);
     let seen = 0;
-    const lineH = 40, x0 = 96, y0 = 96;
+    const lineH = 68, x0 = 152, y0 = 152;
     let cursorX = x0, cursorY = y0, drewCursor = false;
 
     for (let i = 0; i < T.code.length; i++) {
       const y = y0 + i * lineH;
-      g2.fillStyle = '#3a4250'; g2.font = '18px ui-monospace, monospace';
-      g2.fillText(String(i + 1).padStart(2), 66, y);
+      g2.fillStyle = '#3a4250';
+      g2.font = '28px ui-monospace, monospace';
+      g2.fillText(String(i + 1).padStart(2), 100, y);
       let x = x0;
       for (const [t0, cls] of T.code[i]) {
         for (let ci = 0; ci < t0.length; ci++) {
-          if (seen >= reveal) {
-            cursorX = x; cursorY = y; drewCursor = true;
-            break;
-          }
+          if (seen >= reveal) { cursorX = x; cursorY = y; drewCursor = true; break; }
           const ch = t0[ci];
-          g2.fillStyle = TOK[cls] || '#e6edf3';
-          g2.font = '20px ui-monospace, monospace';
+          g2.fillStyle = ({ c: '#7a8a6a', t: '#7ee787', a: '#79c0ff', p: '#c9d1d9', s: '#a5d6ff', x: '#f0ede6', k: '#d2a8ff', o: '#e86830' })[cls] || '#e6edf3';
+          g2.font = '37px ui-monospace, monospace';
           g2.fillText(ch, x, y);
           x += g2.measureText(ch).width;
           seen++;
@@ -401,60 +676,65 @@ function boot(container) {
     // blinking caret
     if (Math.floor(t / 480) % 2 === 0) {
       g2.fillStyle = '#e86830';
-      g2.fillRect(cursorX + 1, cursorY - 18, 3, 24);
+      g2.fillRect(cursorX + 2, cursorY - 30, 4, 40);
     }
+
     // prompt chip bottom-right
     const ready = proximity > 0.45;
     const label = ready ? T.hintReady : T.hint;
-    g2.font = '600 19px ui-monospace, monospace';
-    const tw = g2.measureText(label).width + 34;
-    const bx = SC_W - tw - 26, by = SC_H - 64;
-    g2.fillStyle = ready ? '#e86830' : 'rgba(230,237,243,0.10)';
-    rr(g2, bx, by, tw, 40, 20); g2.fill();
+    g2.font = '600 27px ui-monospace, monospace';
+    const tw = g2.measureText(label).width + 52;
+    const bx = SC_W - tw - 40, by = SC_H - 92;
+    g2.fillStyle = ready ? '#e86830' : 'rgba(230,237,243,0.12)';
+    rr(g2, bx, by, tw, 58, 29); g2.fill();
     g2.fillStyle = ready ? '#0d1117' : '#9aa4b2';
-    g2.fillText(label, bx + 17, by + 27);
+    g2.fillText(label, bx + 26, by + 38);
 
+    crtOverlay();
+    glassGlare();
     screenTex.needsUpdate = true;
   }
 
-  const TERM_PER_LINE = 620;   // ms a line takes to appear (slower = more drama)
-  const TERM_HOLD = 1100;      // ms the finished build holds before the browser pops
+  const TERM_PER_LINE = 580;
+  const TERM_HOLD = 1200;
   function drawTerminal(t) {
     const T = txt();
     g2.fillStyle = '#0d1117'; g2.fillRect(0, 0, SC_W, SC_H);
-    g2.fillStyle = '#10151c'; g2.fillRect(0, 0, SC_W, 52);
-    g2.fillStyle = '#e86830'; g2.beginPath(); g2.arc(30, 26, 6, 0, 7); g2.fill();
-    g2.fillStyle = '#8b949e'; g2.font = '600 21px ui-monospace, monospace';
-    g2.fillText('TERMINAL — build', 48, 34);
+    g2.fillStyle = '#10151c'; g2.fillRect(0, 0, SC_W, 72);
+    g2.fillStyle = '#e86830'; g2.beginPath(); g2.arc(44, 36, 9, 0, 7); g2.fill();
+    g2.fillStyle = '#8b949e'; g2.font = '600 28px ui-monospace, monospace';
+    g2.fillText('TERMINAL — build', 68, 47);
+
     const n = Math.min(T.term.length, Math.floor(t / TERM_PER_LINE) + 1);
     for (let i = 0; i < n; i++) {
       const line = T.term[i];
-      g2.font = '25px ui-monospace, monospace';
+      g2.font = '34px ui-monospace, monospace';
       g2.fillStyle = line[0] === '$' ? '#d2a8ff' : line[0] === '✓' ? '#7ee787' : '#e6edf3';
       let shown = line, typing = false;
       if (i === n - 1) {
-        const cc = Math.max(1, Math.floor((t - i * TERM_PER_LINE) / 30)); // ~30ms / char
+        const cc = Math.max(1, Math.floor((t - i * TERM_PER_LINE) / 26));
         if (cc < line.length) typing = true;
         shown = line.slice(0, cc);
       }
-      const ly = 116 + i * 58;
-      g2.fillText(shown, 32, ly);
-      // blinking block cursor on the active line
-      if (i === n - 1 && (typing || Math.floor(t / 400) % 2 === 0)) {
+      const ly = 165 + i * 80;
+      g2.fillText(shown, 48, ly);
+      if (i === n - 1 && (typing || Math.floor(t / 350) % 2 === 0)) {
         const cw = g2.measureText(shown).width;
         g2.fillStyle = '#e86830';
-        g2.fillRect(38 + cw, ly - 20, 13, 26);
+        g2.fillRect(56 + cw, ly - 30, 18, 38);
       }
     }
-    // progress bar + percent
     const p = Math.min(1, t / (TERM_PER_LINE * T.term.length));
-    g2.fillStyle = '#7ee787'; g2.font = '600 19px ui-monospace, monospace';
-    g2.fillText('▲ astro build', 32, SC_H - 96);
+    g2.fillStyle = '#7ee787'; g2.font = '600 27px ui-monospace, monospace';
+    g2.fillText('▲ astro build', 48, SC_H - 128);
     g2.textAlign = 'right';
-    g2.fillText(Math.round(p * 100) + '%', SC_W - 32, SC_H - 96);
+    g2.fillText(Math.round(p * 100) + '%', SC_W - 48, SC_H - 128);
     g2.textAlign = 'left';
-    g2.fillStyle = '#161b22'; rr(g2, 32, SC_H - 80, SC_W - 64, 18, 9); g2.fill();
-    g2.fillStyle = '#e86830'; rr(g2, 32, SC_H - 80, (SC_W - 64) * p, 18, 9); g2.fill();
+    g2.fillStyle = '#161b22'; rr(g2, 48, SC_H - 108, SC_W - 96, 26, 13); g2.fill();
+    g2.fillStyle = '#e86830'; rr(g2, 48, SC_H - 108, (SC_W - 96) * p, 26, 13); g2.fill();
+
+    crtOverlay();
+    glassGlare();
     screenTex.needsUpdate = true;
   }
 
@@ -467,134 +747,132 @@ function boot(container) {
 
   function drawResult(t) {
     const T = txt();
-    // browser background
     g2.fillStyle = '#f4f1e8'; g2.fillRect(0, 0, SC_W, SC_H);
-    // browser chrome
-    g2.fillStyle = '#e7e1d3'; g2.fillRect(0, 0, SC_W, 74);
+    g2.fillStyle = '#e7e1d3'; g2.fillRect(0, 0, SC_W, 96);
     const dots = ['#ec6a5e', '#f4bf4f', '#61c554'];
-    dots.forEach((c, i) => { g2.fillStyle = c; g2.beginPath(); g2.arc(40 + i * 36, 37, 11, 0, 7); g2.fill(); });
-    g2.fillStyle = '#fbfaf6'; rr(g2, 168, 17, SC_W - 230, 42, 21); g2.fill();
-    g2.fillStyle = '#9a9385'; g2.font = '21px ui-monospace, monospace';
-    g2.fillText('🔒 ' + T.url, 192, 45);
+    dots.forEach((c, i) => { g2.fillStyle = c; g2.beginPath(); g2.arc(52 + i * 48, 48, 14, 0, 7); g2.fill(); });
+    g2.fillStyle = '#fbfaf6'; rr(g2, 220, 22, SC_W - 300, 54, 27); g2.fill();
+    g2.fillStyle = '#9a9385'; g2.font = '26px ui-monospace, monospace';
+    g2.fillText('🔒 ' + T.url, 252, 58);
 
-    // entrance animation
     const a = Math.min(1, t / 440);
     g2.save();
     g2.globalAlpha = a;
-    g2.translate(0, (1 - a) * 30);
+    g2.translate(0, (1 - a) * 40);
 
-    // big headline
     g2.textAlign = 'center';
     g2.fillStyle = '#1b1a18';
-    g2.font = '700 68px "Fraunces", Georgia, serif';
-    g2.fillText(T.big, SC_W / 2, 188);
+    g2.font = '700 82px "Fraunces", Georgia, serif';
+    g2.fillText(T.big, SC_W / 2, 240);
     g2.fillStyle = '#b4502a';
-    g2.font = 'italic 600 52px "Fraunces", Georgia, serif';
-    g2.fillText(T.big2, SC_W / 2, 258);
-    // subline
+    g2.font = 'italic 600 62px "Fraunces", Georgia, serif';
+    g2.fillText(T.big2, SC_W / 2, 330);
     g2.fillStyle = '#6b655a';
-    g2.font = '600 31px "Quicksand", system-ui, sans-serif';
-    g2.fillText(T.sub, SC_W / 2, 344);
+    g2.font = '600 38px "Quicksand", system-ui, sans-serif';
+    g2.fillText(T.sub, SC_W / 2, 430);
     g2.textAlign = 'left';
 
-    // ── CV preview card (clickable region = CV_RECT) ──
     const R = CV_RECT;
-    g2.fillStyle = '#fffdf8';
-    rr(g2, R.x, R.y, R.w, R.h, 20); g2.fill();
-    // left brick accent
-    g2.fillStyle = '#b4502a'; rr(g2, R.x, R.y, 10, R.h, 5); g2.fill();
-    // avatar
-    const asz = 124, ax = R.x + 46, ay = R.y + 46;
+    g2.fillStyle = '#fffdf8'; rr(g2, R.x, R.y, R.w, R.h, 26); g2.fill();
+    g2.fillStyle = '#b4502a'; rr(g2, R.x, R.y, 14, R.h, 6); g2.fill();
+    const asz = 160, ax = R.x + 60, ay = R.y + 60;
     g2.save();
     g2.beginPath(); g2.arc(ax + asz / 2, ay + asz / 2, asz / 2, 0, 7); g2.closePath();
     g2.fillStyle = '#efe7d6'; g2.fill(); g2.clip();
     if (avatarReady) g2.drawImage(avatarImg, ax, ay, asz, asz);
     g2.restore();
-    // name + role
-    const tx = R.x + 200;
-    g2.fillStyle = '#1b1a18'; g2.font = '700 46px "Fraunces", Georgia, serif';
-    g2.fillText(T.cvName, tx, R.y + 80);
-    g2.fillStyle = '#6b655a'; g2.font = '500 24px "Geist Mono", ui-monospace, monospace';
-    g2.fillText(T.cvRole, tx, R.y + 118);
-    // chips
+    const tx = R.x + 260;
+    g2.fillStyle = '#1b1a18'; g2.font = '700 54px "Fraunces", Georgia, serif';
+    g2.fillText(T.cvName, tx, R.y + 100);
+    g2.fillStyle = '#6b655a'; g2.font = '500 28px "Geist Mono", ui-monospace, monospace';
+    g2.fillText(T.cvRole, tx, R.y + 148);
     let cx = tx;
-    g2.font = '600 22px "Quicksand", system-ui, sans-serif';
+    g2.font = '600 26px "Quicksand", system-ui, sans-serif';
     T.cvChips.forEach((chip) => {
-      const cw = g2.measureText(chip).width + 34;
-      g2.fillStyle = '#f1ece0'; rr(g2, cx, R.y + 144, cw, 40, 20); g2.fill();
-      g2.fillStyle = '#7a5a3a'; g2.fillText(chip, cx + 17, R.y + 171);
-      cx += cw + 12;
+      const cw = g2.measureText(chip).width + 44;
+      g2.fillStyle = '#f1ece0'; rr(g2, cx, R.y + 180, cw, 50, 24); g2.fill();
+      g2.fillStyle = '#7a5a3a'; g2.fillText(chip, cx + 22, R.y + 214);
+      cx += cw + 16;
     });
-    // resume teaser lines (top of CV)
     g2.fillStyle = '#e3dccc';
-    [0, 1].forEach((k) => { rr(g2, R.x + 46, R.y + 214 + k * 26, R.w - 250, 10, 5); g2.fill(); });
-    // open CV affordance
+    [0, 1, 2].forEach((k) => { rr(g2, R.x + 60, R.y + 270 + k * 32, R.w - (k === 2 ? 380 : 280), 12, 6); g2.fill(); });
     g2.fillStyle = hoverCV ? '#b4502a' : '#9a9385';
-    g2.font = '600 23px "Geist Mono", ui-monospace, monospace';
+    g2.font = '600 28px "Geist Mono", ui-monospace, monospace';
     g2.textAlign = 'right';
-    g2.fillText(T.cvOpen, R.x + R.w - 26, R.y + R.h - 26);
+    g2.fillText(T.cvOpen, R.x + R.w - 34, R.y + R.h - 34);
     g2.textAlign = 'left';
-    // hover border (orange, border-1)
     if (hoverCV) {
-      g2.strokeStyle = '#e86830'; g2.lineWidth = 3.5;
-      rr(g2, R.x + 2, R.y + 2, R.w - 4, R.h - 4, 20); g2.stroke();
+      g2.strokeStyle = '#e86830'; g2.lineWidth = 4;
+      rr(g2, R.x + 3, R.y + 3, R.w - 6, R.h - 6, 26); g2.stroke();
     }
     g2.restore();
+    glassGlare();
     screenTex.needsUpdate = true;
   }
 
-  // ─────────────────────────────────────────── loop
+  // ─────────────────────────────────────────── animation loop
   const t0 = performance.now();
   let prev = t0;
   let raf;
+
   function frame(now) {
     raf = requestAnimationFrame(frame);
-    const dt = Math.min(0.05, (now - prev) / 1000); prev = now;
+    const dt = Math.min(0.05, (now - prev) / 1000);
+    prev = now;
     const elapsed = now - t0;
 
-    // proximity from cursor → Enter (projected)
     if (hasPointer && (state === 'idle' || state === 'typing')) {
       const ep = enterScreenPx();
       const d = Math.hypot(mouseX - ep.x, mouseY - ep.y);
-      const radius = Math.max(150, Math.min(w, h) * 0.72);
+      const radius = Math.max(140, Math.min(w, h) * 0.7);
       proximity = Math.max(0, Math.min(1, 1 - d / radius));
     }
 
-    // typing advances with proximity (closer = faster)
     if (state === 'idle' || state === 'typing') {
       if (proximity > 0.04) {
         state = 'typing';
-        const cps = 4 + proximity * proximity * 150; // chars/sec
+        const cps = 5 + proximity * proximity * 160;
         typed = Math.min(totalChars(), typed + cps * dt);
       }
       container.classList.toggle('is-engaged', proximity > 0.12);
-      // Enter glow ramps with proximity (visible well before the click zone)
-      const want = Math.max(0, Math.min(1, (proximity - 0.26) / 0.5));
-      matEnter.emissiveIntensity += (want * 1.5 - matEnter.emissiveIntensity) * 0.18;
-      enterKey.position.y = 0.122 + (Math.sin(elapsed * 0.006) * 0.012 + 0.012) * want;
-      enterRing.material.opacity += ((want > 0.15 ? 0.55 + Math.sin(elapsed * 0.006) * 0.25 : 0) - enterRing.material.opacity) * 0.2;
-      enterRing.scale.setScalar(1 + want * 0.12);
+
+      const want = Math.max(0, Math.min(1, (proximity - 0.24) / 0.52));
+      matEnter.emissiveIntensity += (want * 1.9 - matEnter.emissiveIntensity) * 0.16;
+      enterKey.position.y = 0.125 + (Math.sin(elapsed * 0.006) * 0.014 + 0.014) * want;
+      enterRing.material.opacity += ((want > 0.15 ? 0.6 + Math.sin(elapsed * 0.006) * 0.3 : 0) - enterRing.material.opacity) * 0.18;
+      enterRing.scale.setScalar(1 + want * 0.14);
+
+      // a realistic subset of keys "presses" while typing
+      if (!reduceMotion) {
+        const active = state === 'typing' && proximity > 0.06;
+        animKeys.forEach((k, i) => {
+          const rest = k.userData.rest;
+          const down = active && (Math.floor(elapsed * 0.02 + i * 2.3) % 7 === 0)
+            ? rest - 0.03 : rest;
+          k.position.y += (down - k.position.y) * 0.35;
+        });
+      }
       drawEditor(elapsed);
     } else if (state === 'building') {
-      matEnter.emissiveIntensity = 1.6;
-      enterKey.position.y = 0.105; // pressed
+      matEnter.emissiveIntensity = 1.9;
+      enterKey.position.y = 0.1;
       const be = now - buildStart;
       drawTerminal(be);
       const total = TERM_PER_LINE * txt().term.length + TERM_HOLD;
       if (be > total) { state = 'result'; buildStart = now; }
     } else if (state === 'result') {
-      enterKey.position.y = 0.122;
-      matEnter.emissiveIntensity += (0 - matEnter.emissiveIntensity) * 0.1;
-      enterRing.material.opacity += (0 - enterRing.material.opacity) * 0.2;
+      enterKey.position.y = 0.125;
+      matEnter.emissiveIntensity += (0 - matEnter.emissiveIntensity) * 0.08;
+      enterRing.material.opacity += (0 - enterRing.material.opacity) * 0.18;
       drawResult(now - buildStart);
     }
 
-    // gentle float + LED breathing (skip if reduced motion)
     if (!reduceMotion) {
-      mon.position.y = 1.55 + Math.sin(elapsed * 0.0009) * 0.02;
-      ledMat.emissiveIntensity = 1.6 + Math.sin(elapsed * 0.004) * 0.8;
+      mon.position.y = 1.62 + Math.sin(elapsed * 0.0009) * 0.02;
+      ledMat.emissiveIntensity = 2.0 + Math.sin(elapsed * 0.004) * 0.8;
     }
-    glow.color.set(state === 'result' ? 0xffe7c4 : 0x6fd0ff);
+    screenGlow.color.set(state === 'result' ? 0xffe7c4 : 0xffe9c8);
+    screenGlow.intensity = state === 'result' ? 1.1 : 0.7;
 
     renderer.render(scene, camera);
   }
@@ -604,7 +882,8 @@ function boot(container) {
   const ro = new ResizeObserver(() => {
     w = container.clientWidth || w;
     h = container.clientHeight || h;
-    camera.aspect = w / h; camera.updateProjectionMatrix();
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
     renderer.setSize(w, h);
   });
   ro.observe(container);
