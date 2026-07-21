@@ -124,8 +124,8 @@ function boot(container) {
   const scene = new THREE.Scene();
 
   const camera = new THREE.PerspectiveCamera(34, w / h, 0.1, 100);
-  camera.position.set(3.1, 2.35, 6.7);
-  camera.lookAt(0, 1.32, 0.2);
+  camera.position.set(2.8, 1.95, 8.0);
+  camera.lookAt(0, 1.15, 0.1);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(w, h);
@@ -150,8 +150,8 @@ function boot(container) {
     pos: { x: 0, y: 0, z: 0 },  // extra offset after auto-centre + grounding
     rotY: 0,                    // extra yaw (radians)
     deskTop: 0.22,              // surface height the model base rests on
-    cam: { x: 3.1, y: 2.35, z: 6.7 },
-    look: { x: 0, y: 1.32, z: 0.2 },
+    cam: { x: 2.8, y: 1.95, z: 8.0 },
+    look: { x: 0, y: 1.15, z: 0.1 },
     // screen overlay pose (fallback when no named screen mesh is in the GLB)
     screen: { x: 0, y: 1.75, z: 0.55, w: 3.3, h: 2.2, rotY: 0.1, push: 0.02 },
     // invisible Enter-key raycast zone + glowing ring over the GLB keyboard
