@@ -2189,23 +2189,58 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
 }
 </style>
 <style id="pc3d-style">
+  /* dark blueprint stage for the wireframe PC */
   .hero-r.pc-stage{
-    background: radial-gradient(125% 95% at 62% 28%, rgba(255,251,242,.55), rgba(222,214,192,.22) 70%, rgba(222,214,192,0));
-    border: 1px solid var(--line); border-radius: 22px; padding: 0; min-height: 560px;
+    background:
+      radial-gradient(120% 90% at 62% 24%, rgba(232,104,48,.10), rgba(27,26,24,0) 62%),
+      radial-gradient(90% 80% at 8% 96%, rgba(120,160,210,.07), rgba(27,26,24,0) 60%),
+      #14130f;
+    border: 1px solid rgba(244,241,232,.10); border-radius: 22px; padding: 0; min-height: 560px;
     position: relative; overflow: hidden; display: block;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 18px 40px -28px rgba(27,26,24,.45);
+    box-shadow: inset 0 1px 0 rgba(244,241,232,.06), 0 18px 40px -28px rgba(27,26,24,.55);
   }
-  .pc3d-mount{ position:absolute; inset:0; touch-action:none; }
+  /* dot grid + a faint vignette so the wireframe reads as the brightest thing */
+  .hero-r.pc-stage::before{
+    content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
+    background-image:
+      radial-gradient(rgba(244,241,232,.13) 1px, transparent 1.2px),
+      radial-gradient(circle at 50% 45%, rgba(0,0,0,0) 38%, rgba(0,0,0,.42) 100%);
+    background-size: 26px 26px, 100% 100%;
+    background-position: center center, center center;
+    mask-image: radial-gradient(115% 100% at 50% 45%, #000 40%, rgba(0,0,0,.35) 78%, transparent 100%);
+    -webkit-mask-image: radial-gradient(115% 100% at 50% 45%, #000 40%, rgba(0,0,0,.35) 78%, transparent 100%);
+  }
+  /* faint maths / code glyphs drifting behind the machine */
+  .pc-glyphs{ position:absolute; inset:0; z-index:1; pointer-events:none; overflow:hidden; }
+  .pc-glyphs i{
+    position:absolute; font-style:normal;
+    font-family:"Fraunces",Georgia,serif; color:rgba(244,241,232,.16);
+    animation: pcDrift 16s ease-in-out infinite;
+  }
+  .pc-glyphs i:nth-child(1){ left:7%;  top:12%; font-size:40px; animation-delay:-1s }
+  .pc-glyphs i:nth-child(2){ left:88%; top:20%; font-size:30px; animation-delay:-4s }
+  .pc-glyphs i:nth-child(3){ left:16%; top:70%; font-size:26px; animation-delay:-7s }
+  .pc-glyphs i:nth-child(4){ left:79%; top:76%; font-size:36px; animation-delay:-10s }
+  .pc-glyphs i:nth-child(5){ left:46%; top:6%;  font-size:24px; animation-delay:-13s }
+  .pc-glyphs i:nth-child(6){ left:92%; top:52%; font-size:22px; animation-delay:-2.5s }
+  .pc-glyphs i:nth-child(7){ left:4%;  top:44%; font-size:28px; animation-delay:-8.5s }
+  .pc-glyphs i:nth-child(8){ left:64%; top:90%; font-size:22px; animation-delay:-5.5s }
+  @keyframes pcDrift{
+    0%,100%{ transform:translate3d(0,0,0); opacity:.5 }
+    50%    { transform:translate3d(0,-11px,0); opacity:1 }
+  }
+  .pc3d-mount{ position:absolute; inset:0; z-index:2; touch-action:none; }
   .pc3d-mount canvas{ display:block; width:100% !important; height:100% !important; }
   .pc3d-hint{
     position:absolute; left:50%; top:14px; transform:translateX(-50%); z-index:3;
-    font:500 12px/1 "Geist Mono",ui-monospace,monospace; color:var(--muted); letter-spacing:.3px;
-    background:rgba(244,241,232,.72); padding:7px 13px; border-radius:999px; border:1px solid var(--line);
+    font:500 12px/1 "Geist Mono",ui-monospace,monospace; color:rgba(244,241,232,.72); letter-spacing:.3px;
+    background:rgba(20,19,15,.55); padding:7px 13px; border-radius:999px; border:1px solid rgba(244,241,232,.14);
     backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); opacity:.9;
     transition:opacity .45s ease; pointer-events:none; white-space:nowrap;
   }
   .pc3d-mount.is-engaged .pc3d-hint{ opacity:0; }
   @media (max-width: 900px){ .hero-r.pc-stage{ min-height: 440px; } }
+  @media (prefers-reduced-motion: reduce){ .pc-glyphs i{ animation:none } }
 </style>
 </head>
 <body style="font-family: Quicksand">
@@ -2340,6 +2375,9 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
       </div>
     </div>
     <aside class="hero-r pc-stage" aria-label="Interactive 3D computer — bring your cursor toward the keyboard">
+      <div class="pc-glyphs" aria-hidden="true" data-i18n-skip>
+        <i>∑</i><i>∫</i><i>λ</i><i>π</i><i>≈</i><i>∂</i><i>⟨/⟩</i><i>∞</i>
+      </div>
       <div id="pc3d-mount" class="pc3d-mount" data-i18n-skip>
         <div class="pc3d-hint" id="pc3d-hint" data-i18n="pc.hint">move closer to the keyboard →</div>
       </div>
