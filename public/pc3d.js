@@ -1,13 +1,15 @@
 /* ════════════════════════════════════════════════════════════════════════
-   pc3d.js — interactive WIREFRAME 3D PC for the hero (smiro.dev)
+   pc3d.js — interactive WIREFRAME 3D LAPTOP for the hero (smiro.dev)
 
-   Blueprint aesthetic: the whole machine is drawn with thin near-white
-   lines over the dark hero stage — no shading, no model file, no textures.
-   Everything is built from Three.js primitives:
-     · monitor  — BoxGeometry → EdgesGeometry → LineSegments + screen rect
-     · stand    — wireframe base plate + neck + hinge block
-     · keyboard — wireframe shell + a rectangle per key (BufferGeometry)
-     · desk     — vertex-alpha line grid that fades out towards the edges
+   Blueprint aesthetic, inverted: pure-white hairlines drawn over the warm
+   terracotta hero stage (.hero-r.pc-stage). No shading, no model file, no
+   post-processing — the canvas stays transparent so the CSS gradient shows
+   through. Everything is built from Three.js primitives / raw line buffers:
+     · base       — rounded slab outline + key deck + touchpad + speaker grilles
+     · lid        — slab hinged at the back, open ~110°, with a screen aperture
+     · hinge      — two short barrels bridging base and lid
+     · headphones — two ear cups (flat ellipses), arched headband, cable
+     · mug + desk — a little life, plus a line grid that fades out to nothing
 
    The ONLY solid surface is the screen plane: a CanvasTexture showing the
    live editor / terminal / CV, and the surface raycasting reads for hover
@@ -15,10 +17,10 @@
    slightly-scaled additive copy of the wireframe — no post-processing, so
    the canvas stays transparent over the CSS background of .hero-r.
 
-   Story / state machine, driven by cursor proximity to the Enter key:
+   Story / state machine, driven by cursor proximity to the deck's Enter key:
      idle      → cursor far. Editor at rest, first lines already typed.
      typing    → cursor approaches. Screen auto-types. Speed ∝ proximity.
-     ready     → cursor near keyboard. Enter ring glows + rises.
+     ready     → cursor near the deck. Enter ring glows + rises.
      building  → user clicked Enter. Terminal runs a fake `build`.
      result    → a "browser" pops up with a clickable CV preview.
 
@@ -27,10 +29,11 @@
    Live tuning: window.__pc3d (TUNE + apply()). apply() rebuilds the
    wireframe from TUNE and re-derives the Enter key pose; to hand-place the
    Enter key, set __pc3d.TUNE.enter then call placeEnter() (not apply()).
+   The camera is framed, not placed: TUNE.cam only gives the direction, and
+   the distance is solved so TUNE.frame always fits the column (any aspect).
    ════════════════════════════════════════════════════════════════════════ */
 
 import * as THREE from 'three';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 const mount = document.getElementById('pc3d-mount');
 if (mount) boot(mount);
@@ -131,50 +134,56 @@ function boot(container) {
   renderer.setSize(w, h);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   // nothing is shaded any more — no shadow pass, no tone-mapping crush on
-  // the near-white lines.
+  // the white lines, no environment map (there is no PBR surface left).
   renderer.shadowMap.enabled = false;
   renderer.toneMapping = THREE.NoToneMapping;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   container.appendChild(renderer.domElement);
 
-  // kept for reflections on the screen surface / any future lit part
-  const pmrem = new THREE.PMREMGenerator(renderer);
-  pmrem.compileEquirectangularShader();
-  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-  if ('environmentIntensity' in scene) scene.environmentIntensity = 0.25;
-
   // ─────────────────────────────────────────── live-tuning values
-  const LINE = 0xf0ece2;   // warm near-white — the blueprint ink
-  const ACCENT = 0xe86830; // brick accent, only used on the Enter affordance
+  const LINE = 0xffffff;   // pure white — the ink, on a terracotta stage
+  const ACCENT = 0xffd9a8; // warm highlight for the Enter affordance + webcam
+  const SHADE = 0x6d2408;  // burnt-umber contact shadow on the "desk"
 
   const TUNE = {
-    // wireframe dimensions (world units, desk surface at y = 0)
-    mon: { w: 3.9, h: 2.9, d: 0.24, y: 2.52 },
-    stand: { baseW: 1.72, baseD: 0.96, baseH: 0.07, neckW: 0.42, neckD: 0.2, neckH: 1.18 },
-    kb: { w: 2.72, h: 0.13, d: 1.0, z: 2.02, tilt: -0.05, cols: 14, rows: 5 },
-    desk: { w: 7.6, d: 4.2, z: 0.7, step: 0.38 },
+    // world units, desk surface at y = 0, laptop centred on x = 0
+    base: { w: 4.24, d: 2.86, h: 0.125, z: 0.6, r: 0.16 },  // the slab you type on
+    lid: { w: 4.24, h: 2.86, d: 0.085, r: 0.15, open: 110 }, // degrees from the base
+    hinge: { r: 0.052, len: 0.5, x: 1.38, inset: 0.09 },
+    deck: { w: 3.62, d: 1.26, z: -0.62, cols: 14, rows: 5 }, // key block, base-local
+    pad: { w: 1.52, d: 0.94, z: 0.78 },                      // touchpad, base-local
+    hp: { x: 2.72, z: 1.02, rot: -0.44, s: 0.9 },            // headphones on the desk
+    mug: { x: -2.52, z: -0.42, r: 0.29, h: 0.42 },
+    desk: { w: 9.8, d: 5.8, z: 0.45, step: 0.4 },
     // ink weights (animated slightly around these)
-    line: { edge: 0.82, detail: 0.4, halo: 0.13, desk: 0.5 },
-    halo: 1.005,               // scale of the additive glow copy
-    sway: 0.075,               // amplitude of the idle yaw sway (radians)
-    rotY: -0.06,               // resting yaw
-    cam: { x: 2.15, y: 3.05, z: 8.7 },
-    look: { x: 0, y: 2.0, z: 0.45 },
-    // screen plane pose (pc-local). 3:2 to match the canvas — do not distort.
-    screen: { x: 0, y: 2.66, z: 0.145, w: 3.3, h: 2.2 },
-    // Enter-key pose in keyboard-local space — re-derived by build()
-    enter: { x: 1.1, y: 0.075, z: 0.09 },
+    line: { edge: 0.95, detail: 0.5, halo: 0.11, desk: 0.32 },
+    halo: 1.004,               // scale of the additive glow copy
+    sway: 0.058,               // amplitude of the idle yaw sway (radians)
+    rotY: -0.075,              // resting yaw
+    breathe: 0.008,            // lid open/close oscillation (radians)
+    // the camera direction (from look → cam); the distance is solved so that
+    // `frame` always fits, whatever the column's aspect ratio is
+    cam: { x: 2.5, y: 4.25, z: 9.2 },
+    look: { x: 0.4, y: 0.92, z: 0.3 },
+    frame: { w: 7.7, h: 6.5 },
+    // screen plane pose, LID-LOCAL. 3:2 to match the canvas — do not distort.
+    screen: { x: 0, y: 1.44, z: 0.014, w: 3.84, h: 2.56 },
+    // Enter-key pose in base-local space — re-derived by build()
+    enter: { x: 1.5, y: 0.135, z: -0.32 },
   };
+
+  const lidAngle = () => -(TUNE.lid.open - 90) * Math.PI / 180;
+  const hingeZ = () => TUNE.base.z - TUNE.base.d / 2 + TUNE.hinge.inset;
 
   // ─────────────────────────────────────────── wireframe materials
   const matEdge = new THREE.LineBasicMaterial({ color: LINE, transparent: true, opacity: TUNE.line.edge, depthWrite: false });
   const matDetail = new THREE.LineBasicMaterial({ color: LINE, transparent: true, opacity: TUNE.line.detail, depthWrite: false });
   const matHalo = new THREE.LineBasicMaterial({ color: LINE, transparent: true, opacity: TUNE.line.halo, depthWrite: false, blending: THREE.AdditiveBlending });
-  const matDesk = new THREE.LineBasicMaterial({ color: 0xffffff, vertexColors: true, transparent: true, opacity: TUNE.line.desk, depthWrite: false });
+  const matDesk = new THREE.LineBasicMaterial({ color: LINE, vertexColors: true, transparent: true, opacity: TUNE.line.desk, depthWrite: false });
 
-  // soft radial sprite used for every glow in the scene (screen bloom, LED,
-  // Enter light pool). Alpha reaches 0 at the rim so additive blending never
-  // darkens the transparent canvas.
+  // soft radial sprite used for every glow AND every contact shadow in the
+  // scene. Alpha reaches 0 at the rim, so additive blending never darkens
+  // the transparent canvas and shadows never end on a hard edge.
   function glowTexture() {
     const c = document.createElement('canvas');
     c.width = c.height = 128;
@@ -191,49 +200,87 @@ function boot(container) {
   }
   const glowTex = glowTexture();
 
-  // ─────────────────────────────────────────── geometry helpers
-  function edgeBox(gw, gh, gd, mat) {
-    return new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(gw, gh, gd)), mat);
+  // ─────────────────────────────────────────── line-buffer helpers
+  //  Every wireframe part pushes raw segments into one of two flat arrays
+  //  (E = edge ink, D = detail ink) which become a single LineSegments each.
+  function pushSeg(out, ax, ay, az, bx, by, bz) {
+    out.push(ax, ay, az, bx, by, bz);
   }
-  // rectangle outline in the XY plane (LineLoop) — screen frame, key faces
-  function rectXY(rw, rh, mat) {
-    const hw = rw / 2, hh = rh / 2;
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.Float32BufferAttribute(
-      [-hw, -hh, 0, hw, -hh, 0, hw, hh, 0, -hw, hh, 0], 3));
-    return new THREE.LineLoop(g, mat);
+  // polyline through a list of [x,y,z]
+  function pushPath(out, pts) {
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1];
+      out.push(a[0], a[1], a[2], b[0], b[1], b[2]);
+    }
   }
-  // rectangle outline lying flat in the XZ plane, pushed into a segment list
+  // parametric ellipse / arc, in the upright 'xy' plane or the flat 'xz' one.
+  // k is the constant third coordinate; rot spins the ellipse in its plane.
+  function arcPts(plane, cu, cv, ru, rv, k, segs, a0 = 0, a1 = Math.PI * 2, rot = 0) {
+    const pts = [], cs = Math.cos(rot), sn = Math.sin(rot);
+    for (let i = 0; i <= segs; i++) {
+      const a = a0 + (a1 - a0) * (segs > 0 ? i / segs : 0);
+      const u0 = Math.cos(a) * ru, v0 = Math.sin(a) * rv;
+      const u = cu + u0 * cs - v0 * sn, v = cv + u0 * sn + v0 * cs;
+      pts.push(plane === 'xy' ? [u, v, k] : [u, k, v]);
+    }
+    return pts;
+  }
+  // closed rounded-rectangle outline — the shape that makes the whole thing
+  // read as a modern machine instead of a stack of boxes
+  function rrPts(plane, cu, cv, ru, rv, r, seg, k) {
+    const rad = Math.min(r, ru / 2, rv / 2);
+    const hu = ru / 2 - rad, hv = rv / 2 - rad;
+    const n = rad > 0 ? Math.max(1, seg) : 0;
+    const corners = [[hu, hv, 0], [-hu, hv, Math.PI / 2], [-hu, -hv, Math.PI], [hu, -hv, Math.PI * 1.5]];
+    const pts = [];
+    for (const [ou, ov, a0] of corners) {
+      for (let i = 0; i <= n; i++) {
+        const a = a0 + (n > 0 ? i / n : 0) * (Math.PI / 2);
+        const u = cu + ou + Math.cos(a) * rad, v = cv + ov + Math.sin(a) * rad;
+        pts.push(plane === 'xy' ? [u, v, k] : [u, k, v]);
+      }
+    }
+    pts.push(pts[0]);
+    return pts;
+  }
+  // plain rectangle lying flat in the XZ plane — the keys
   function pushRectXZ(out, cx, cz, rw, rd, y) {
     const x0 = cx - rw / 2, x1 = cx + rw / 2, z0 = cz - rd / 2, z1 = cz + rd / 2;
     out.push(x0, y, z0, x1, y, z0, x1, y, z0, x1, y, z1,
              x1, y, z1, x0, y, z1, x0, y, z1, x0, y, z0);
   }
+  function segments(arr, mat) {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3));
+    return new THREE.LineSegments(g, mat);
+  }
   // flat ring in the XZ plane — the Enter affordance
-  function circleGeom(radius, segments) {
+  function circleGeom(radius, segs) {
     const pts = [];
-    for (let i = 0; i < segments; i++) {
-      const a = (i / segments) * Math.PI * 2;
+    for (let i = 0; i < segs; i++) {
+      const a = (i / segs) * Math.PI * 2;
       pts.push(Math.cos(a) * radius, 0, Math.sin(a) * radius);
     }
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
     return g;
   }
-  function glowPlane(gw, gd, color, opacity) {
+  function softPlane(gw, gd, color, opacity, additive) {
     const m = new THREE.Mesh(
       new THREE.PlaneGeometry(gw, gd),
       new THREE.MeshBasicMaterial({
-        map: glowTex, color, transparent: true, opacity,
-        blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
+        map: glowTex, color, transparent: true, opacity, depthWrite: false,
+        toneMapped: false,
+        blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
       })
     );
     m.rotation.x = -Math.PI / 2;
     return m;
   }
 
-  // desk: line grid with per-vertex alpha so it dissolves at the edges
-  // instead of ending on a hard rectangle.
+  // ─────────────────────────────────────────── desk
+  // line grid with per-vertex alpha so it dissolves at the edges instead of
+  // ending on a hard rectangle.
   function buildDesk() {
     const D = TUNE.desk;
     const nx = Math.max(1, Math.round(D.w / D.step));
@@ -265,105 +312,251 @@ function boot(container) {
     return new THREE.LineSegments(g, matDesk);
   }
 
-  // keyboard: shell + one rectangle per key. The Enter footprint (last
-  // column, two middle rows) is left empty and drawn as its own wide key,
-  // and its centre becomes the interaction anchor (TUNE.enter).
-  function buildKeyboard() {
-    const K = TUNE.kb;
+  // ─────────────────────────────────────────── laptop base
+  // Rounded slab (top + bottom outline joined by short posts), the key deck,
+  // the touchpad and the speaker grilles either side of the keys.
+  // The Enter footprint (last column, two middle rows) is left empty and
+  // drawn as its own wide key; its centre becomes TUNE.enter.
+  const ENTER_SIZE = { w: 0.2, d: 0.36 };
+  const SPACE_ROW = [1.35, 1.1, 1.45, 5.6, 1.45, 1.1, 1.35];
+
+  function buildBase() {
+    const B = TUNE.base, K = TUNE.deck, P = TUNE.pad;
     const g = new THREE.Group();
-    g.add(edgeBox(K.w, K.h, K.d, matEdge));
+    g.name = 'base';
+    g.position.set(0, 0, B.z);
+    const E = [], D = [];
 
-    const top = K.h / 2 + 0.002;
-    const pad = 0.09;
-    const iw = K.w - pad * 2, id = K.d - pad * 2;
+    // slab — the top face is the bright outline, the underside stays faint
+    const top = rrPts('xz', 0, 0, B.w, B.d, B.r, 5, B.h);
+    const bot = rrPts('xz', 0, 0, B.w - 0.03, B.d - 0.03, B.r, 5, 0.004);
+    pushPath(E, top);
+    pushPath(D, bot);
+    for (let i = 0; i < top.length - 1; i += 2) {   // thickness posts
+      pushSeg(D, top[i][0], B.h, top[i][2], top[i][0], 0.004, top[i][2]);
+    }
+    // the lip you hook a finger under to open the lid
+    pushSeg(E, -0.42, B.h * 0.5, B.d / 2 + 0.002, 0.42, B.h * 0.5, B.d / 2 + 0.002);
+
+    // key deck
+    const kTop = B.h + 0.002;
+    const iw = K.w, id = K.d;
     const cw = iw / K.cols, cd = id / K.rows;
-    const kw = cw * 0.76, kd = cd * 0.7;
+    const kw = cw * 0.78, kd = cd * 0.72;
     const eCol = K.cols - 1, eRow = 2;      // classic wide Enter, right edge
+    const kx = 0, kz = K.z;
 
-    const keys = [];
-    for (let r = 0; r < K.rows; r++) {
+    // the well the keys sit in
+    pushPath(D, rrPts('xz', kx, kz, iw + 0.14, id + 0.14, 0.06, 3, kTop - 0.001));
+
+    for (let r = 0; r < K.rows - 1; r++) {
+      const z = kz - id / 2 + cd * (r + 0.5);
+      const rowD = r === 0 ? cd * 0.5 : kd;    // short function row at the back
       for (let c = 0; c < K.cols; c++) {
         if (c === eCol && (r === eRow || r === eRow + 1)) continue;
-        pushRectXZ(keys,
-          -iw / 2 + cw * (c + 0.5),
-          -id / 2 + cd * (r + 0.5),
-          kw, kd, top);
+        pushRectXZ(D, kx - iw / 2 + cw * (c + 0.5), z, kw, rowD, kTop);
       }
     }
-    const kg = new THREE.BufferGeometry();
-    kg.setAttribute('position', new THREE.Float32BufferAttribute(keys, 3));
-    g.add(new THREE.LineSegments(kg, matDetail));
+    // front row: modifiers + a wide space bar, so the deck reads as a laptop
+    const unit = iw / SPACE_ROW.reduce((a, b) => a + b, 0);
+    let cx = kx - iw / 2;
+    const frontZ = kz - id / 2 + cd * (K.rows - 0.5);
+    for (const u of SPACE_ROW) {
+      const cellW = u * unit;
+      pushRectXZ(D, cx + cellW / 2, frontZ, cellW * 0.86, kd, kTop);
+      cx += cellW;
+    }
 
     // the Enter key itself — brighter ink, spans two rows
-    const ex = -iw / 2 + cw * (eCol + 0.5);
-    const ez = -id / 2 + cd * (eRow + 1);
-    const ew = kw, ed = cd * 2 * 0.8;
-    const eg = new THREE.BufferGeometry();
-    const eSegs = [];
-    pushRectXZ(eSegs, ex, ez, ew, ed, top);
-    eg.setAttribute('position', new THREE.Float32BufferAttribute(eSegs, 3));
-    g.add(new THREE.LineSegments(eg, matEdge));
+    const ex = kx - iw / 2 + cw * (eCol + 0.5);
+    const ez = kz - id / 2 + cd * (eRow + 1);
+    const ew = kw, ed = cd * 2 * 0.82;
+    pushRectXZ(E, ex, ez, ew, ed, kTop);
+
+    // touchpad — a rounded rectangle with a faint inner outline
+    pushPath(E, rrPts('xz', 0, P.z, P.w, P.d, 0.09, 4, kTop));
+    pushPath(D, rrPts('xz', 0, P.z, P.w - 0.07, P.d - 0.07, 0.07, 3, kTop));
+
+    // speaker grilles either side of the key deck + a vent under the hinge
+    const gx = (iw + B.w) / 4;
+    for (let i = 0; i < 9; i++) {
+      const z = kz - id / 2 + (i + 0.5) * (id / 9);
+      pushSeg(D, gx - 0.055, kTop, z, gx + 0.055, kTop, z);
+      pushSeg(D, -gx - 0.055, kTop, z, -gx + 0.055, kTop, z);
+    }
+    pushPath(D, rrPts('xz', 0, -B.d / 2 + 0.1, iw * 0.72, 0.055, 0.027, 2, kTop));
+
+    g.add(segments(E, matEdge));
+    g.add(segments(D, matDetail));
 
     TUNE.enter.x = ex;
-    TUNE.enter.y = top + 0.005;
+    TUNE.enter.y = kTop + 0.006;
     TUNE.enter.z = ez;
     ENTER_SIZE.w = ew; ENTER_SIZE.d = ed;
     return g;
   }
-  const ENTER_SIZE = { w: 0.15, d: 0.24 };
 
-  function buildMonitor() {
-    const M = TUNE.mon, S = TUNE.screen;
+  // ─────────────────────────────────────────── laptop lid
+  // Hinged at the back edge of the base and tilted open by TUNE.lid.open.
+  // Its +Z local face is the one you look at, so the screen plane, the bloom
+  // and the webcam dot all ride at z = lid.d/2 + ε (see placeScreen).
+  function buildLid() {
+    const L = TUNE.lid, S = TUNE.screen;
     const g = new THREE.Group();
-    g.position.y = M.y;
-    g.add(edgeBox(M.w, M.h, M.d, matEdge));
+    g.name = 'lid';
+    g.position.set(0, TUNE.base.h, hingeZ());
+    g.rotation.x = lidAngle();
+    const E = [], D = [];
 
-    // the screen aperture, drawn on the front face
-    const frame = rectXY(S.w + 0.06, S.h + 0.06, matEdge);
-    frame.position.set(S.x, S.y - M.y, M.d / 2 + 0.002);
-    g.add(frame);
-
-    // chin detail: a thin brand line + vents, keeps the box from reading empty
-    const chinY = (S.y - M.y) - S.h / 2 - 0.24;
-    const vents = [];
-    for (let i = 0; i < 3; i++) {
-      const y = chinY - i * 0.045;
-      vents.push(-M.w * 0.13, y, M.d / 2 + 0.002, M.w * 0.13, y, M.d / 2 + 0.002);
+    const zf = L.d / 2, zb = -L.d / 2;
+    const front = rrPts('xy', 0, L.h / 2, L.w, L.h, L.r, 5, zf);
+    const back = rrPts('xy', 0, L.h / 2, L.w - 0.02, L.h - 0.02, L.r, 5, zb);
+    pushPath(E, front);
+    pushPath(D, back);
+    for (let i = 0; i < front.length - 1; i += 3) {   // panel thickness
+      pushSeg(D, front[i][0], front[i][1], zf, front[i][0], front[i][1], zb);
     }
-    const vg = new THREE.BufferGeometry();
-    vg.setAttribute('position', new THREE.Float32BufferAttribute(vents, 3));
-    g.add(new THREE.LineSegments(vg, matDetail));
+
+    // screen aperture — the rectangle the CanvasTexture sits inside
+    pushPath(E, rrPts('xy', S.x, S.y, S.w + 0.07, S.h + 0.07, 0.05, 3, zf + 0.004));
+    // webcam pinhole in the top bezel
+    pushPath(D, arcPts('xy', S.x, S.y + S.h / 2 + 0.075, 0.022, 0.022, zf + 0.004, 12));
+    // chin: a thin brand line, keeps the bezel from reading empty
+    const chinY = S.y - S.h / 2 - 0.085;
+    pushSeg(D, -0.34, chinY, zf + 0.003, 0.34, chinY, zf + 0.003);
+    return { group: g, E, D };
+  }
+
+  // ─────────────────────────────────────────── hinge barrels
+  function buildHinge(E, D) {
+    const H = TUNE.hinge;
+    for (const s of [-1, 1]) {
+      const x0 = s * H.x - H.len / 2, x1 = s * H.x + H.len / 2;
+      const y = TUNE.base.h, z = hingeZ();
+      pushPath(E, arcPts('xy', y, z, H.r, H.r, x0, 12).map(([u, v, k]) => [k, u, v]));
+      pushPath(D, arcPts('xy', y, z, H.r, H.r, x1, 12).map(([u, v, k]) => [k, u, v]));
+      for (let i = 0; i < 4; i++) {                 // barrel seams
+        const a = (i / 4) * Math.PI * 2;
+        const py = y + Math.cos(a) * H.r, pz = z + Math.sin(a) * H.r;
+        pushSeg(D, x0, py, pz, x1, py, pz);
+      }
+    }
+  }
+
+  // ─────────────────────────────────────────── headphones
+  // Lying flat on the desk beside the touchpad: two ear cups splayed open,
+  // an arched headband bridging them at the back, a cable trailing away.
+  function buildHeadphones() {
+    const H = TUNE.hp;
+    const g = new THREE.Group();
+    g.name = 'headphones';
+    g.position.set(H.x, 0, H.z);
+    g.rotation.y = H.rot;
+    g.scale.setScalar(H.s);
+    const E = [], D = [];
+
+    const cupX = 0.6, rx = 0.4, rz = 0.33, yTop = 0.2, yBot = 0.018;
+    for (const s of [-1, 1]) {
+      const cx = cupX * s, tilt = 0.24 * s;
+      pushPath(E, arcPts('xz', cx, 0, rx, rz, yTop, 30, 0, Math.PI * 2, tilt));
+      pushPath(D, arcPts('xz', cx, 0, rx, rz, yBot, 30, 0, Math.PI * 2, tilt));
+      pushPath(D, arcPts('xz', cx, 0, rx * 0.63, rz * 0.6, yTop + 0.004, 26, 0, Math.PI * 2, tilt));
+      pushPath(D, arcPts('xz', cx, 0, rx * 0.3, rz * 0.28, yTop + 0.006, 20, 0, Math.PI * 2, tilt));
+      for (let i = 0; i < 12; i++) {               // cup wall
+        const a = (i / 12) * Math.PI * 2;
+        const [px, , pz] = arcPts('xz', cx, 0, rx, rz, 0, 0, a, a, tilt)[0];
+        pushSeg(D, px, yBot, pz, px, yTop, pz);
+      }
+    }
+
+    // headband: two parallel arcs offset along the outward normal, arching up
+    // over the middle, plus a few rungs so it reads as a band and not a wire
+    const bandRz = 0.62, bandY = 0.21, lift = 0.17, half = 0.055;
+    const rail = (side) => {
+      const pts = [];
+      for (let i = 0; i <= 32; i++) {
+        const t = i / 32, a = Math.PI + t * Math.PI;
+        const sa = Math.sin(a), ca = Math.cos(a);
+        // tangent (−cupX·sin a, bandRz·cos a) → outward normal, normalised
+        let nx = bandRz * ca, nz = cupX * sa;
+        const nl = Math.hypot(nx, nz) || 1;
+        nx /= nl; nz /= nl;
+        pts.push([
+          cupX * ca + nx * half * side,
+          bandY + Math.sin(t * Math.PI) * lift,
+          bandRz * sa + nz * half * side,
+        ]);
+      }
+      return pts;
+    };
+    const inner = rail(-1), outer = rail(1);
+    pushPath(E, inner);
+    pushPath(E, outer);
+    for (let i = 0; i <= 32; i += 4) {
+      pushSeg(D, inner[i][0], inner[i][1], inner[i][2], outer[i][0], outer[i][1], outer[i][2]);
+    }
+    // yokes — the band ends dropping onto the cups
+    for (const s of [-1, 1]) {
+      const i = s < 0 ? 0 : 32;
+      pushSeg(D, inner[i][0], inner[i][1], inner[i][2], cupX * s, yTop, 0);
+      pushSeg(D, outer[i][0], outer[i][1], outer[i][2], cupX * s, yTop, 0);
+    }
+
+    // cable: a loose curl trailing off the right cup, flat on the desk
+    const cable = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0.96, 0.03, 0.2),
+      new THREE.Vector3(1.32, 0.03, 0.62),
+      new THREE.Vector3(1.06, 0.03, 1.12),
+      new THREE.Vector3(0.55, 0.03, 1.3),
+      new THREE.Vector3(0.28, 0.03, 1.56),
+    ]);
+    pushPath(D, cable.getPoints(48).map((p) => [p.x, p.y, p.z]));
+
+    g.add(segments(E, matEdge));
+    g.add(segments(D, matDetail));
     return g;
   }
 
-  function buildStand() {
-    const S = TUNE.stand, M = TUNE.mon;
-    const g = new THREE.Group();
-    const base = edgeBox(S.baseW, S.baseH, S.baseD, matEdge);
-    base.position.set(0, S.baseH / 2, 0.04);
-    g.add(base);
-
-    const neck = edgeBox(S.neckW, S.neckH, S.neckD, matEdge);
-    neck.position.set(0, S.baseH + S.neckH / 2, 0.04);
-    g.add(neck);
-
-    // hinge block where the neck meets the panel
-    const hinge = edgeBox(S.neckW * 1.5, 0.16, S.neckD * 1.3, matDetail);
-    hinge.position.set(0, M.y - TUNE.mon.h / 2 + 0.02, 0.02);
-    g.add(hinge);
-    return g;
+  // ─────────────────────────────────────────── mug (a bit of life)
+  function buildMug(E, D) {
+    const M = TUNE.mug;
+    const rb = M.r * 0.84;
+    pushPath(E, arcPts('xz', M.x, M.z, M.r, M.r * 0.95, M.h, 26));
+    pushPath(D, arcPts('xz', M.x, M.z, M.r * 0.86, M.r * 0.82, M.h - 0.02, 22));
+    pushPath(D, arcPts('xz', M.x, M.z, rb, rb * 0.95, 0.005, 22));
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * Math.PI * 2;
+      pushSeg(D, M.x + Math.cos(a) * rb, 0.005, M.z + Math.sin(a) * rb * 0.95,
+                 M.x + Math.cos(a) * M.r, M.h, M.z + Math.sin(a) * M.r * 0.95);
+    }
+    // handle, on the far side so it never crosses the laptop silhouette
+    pushPath(E, arcPts('xy', M.x - M.r * 0.95, M.h * 0.55, 0.17, 0.13, M.z,
+      18, Math.PI * 0.62, Math.PI * 1.38));
+    // two wisps of steam
+    for (const s of [-1, 1]) {
+      const pts = [];
+      for (let i = 0; i <= 10; i++) {
+        const t = i / 10;
+        pts.push([
+          M.x + s * 0.07 + Math.sin(t * 4.2 + s) * 0.045,
+          M.h + 0.05 + t * 0.38,
+          M.z - 0.02 + s * 0.03,
+        ]);
+      }
+      pushPath(D, pts);
+    }
   }
 
   // ─────────────────────────────────────────── scene graph
   //  pc ── wire      (rebuilt from TUNE by build())
   //     ├─ halo      (additive copy of wire, scaled a hair for the glow)
-  //     ├─ screen    (the one solid surface — CanvasTexture)
-  //     ├─ bloom     (additive sprite spilling around the screen)
-  //     └─ kbFx ── enterFx ── invisible raycast box + ring + light pool
+  //     ├─ shadows   (soft contact pools grounding the props on the desk)
+  //     ├─ lidFx ─── screen (the one solid surface) + bloom + webcam dot
+  //     └─ kbFx ──── enterFx ── invisible raycast box + ring + light pool
   const pc = new THREE.Group();
   scene.add(pc);
 
-  let wire = null, halo = null;
+  let wire = null, halo = null, lidWire = null, haloLid = null;
 
   function disposeTree(root) {
     root.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
@@ -375,12 +568,28 @@ function boot(container) {
 
     wire = new THREE.Group();
     wire.add(buildDesk());
-    wire.add(buildStand());
-    wire.add(buildMonitor());
-    const kb = buildKeyboard();
-    kb.position.set(0, TUNE.kb.h / 2, TUNE.kb.z);
-    kb.rotation.x = TUNE.kb.tilt;
-    wire.add(kb);
+
+    const base = buildBase();
+    wire.add(base);
+
+    // lid + hinge share one buffer pair so the barrels weld into the panel
+    const lid = buildLid();
+    buildHinge(lid.E, lid.D);
+    // the hinge is authored in pc space, the panel in lid space — so the
+    // barrels go on their own (unrotated) node next to the lid group.
+    const hingeNode = new THREE.Group();
+    lidWire = lid.group;
+    lidWire.add(segments(lid.E.slice(0, lid.E.length), matEdge));
+    wire.add(hingeNode);
+
+    wire.add(lidWire);
+    wire.add(buildHeadphones());
+
+    const E = [], D = [];
+    buildMug(E, D);
+    wire.add(segments(E, matEdge));
+    wire.add(segments(D, matDetail));
+
     pc.add(wire);
 
     // glow copy: same geometry, additive ink, scaled a hair so the lines
@@ -388,11 +597,12 @@ function boot(container) {
     halo = wire.clone(true);
     halo.traverse((o) => { if (o.isLine || o.isLineSegments) o.material = matHalo; });
     halo.scale.setScalar(TUNE.halo);
+    haloLid = halo.getObjectByName('lid');
     pc.add(halo);
 
-    // the Enter affordance rides on the keyboard so the tilt applies to it
-    kbFx.position.copy(kb.position);
-    kbFx.rotation.copy(kb.rotation);
+    // the Enter affordance rides on the base so any base pose applies to it
+    kbFx.position.copy(base.position);
+    kbFx.rotation.copy(base.rotation);
   }
 
   // ─────────────────────────────────────────── screen (CanvasTexture plane)
@@ -405,30 +615,45 @@ function boot(container) {
   screenTex.magFilter = THREE.LinearFilter;
   screenTex.colorSpace = THREE.SRGBColorSpace;
 
+  // the lid pose is mirrored here so the screen, its bloom and the webcam
+  // dot ride the panel without living inside the rebuildable wireframe.
+  const lidFx = new THREE.Group();
+  pc.add(lidFx);
+
   // reference plane size (3:2, matches the canvas ratio), scaled by TUNE
   const SCREEN_W = 3.3, SCREEN_H = 2.2;
   const screenMat = new THREE.MeshBasicMaterial({ map: screenTex, toneMapped: false });
   const screen = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN_W, SCREEN_H), screenMat);
   screen.name = 'screen';
-  pc.add(screen);
+  lidFx.add(screen);
 
-  // light spilling out of the panel (replaces the old point light — nothing
-  // in the scene is lit any more, so the bloom is drawn, not computed)
+  // light spilling out of the panel (nothing in the scene is lit any more,
+  // so the bloom is drawn, not computed). Sits behind the plane so only the
+  // spill past the bezel shows.
   const bloomMat = new THREE.SpriteMaterial({
     map: glowTex, color: 0xffe9c8, transparent: true, opacity: 0.18,
     blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
   });
   const bloom = new THREE.Sprite(bloomMat);
-  pc.add(bloom);
+  lidFx.add(bloom);
 
-  // power LED on the monitor chin — breathes
+  // webcam dot in the top bezel — breathes
   const ledMat = new THREE.SpriteMaterial({
     map: glowTex, color: ACCENT, transparent: true, opacity: 0.9,
     blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
   });
   const led = new THREE.Sprite(ledMat);
-  led.scale.setScalar(0.17);
-  pc.add(led);
+  led.scale.setScalar(0.12);
+  lidFx.add(led);
+
+  // ─────────────────────────────────────────── contact shadows
+  // Normal-blended (not additive) dark pools: the canvas is transparent, so
+  // these composite straight onto the terracotta CSS stage and ground the
+  // props instead of leaving them floating over the grid.
+  const shadowLaptop = softPlane(6.2, 4.2, SHADE, 0.3, false);
+  const shadowHp = softPlane(2.5, 2.1, SHADE, 0.22, false);
+  const shadowMug = softPlane(1.1, 1.1, SHADE, 0.2, false);
+  [shadowLaptop, shadowHp, shadowMug].forEach((s) => { s.position.y = 0.002; pc.add(s); });
 
   // ─────────────────────────────────────────── Enter-key interaction group
   const kbFx = new THREE.Group();
@@ -449,51 +674,69 @@ function boot(container) {
     color: ACCENT, transparent: true, opacity: 0,
     depthWrite: false, blending: THREE.AdditiveBlending,
   });
-  const enterRing = new THREE.LineLoop(circleGeom(0.22, 48), matEnterRing);
+  const enterRing = new THREE.LineLoop(circleGeom(0.24, 48), matEnterRing);
   enterFx.add(enterRing);
 
   // pool of light under the key
-  const enterPool = glowPlane(0.8, 0.8, ACCENT, 0);
+  const enterPool = softPlane(0.85, 0.85, ACCENT, 0, true);
   enterPool.position.y = -0.02;
   enterFx.add(enterPool);
 
-  // ─────────────────────────────────────────── lighting (minimal — the
-  // wireframe emits its own light; these only matter to the env-lit screen)
-  scene.add(new THREE.AmbientLight(0xfff4e6, 0.5));
-  const keyLight = new THREE.DirectionalLight(0xfff1de, 0.35);
-  keyLight.position.set(4.5, 7.5, 4.5);
-  scene.add(keyLight);
+  // ─────────────────────────────────────────── lighting
+  // Every line is an unlit LineBasicMaterial and the screen is unlit too, so
+  // this ambient only matters if a shaded part is ever added — it is kept so
+  // the white ink can never be dimmed by a missing light.
+  scene.add(new THREE.AmbientLight(0xfff4e6, 1));
 
   // ─────────────────────────────────────────── placement
   function placeScreen() {
-    const S = TUNE.screen;
-    screen.position.set(S.x, S.y, S.z);
+    const S = TUNE.screen, L = TUNE.lid, B = TUNE.base;
+    lidFx.position.set(0, B.h, hingeZ());
+    lidFx.rotation.x = lidAngle();
+
+    const zf = L.d / 2 + S.z;
+    screen.position.set(S.x, S.y, zf);
     screen.scale.set(S.w / SCREEN_W, S.h / SCREEN_H, 1);
 
-    bloom.position.set(S.x, S.y, S.z - 0.03);
-    bloom.scale.set(S.w * 1.55, S.h * 1.85, 1);
+    bloom.position.set(S.x, S.y, zf - 0.05);
+    bloom.scale.set(S.w * 1.5, S.h * 1.78, 1);
 
-    led.position.set(S.x + S.w * 0.42, S.y - S.h / 2 - 0.24, TUNE.mon.d / 2 + 0.01);
+    led.position.set(S.x, S.y + S.h / 2 + 0.075, zf);
   }
 
   function placeEnter() {
     enterFx.position.set(TUNE.enter.x, TUNE.enter.y, TUNE.enter.z);
     // forgiving click target: a little wider/deeper than the drawn key
-    enterKey.scale.set(ENTER_SIZE.w * 2.2, 0.16, ENTER_SIZE.d * 1.4);
+    enterKey.scale.set(ENTER_SIZE.w * 2.4, 0.16, ENTER_SIZE.d * 1.5);
     enterRing.scale.setScalar(1);
   }
 
+  function placeShadows() {
+    shadowLaptop.position.set(0, 0.002, TUNE.base.z - 0.15);
+    shadowHp.position.set(TUNE.hp.x, 0.003, TUNE.hp.z + 0.1);
+    shadowMug.position.set(TUNE.mug.x, 0.003, TUNE.mug.z);
+  }
+
+  // The camera is framed rather than placed: TUNE.cam only sets the viewing
+  // direction, and the distance is solved so TUNE.frame fits at any aspect —
+  // a tall narrow column pulls back instead of cropping the laptop.
+  const camDir = new THREE.Vector3();
   function placeCamera() {
-    camera.position.set(TUNE.cam.x, TUNE.cam.y, TUNE.cam.z);
-    camera.lookAt(TUNE.look.x, TUNE.look.y, TUNE.look.z);
+    const K = TUNE.cam, L = TUNE.look, F = TUNE.frame;
+    camDir.set(K.x - L.x, K.y - L.y, K.z - L.z).normalize();
+    const halfTan = Math.tan((camera.fov * Math.PI / 180) / 2);
+    const d = Math.max(F.h / 2 / halfTan, F.w / 2 / (halfTan * Math.max(0.2, camera.aspect)));
+    camera.position.set(L.x + camDir.x * d, L.y + camDir.y * d, L.z + camDir.z * d);
+    camera.lookAt(L.x, L.y, L.z);
     camera.updateProjectionMatrix();
   }
 
-  // re-apply TUNE live from the console: __pc3d.TUNE.mon.w = 4.2; __pc3d.apply()
+  // re-apply TUNE live from the console: __pc3d.TUNE.lid.open = 105; __pc3d.apply()
   function apply() {
     build();
     placeScreen();
     placeEnter();
+    placeShadows();
     placeCamera();
   }
   apply();
@@ -502,8 +745,9 @@ function boot(container) {
   // live-tuning handle exposed for console fiddling
   window.__pc3d = {
     scene, renderer, camera, pc, screen, enterKey, enterRing, TUNE,
-    apply, build, placeScreen, placeEnter, placeCamera,
+    apply, build, placeScreen, placeEnter, placeShadows, placeCamera,
     get wire() { return wire; },
+    get lid() { return lidWire; },
   };
 
   // ─────────────────────────────────────────── state + interaction
@@ -808,19 +1052,26 @@ function boot(container) {
     prev = now;
     const elapsed = now - t0;
 
-    // the whole blueprint floats and sways gently (graphify-style drift).
-    // screen, keyboard and Enter affordance are children, so they ride along
-    // and raycasting stays correct without extra bookkeeping.
+    // the whole desk floats and sways gently. screen, deck and the Enter
+    // affordance are children, so they ride along and raycasting stays
+    // correct without extra bookkeeping.
     if (!reduceMotion) {
       pc.position.y = Math.sin(elapsed * 0.0009) * 0.035;
       pc.rotation.y = TUNE.rotY + Math.sin(elapsed * 0.00045) * TUNE.sway;
-      pc.rotation.x = Math.sin(elapsed * 0.00062) * TUNE.sway * 0.2;
+      pc.rotation.x = Math.sin(elapsed * 0.00062) * TUNE.sway * 0.18;
     }
 
+    // the lid breathes open and shut by a fraction of a degree — the wire
+    // panel, its halo copy and the screen node all share one angle.
+    const la = lidAngle() + (reduceMotion ? 0 : Math.sin(elapsed * 0.0007) * TUNE.breathe);
+    if (lidWire) lidWire.rotation.x = la;
+    if (haloLid) haloLid.rotation.x = la;
+    lidFx.rotation.x = la;
+
     // ink breathing — the lines pulse very slightly, like a live blueprint
-    const pulse = reduceMotion ? 0 : Math.sin(elapsed * 0.0016) * 0.07;
-    matEdge.opacity = TUNE.line.edge + pulse;
-    matDetail.opacity = TUNE.line.detail + pulse * 0.5;
+    const pulse = reduceMotion ? 0 : Math.sin(elapsed * 0.0016) * 0.05;
+    matEdge.opacity = Math.min(1, TUNE.line.edge + pulse);
+    matDetail.opacity = TUNE.line.detail + pulse * 0.6;
     matHalo.opacity = Math.max(0, TUNE.line.halo + pulse * 0.6);
 
     if (hasPointer && (state === 'idle' || state === 'typing')) {
@@ -862,12 +1113,12 @@ function boot(container) {
       drawResult(now - buildStart);
     }
 
-    // screen bloom + power LED breathe with the state
-    const warm = state === 'result' ? 0xffe7c4 : 0xffe9c8;
+    // screen bloom + webcam dot breathe with the state
+    const warm = state === 'result' ? 0xffe7c4 : 0xffd9a8;
     bloomMat.color.set(warm);
-    bloomMat.opacity = (state === 'result' ? 0.26 : 0.18) +
+    bloomMat.opacity = (state === 'result' ? 0.24 : 0.17) +
       (reduceMotion ? 0 : Math.sin(elapsed * 0.004) * 0.035);
-    ledMat.opacity = 0.55 + (reduceMotion ? 0.25 : Math.sin(elapsed * 0.0022) * 0.3 + 0.25);
+    ledMat.opacity = 0.4 + (reduceMotion ? 0.2 : Math.sin(elapsed * 0.0022) * 0.22 + 0.22);
 
     renderer.render(scene, camera);
   }
@@ -878,8 +1129,8 @@ function boot(container) {
     w = container.clientWidth || w;
     h = container.clientHeight || h;
     camera.aspect = w / h;
-    camera.updateProjectionMatrix();
     renderer.setSize(w, h);
+    placeCamera();          // re-solve the distance so the framing survives
   });
   ro.observe(container);
 
