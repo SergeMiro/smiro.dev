@@ -141,9 +141,9 @@ function boot(container) {
   container.appendChild(renderer.domElement);
 
   // ─────────────────────────────────────────── live-tuning values
-  const LINE = 0xe86830;   // warm orange — matches site brick accent
+  const LINE = 0xe86830;   // warm orange — matches brick accent
   const ACCENT = 0xffd9a8; // warm highlight for the Enter affordance + webcam
-  const SHADE = 0x3a1004;   // deep burnt shadow on dark desk
+  const SHADE = 0x6d2408;  // burnt-umber contact shadow on the "desk"
 
   const TUNE = {
     // world units, desk surface at y = 0, laptop centred on x = 0
@@ -156,7 +156,7 @@ function boot(container) {
     mug: { x: -2.52, z: -0.42, r: 0.29, h: 0.42 },
     desk: { w: 9.8, d: 5.8, z: 0.45, step: 0.4 },
     // ink weights (animated slightly around these)
-    line: { edge: 0.9, detail: 0.45, halo: 0.12, desk: 0.28 },
+    line: { edge: 0.95, detail: 0.5, halo: 0.11, desk: 0.32 },
     halo: 1.004,               // scale of the additive glow copy
     sway: 0.058,               // amplitude of the idle yaw sway (radians)
     rotY: -0.075,              // resting yaw
@@ -532,8 +532,19 @@ function boot(container) {
     // handle, on the far side so it never crosses the laptop silhouette
     pushPath(E, arcPts('xy', M.x - M.r * 0.95, M.h * 0.55, 0.17, 0.13, M.z,
       18, Math.PI * 0.62, Math.PI * 1.38));
-    // steam sprites are built separately — see createSteam() + frame loop
-    // (animated particle system, not static wisps)
+    // two wisps of steam
+    for (const s of [-1, 1]) {
+      const pts = [];
+      for (let i = 0; i <= 10; i++) {
+        const t = i / 10;
+        pts.push([
+          M.x + s * 0.07 + Math.sin(t * 4.2 + s) * 0.045,
+          M.h + 0.05 + t * 0.38,
+          M.z - 0.02 + s * 0.03,
+        ]);
+      }
+      pushPath(D, pts);
+    }
   }
 
   // ─────────────────────────────────────────── scene graph
@@ -1108,19 +1119,6 @@ function boot(container) {
     bloomMat.opacity = (state === 'result' ? 0.24 : 0.17) +
       (reduceMotion ? 0 : Math.sin(elapsed * 0.004) * 0.035);
     ledMat.opacity = 0.4 + (reduceMotion ? 0.2 : Math.sin(elapsed * 0.0022) * 0.22 + 0.22);
-
-    // animate steam particles rising from the mug
-    for (const s of steamParticles) {
-      s.life += dt;
-      if (s.life > s.maxLife) { s.life = 0; }
-      const t = s.life / s.maxLife;
-      const y = TUNE.mug.h + 0.06 + t * 0.55;
-      const x = s.baseX + Math.sin(elapsed * 0.002 + s.phase) * 0.04;
-      const z = s.baseZ + Math.cos(elapsed * 0.0025 + s.phase) * 0.03;
-      s.sprite.position.set(x, y, z);
-      s.sprite.material.opacity = t < 0.15 ? t / 0.15 * 0.22 : (1 - t) * 0.22;
-      s.sprite.scale.setScalar(0.2 + t * 0.25);
-    }
 
     renderer.render(scene, camera);
   }
