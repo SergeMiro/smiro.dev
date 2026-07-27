@@ -583,7 +583,6 @@ function boot(container) {
     wire.add(hingeNode);
 
     wire.add(lidWire);
-    wire.add(buildHeadphones());
 
     const E = [], D = [];
     buildMug(E, D);
@@ -654,9 +653,8 @@ function boot(container) {
   // these composite straight onto the terracotta CSS stage and ground the
   // props instead of leaving them floating over the grid.
   const shadowLaptop = softPlane(6.2, 4.2, SHADE, 0.3, false);
-  const shadowHp = softPlane(2.5, 2.1, SHADE, 0.22, false);
   const shadowMug = softPlane(1.1, 1.1, SHADE, 0.2, false);
-  [shadowLaptop, shadowHp, shadowMug].forEach((s) => { s.position.y = 0.002; pc.add(s); });
+  [shadowLaptop, shadowMug].forEach((s) => { s.position.y = 0.002; pc.add(s); });
 
   // ─────────────────────────────────────────── Enter-key interaction group
   const kbFx = new THREE.Group();
@@ -716,7 +714,6 @@ function boot(container) {
 
   function placeShadows() {
     shadowLaptop.position.set(0, 0.002, TUNE.base.z - 0.15);
-    shadowHp.position.set(TUNE.hp.x, 0.003, TUNE.hp.z + 0.1);
     shadowMug.position.set(TUNE.mug.x, 0.003, TUNE.mug.z);
   }
 
