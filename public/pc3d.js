@@ -118,7 +118,21 @@ function boot(container) {
       hintReady: 'appuyez  ⏎  Entrée',
     },
   };
-  const TOK = { c: '#8a9678', t: '#3fb950', a: '#4b9fea', p: '#57606a', s: '#0a7ea4', x: '#1b1a18', k: '#8957e5', o: '#e86830' };
+  // warm "paper" screen palette — the panel is a cream sheet, not a terminal
+  const SCR = {
+    paper: '#f4f1e8',   // same beige as the page background
+    sheet: '#faf8f2',   // the code sheet, a shade lighter than the chrome
+    chrome: '#e9e3d4',  // tab strip / title bars
+    rail: '#ece6d8',    // activity rail
+    line: '#ddd5c2',    // hairlines
+    ink: '#3a352c',     // primary text
+    soft: '#8c8474',    // secondary text
+    faint: '#b9b1a0',   // line numbers, disabled text
+    brick: '#e86830',   // accent
+    deep: '#b4502a',    // accent, darker — for text on cream
+  };
+  // syntax tokens, tuned for dark-on-cream instead of green-on-black
+  const TOK = { c: '#a79e8a', t: '#a8542c', a: '#8a6d3b', p: '#a89f8d', s: '#5d7a52', x: '#3a352c', k: '#8a5b7d', o: '#e86830' };
   const lang = () => (window.I18N && window.I18N.getLang && (window.I18N.getLang() === 'fr')) ? 'fr' : 'en';
   const txt = () => C[lang()];
 
@@ -153,7 +167,7 @@ function boot(container) {
     deck: { w: 3.62, d: 1.26, z: -0.62, cols: 14, rows: 5 }, // key block, base-local
     pad: { w: 1.52, d: 0.94, z: 0.78 },                      // touchpad, base-local
     hp: { x: 1.85, z: 0.58, rot: -0.32, s: 0.85 },            // headphones close to laptop
-    mug: { x: -2.52, z: -0.42, r: 0.29, h: 0.42 },
+    mug: { x: -2.52, z: -0.42, r: 0.27, h: 0.48 },   // tall mug: h ≈ 1.8 × r
     desk: { w: 9.8, d: 5.8, z: 0.45, step: 0.4 },
     // ink weights (animated slightly around these)
     line: { edge: 0.95, detail: 0.5, halo: 0.11, desk: 0.32 },
@@ -518,20 +532,48 @@ function boot(container) {
   }
 
   // ─────────────────────────────────────────── mug (a bit of life)
+  //  A proper coffee mug, not a teacup: tall straight-walled cylinder, thick
+  //  rim, coffee line inside, and a C-shaped strap handle whose four ends all
+  //  land on the wall silhouette (x = M.x - r) so it reads as welded on.
   function buildMug(E, D) {
     const M = TUNE.mug;
-    const rb = M.r * 0.84;
-    pushPath(E, arcPts('xz', M.x, M.z, M.r, M.r * 0.95, M.h, 26));
-    pushPath(D, arcPts('xz', M.x, M.z, M.r * 0.86, M.r * 0.82, M.h - 0.02, 22));
-    pushPath(D, arcPts('xz', M.x, M.z, rb, rb * 0.95, 0.005, 22));
-    for (let i = 0; i < 10; i++) {
-      const a = (i / 10) * Math.PI * 2;
-      pushSeg(D, M.x + Math.cos(a) * rb, 0.005, M.z + Math.sin(a) * rb * 0.95,
-                 M.x + Math.cos(a) * M.r, M.h, M.z + Math.sin(a) * M.r * 0.95);
+    const rz = M.r * 0.95;              // a hair elliptical so it reads in 3/4
+    const rb = M.r * 0.96;              // barely-tapered foot — walls stay straight
+    const yTop = M.h, yBase = 0.005;
+
+    // rim: outer edge + inner lip → hollow, thick-walled
+    pushPath(E, arcPts('xz', M.x, M.z, M.r, rz, yTop, 30));
+    pushPath(D, arcPts('xz', M.x, M.z, M.r * 0.87, rz * 0.87, yTop - 0.018, 26));
+    // coffee surface, sitting a little below the rim
+    pushPath(D, arcPts('xz', M.x, M.z, M.r * 0.80, rz * 0.80, yTop - M.h * 0.2, 24));
+    // foot: bottom edge + inset ring so it plants on the desk
+    pushPath(E, arcPts('xz', M.x, M.z, rb, rb * 0.95, yBase, 26));
+    pushPath(D, arcPts('xz', M.x, M.z, rb * 0.8, rb * 0.76, yBase + 0.02, 22));
+    // straight walls
+    for (let i = 0; i < 14; i++) {
+      const a = (i / 14) * Math.PI * 2;
+      const c = Math.cos(a), s = Math.sin(a);
+      pushSeg(D, M.x + c * rb, yBase, M.z + s * rb * 0.95,
+                 M.x + c * M.r, yTop, M.z + s * rz);
     }
-    // handle, on the far side so it never crosses the laptop silhouette
-    pushPath(E, arcPts('xy', M.x - M.r * 0.95, M.h * 0.55, 0.17, 0.13, M.z,
-      18, Math.PI * 0.62, Math.PI * 1.38));
+
+    // handle — on the far side so it never crosses the laptop silhouette.
+    // Half-turn sweep, so both ends of both edges sit at x = cx on the wall.
+    const cx = M.x - M.r * 0.98, cy = M.h * 0.52;
+    const HS = 24, A0 = Math.PI * 0.5, A1 = Math.PI * 1.5;
+    const band = 0.045, hru = 0.17, hrv = M.h * 0.34;
+    const outer = arcPts('xy', cx, cy, hru + band, hrv + band * 0.8, M.z, HS, A0, A1);
+    const inner = arcPts('xy', cx, cy, hru - band, hrv - band * 0.8, M.z, HS, A0, A1);
+    pushPath(E, outer);
+    pushPath(E, inner);
+    // close the strap where it meets the body, then a few ribs across the band
+    for (const i of [0, HS]) {
+      pushSeg(E, outer[i][0], outer[i][1], outer[i][2], inner[i][0], inner[i][1], inner[i][2]);
+    }
+    for (let i = 4; i < HS; i += 4) {
+      pushSeg(D, outer[i][0], outer[i][1], outer[i][2], inner[i][0], inner[i][1], inner[i][2]);
+    }
+
     // two wisps of steam
     for (const s of [-1, 1]) {
       const pts = [];
@@ -844,37 +886,60 @@ function boot(container) {
     c.arcTo(x, y, x + bw, y, r);
     c.closePath();
   }
-  // subtle CRT overlay: scanlines + vignette (dark screens only)
-  function crtOverlay() {
+  // paper grain: barely-there warm scanlines + a soft warm vignette. Same job
+  // the old CRT overlay did (make the panel read as a lit surface, not flat
+  // fill), at a tenth of the weight so the cream never turns muddy.
+  function paperGrain() {
     g2.save();
-    g2.globalAlpha = 0.05; g2.fillStyle = '#000';
-    for (let y = 0; y < SC_H; y += 4) g2.fillRect(0, y, SC_W, 2);
+    g2.globalAlpha = 0.018; g2.fillStyle = '#6d5b45';
+    for (let y = 0; y < SC_H; y += 5) g2.fillRect(0, y, SC_W, 2);
     g2.restore();
-    const vg = g2.createRadialGradient(SC_W / 2, SC_H / 2, SC_H * 0.34, SC_W / 2, SC_H / 2, SC_H * 0.78);
-    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.30)');
+    const vg = g2.createRadialGradient(SC_W * 0.42, SC_H * 0.38, SC_H * 0.3, SC_W / 2, SC_H / 2, SC_H * 0.9);
+    vg.addColorStop(0, 'rgba(255,252,244,0.16)');
+    vg.addColorStop(1, 'rgba(109,91,69,0.10)');
     g2.fillStyle = vg; g2.fillRect(0, 0, SC_W, SC_H);
+  }
+  // inner bezel shade — a warm inset shadow on all four edges, so the bright
+  // sheet still reads as sitting *inside* a panel (all states)
+  function bezelShade() {
+    const d = 46;
+    const edges = [
+      [0, 0, SC_W, d, 0, 0, 0, d],                    // top
+      [0, SC_H - d, SC_W, d, 0, SC_H, 0, SC_H - d],   // bottom
+      [0, 0, d, SC_H, 0, 0, d, 0],                    // left
+      [SC_W - d, 0, d, SC_H, SC_W, 0, SC_W - d, 0],   // right
+    ];
+    for (const [x, y, bw, bh, gx0, gy0, gx1, gy1] of edges) {
+      const gr = g2.createLinearGradient(gx0, gy0, gx1, gy1);
+      gr.addColorStop(0, 'rgba(88,70,52,0.16)');
+      gr.addColorStop(1, 'rgba(88,70,52,0)');
+      g2.fillStyle = gr; g2.fillRect(x, y, bw, bh);
+    }
   }
   // faint glass glare across the whole screen (all states)
   function glassGlare() {
     const gr = g2.createLinearGradient(0, 0, SC_W * 0.9, SC_H);
-    gr.addColorStop(0, 'rgba(255,255,255,0.07)');
-    gr.addColorStop(0.18, 'rgba(255,255,255,0.0)');
+    gr.addColorStop(0, 'rgba(255,251,240,0.34)');
+    gr.addColorStop(0.18, 'rgba(255,251,240,0.0)');
     g2.fillStyle = gr; g2.fillRect(0, 0, SC_W, SC_H);
   }
 
   function drawEditor(t) {
     const T = txt();
-    g2.fillStyle = '#0d1117'; g2.fillRect(0, 0, SC_W, SC_H);
+    g2.fillStyle = SCR.paper; g2.fillRect(0, 0, SC_W, SC_H);
+    // the code sheet — a lighter panel inset from the chrome
+    g2.fillStyle = SCR.sheet; g2.fillRect(78, 64, SC_W - 78, SC_H - 64);
 
-    // activity bar
-    g2.fillStyle = '#0a0d12'; g2.fillRect(0, 0, 78, SC_H);
-    g2.fillStyle = '#e86830'; g2.fillRect(0, 100, 4, 50);
+    // activity rail
+    g2.fillStyle = SCR.rail; g2.fillRect(0, 0, 78, SC_H);
+    g2.fillStyle = SCR.brick; g2.fillRect(0, 100, 4, 50);
 
-    // tab bar
-    g2.fillStyle = '#10151c'; g2.fillRect(78, 0, SC_W - 78, 64);
-    g2.fillStyle = '#0d1117'; g2.fillRect(78, 0, 360, 64);
-    g2.fillStyle = '#e86830'; g2.fillRect(78, 0, 360, 4);
-    g2.fillStyle = '#e6edf3';
+    // tab bar — active tab is the sheet colour, marked with a brick underline
+    g2.fillStyle = SCR.chrome; g2.fillRect(78, 0, SC_W - 78, 64);
+    g2.fillStyle = SCR.sheet; g2.fillRect(78, 0, 360, 64);
+    g2.fillStyle = SCR.brick; g2.fillRect(78, 0, 360, 4);
+    g2.fillStyle = SCR.line; g2.fillRect(78, 63, SC_W - 78, 1);
+    g2.fillStyle = SCR.ink;
     g2.font = '600 32px ui-monospace, monospace';
     g2.textBaseline = 'alphabetic';
     g2.fillText('◗ ' + T.file, 110, 44);
@@ -884,17 +949,20 @@ function boot(container) {
     const lineH = 68, x0 = 152, y0 = 152;
     let cursorX = x0, cursorY = y0, drewCursor = false;
 
+    // gutter hairline, so the line numbers sit in their own column
+    g2.fillStyle = SCR.line; g2.fillRect(136, 64, 1, SC_H - 64);
+
     for (let i = 0; i < T.code.length; i++) {
       const y = y0 + i * lineH;
-      g2.fillStyle = '#3a4250';
+      g2.fillStyle = SCR.faint;
       g2.font = '28px ui-monospace, monospace';
-      g2.fillText(String(i + 1).padStart(2), 100, y);
+      g2.fillText(String(i + 1).padStart(2), 92, y);
       let x = x0;
       for (const [t0, cls] of T.code[i]) {
         for (let ci = 0; ci < t0.length; ci++) {
           if (seen >= reveal) { cursorX = x; cursorY = y; drewCursor = true; break; }
           const ch = t0[ci];
-          g2.fillStyle = ({ c: '#7a8a6a', t: '#7ee787', a: '#79c0ff', p: '#c9d1d9', s: '#a5d6ff', x: '#f0ede6', k: '#d2a8ff', o: '#e86830' })[cls] || '#e6edf3';
+          g2.fillStyle = TOK[cls] || SCR.ink;
           g2.font = '37px ui-monospace, monospace';
           g2.fillText(ch, x, y);
           x += g2.measureText(ch).width;
@@ -906,7 +974,7 @@ function boot(container) {
     }
     // blinking caret
     if (Math.floor(t / 480) % 2 === 0) {
-      g2.fillStyle = '#e86830';
+      g2.fillStyle = SCR.brick;
       g2.fillRect(cursorX + 2, cursorY - 30, 4, 40);
     }
 
@@ -916,12 +984,14 @@ function boot(container) {
     g2.font = '600 27px ui-monospace, monospace';
     const tw = g2.measureText(label).width + 52;
     const bx = SC_W - tw - 40, by = SC_H - 92;
-    g2.fillStyle = ready ? '#e86830' : 'rgba(230,237,243,0.12)';
+    g2.fillStyle = ready ? SCR.brick : '#efe9db';
     rr(g2, bx, by, tw, 58, 29); g2.fill();
-    g2.fillStyle = ready ? '#0d1117' : '#9aa4b2';
+    if (!ready) { g2.strokeStyle = SCR.line; g2.lineWidth = 2; g2.stroke(); }
+    g2.fillStyle = ready ? '#fdfaf3' : SCR.soft;
     g2.fillText(label, bx + 26, by + 38);
 
-    crtOverlay();
+    paperGrain();
+    bezelShade();
     glassGlare();
     screenTex.needsUpdate = true;
   }
@@ -930,17 +1000,18 @@ function boot(container) {
   const TERM_HOLD = 1200;
   function drawTerminal(t) {
     const T = txt();
-    g2.fillStyle = '#0d1117'; g2.fillRect(0, 0, SC_W, SC_H);
-    g2.fillStyle = '#10151c'; g2.fillRect(0, 0, SC_W, 72);
-    g2.fillStyle = '#e86830'; g2.beginPath(); g2.arc(44, 36, 9, 0, 7); g2.fill();
-    g2.fillStyle = '#8b949e'; g2.font = '600 28px ui-monospace, monospace';
+    g2.fillStyle = SCR.paper; g2.fillRect(0, 0, SC_W, SC_H);
+    g2.fillStyle = SCR.chrome; g2.fillRect(0, 0, SC_W, 72);
+    g2.fillStyle = SCR.line; g2.fillRect(0, 71, SC_W, 1);
+    g2.fillStyle = SCR.brick; g2.beginPath(); g2.arc(44, 36, 9, 0, 7); g2.fill();
+    g2.fillStyle = SCR.soft; g2.font = '600 28px ui-monospace, monospace';
     g2.fillText('TERMINAL — build', 68, 47);
 
     const n = Math.min(T.term.length, Math.floor(t / TERM_PER_LINE) + 1);
     for (let i = 0; i < n; i++) {
       const line = T.term[i];
       g2.font = '34px ui-monospace, monospace';
-      g2.fillStyle = line[0] === '$' ? '#d2a8ff' : line[0] === '✓' ? '#7ee787' : '#e6edf3';
+      g2.fillStyle = line[0] === '$' ? SCR.deep : line[0] === '✓' ? TOK.s : SCR.ink;
       let shown = line, typing = false;
       if (i === n - 1) {
         const cc = Math.max(1, Math.floor((t - i * TERM_PER_LINE) / 26));
@@ -951,20 +1022,22 @@ function boot(container) {
       g2.fillText(shown, 48, ly);
       if (i === n - 1 && (typing || Math.floor(t / 350) % 2 === 0)) {
         const cw = g2.measureText(shown).width;
-        g2.fillStyle = '#e86830';
+        g2.fillStyle = SCR.brick;
         g2.fillRect(56 + cw, ly - 30, 18, 38);
       }
     }
     const p = Math.min(1, t / (TERM_PER_LINE * T.term.length));
-    g2.fillStyle = '#7ee787'; g2.font = '600 27px ui-monospace, monospace';
+    g2.fillStyle = SCR.soft; g2.font = '600 27px ui-monospace, monospace';
     g2.fillText('▲ astro build', 48, SC_H - 128);
     g2.textAlign = 'right';
+    g2.fillStyle = SCR.deep;
     g2.fillText(Math.round(p * 100) + '%', SC_W - 48, SC_H - 128);
     g2.textAlign = 'left';
-    g2.fillStyle = '#161b22'; rr(g2, 48, SC_H - 108, SC_W - 96, 26, 13); g2.fill();
-    g2.fillStyle = '#e86830'; rr(g2, 48, SC_H - 108, (SC_W - 96) * p, 26, 13); g2.fill();
+    g2.fillStyle = '#e5decc'; rr(g2, 48, SC_H - 108, SC_W - 96, 26, 13); g2.fill();
+    g2.fillStyle = SCR.brick; rr(g2, 48, SC_H - 108, (SC_W - 96) * p, 26, 13); g2.fill();
 
-    crtOverlay();
+    paperGrain();
+    bezelShade();
     glassGlare();
     screenTex.needsUpdate = true;
   }
@@ -978,12 +1051,15 @@ function boot(container) {
 
   function drawResult(t) {
     const T = txt();
-    g2.fillStyle = '#f4f1e8'; g2.fillRect(0, 0, SC_W, SC_H);
-    g2.fillStyle = '#e7e1d3'; g2.fillRect(0, 0, SC_W, 96);
-    const dots = ['#ec6a5e', '#f4bf4f', '#61c554'];
+    g2.fillStyle = SCR.paper; g2.fillRect(0, 0, SC_W, SC_H);
+    g2.fillStyle = SCR.chrome; g2.fillRect(0, 0, SC_W, 96);
+    g2.fillStyle = SCR.line; g2.fillRect(0, 95, SC_W, 1);
+    // traffic lights, muted so they sit inside the warm palette
+    const dots = ['#d98072', '#dcb469', '#93ad7c'];
     dots.forEach((c, i) => { g2.fillStyle = c; g2.beginPath(); g2.arc(52 + i * 48, 48, 14, 0, 7); g2.fill(); });
-    g2.fillStyle = '#fbfaf6'; rr(g2, 220, 22, SC_W - 300, 54, 27); g2.fill();
-    g2.fillStyle = '#9a9385'; g2.font = '26px ui-monospace, monospace';
+    g2.fillStyle = SCR.sheet; rr(g2, 220, 22, SC_W - 300, 54, 27); g2.fill();
+    g2.strokeStyle = SCR.line; g2.lineWidth = 2; g2.stroke();
+    g2.fillStyle = SCR.soft; g2.font = '26px ui-monospace, monospace';
     g2.fillText('🔒 ' + T.url, 252, 58);
 
     const a = Math.min(1, t / 440);
@@ -992,10 +1068,10 @@ function boot(container) {
     g2.translate(0, (1 - a) * 40);
 
     g2.textAlign = 'center';
-    g2.fillStyle = '#1b1a18';
+    g2.fillStyle = '#2a2620';
     g2.font = '700 82px "Fraunces", Georgia, serif';
     g2.fillText(T.big, SC_W / 2, 240);
-    g2.fillStyle = '#b4502a';
+    g2.fillStyle = SCR.deep;
     g2.font = 'italic 600 62px "Fraunces", Georgia, serif';
     g2.fillText(T.big2, SC_W / 2, 330);
     g2.fillStyle = '#6b655a';
@@ -1005,7 +1081,8 @@ function boot(container) {
 
     const R = CV_RECT;
     g2.fillStyle = '#fffdf8'; rr(g2, R.x, R.y, R.w, R.h, 26); g2.fill();
-    g2.fillStyle = '#b4502a'; rr(g2, R.x, R.y, 14, R.h, 6); g2.fill();
+    g2.strokeStyle = SCR.line; g2.lineWidth = 2; g2.stroke();
+    g2.fillStyle = SCR.deep; rr(g2, R.x, R.y, 14, R.h, 6); g2.fill();
     const asz = 160, ax = R.x + 60, ay = R.y + 60;
     g2.save();
     g2.beginPath(); g2.arc(ax + asz / 2, ay + asz / 2, asz / 2, 0, 7); g2.closePath();
@@ -1013,7 +1090,7 @@ function boot(container) {
     if (avatarReady) g2.drawImage(avatarImg, ax, ay, asz, asz);
     g2.restore();
     const tx = R.x + 260;
-    g2.fillStyle = '#1b1a18'; g2.font = '700 54px "Fraunces", Georgia, serif';
+    g2.fillStyle = '#2a2620'; g2.font = '700 54px "Fraunces", Georgia, serif';
     g2.fillText(T.cvName, tx, R.y + 100);
     g2.fillStyle = '#6b655a'; g2.font = '500 28px "Geist Mono", ui-monospace, monospace';
     g2.fillText(T.cvRole, tx, R.y + 148);
@@ -1027,16 +1104,17 @@ function boot(container) {
     });
     g2.fillStyle = '#e3dccc';
     [0, 1, 2].forEach((k) => { rr(g2, R.x + 60, R.y + 270 + k * 32, R.w - (k === 2 ? 380 : 280), 12, 6); g2.fill(); });
-    g2.fillStyle = hoverCV ? '#b4502a' : '#9a9385';
+    g2.fillStyle = hoverCV ? SCR.deep : SCR.soft;
     g2.font = '600 28px "Geist Mono", ui-monospace, monospace';
     g2.textAlign = 'right';
     g2.fillText(T.cvOpen, R.x + R.w - 34, R.y + R.h - 34);
     g2.textAlign = 'left';
     if (hoverCV) {
-      g2.strokeStyle = '#e86830'; g2.lineWidth = 4;
+      g2.strokeStyle = SCR.brick; g2.lineWidth = 4;
       rr(g2, R.x + 3, R.y + 3, R.w - 6, R.h - 6, 26); g2.stroke();
     }
     g2.restore();
+    bezelShade();
     glassGlare();
     screenTex.needsUpdate = true;
   }

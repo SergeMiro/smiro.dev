@@ -2198,14 +2198,6 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
   }
   .pc3d-mount{ position:absolute; inset:0; z-index:2; touch-action:none; }
   .pc3d-mount canvas{ display:block; width:100% !important; height:100% !important; }
-  .pc3d-hint{
-    position:absolute; left:50%; top:14px; transform:translateX(-50%); z-index:3;
-    font:500 12px/1 "Geist Mono",ui-monospace,monospace; color:var(--muted); letter-spacing:.3px;
- background:rgba(244,241,232,.72); padding:7px 13px; border-radius:999px; border:1px solid var(--line);
-    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); opacity:.9;
-    transition:opacity .45s ease; pointer-events:none; white-space:nowrap;
-  }
-  .pc3d-mount.is-engaged .pc3d-hint{ opacity:0; }
   @media (max-width: 900px){ .hero-r.pc-stage{ min-height: 440px; } }
 </style>
 </head>
@@ -2341,9 +2333,7 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
       </div>
     </div>
     <aside class="hero-r pc-stage" aria-label="Interactive 3D computer — bring your cursor toward the keyboard">
-      <div id="pc3d-mount" class="pc3d-mount" data-i18n-skip>
-        <div class="pc3d-hint" id="pc3d-hint" data-i18n="pc.hint">move closer to the keyboard →</div>
-      </div>
+      <div id="pc3d-mount" class="pc3d-mount" data-i18n-skip></div>
     </aside>
   </div>
 

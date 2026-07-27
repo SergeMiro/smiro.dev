@@ -1,0 +1,2 @@
+[    1094ms] [WARNING] [.WebGL-0x349401b43200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels @ http://localhost:4399/:0
+[    4555ms] [WARNING] [.WebGL-0x349401b43200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels @ http://localhost:4399/:0
