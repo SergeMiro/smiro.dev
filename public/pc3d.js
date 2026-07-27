@@ -695,22 +695,6 @@ function boot(container) {
   led.scale.setScalar(0.12);
   lidFx.add(led);
 
-  // ─────────────────────────────────────────── desk mask under the laptop
-  // Every wire material has depthWrite:false and the canvas is transparent, so
-  // the floor grid otherwise reads straight through the slab. This one solid,
-  // depth-writing patch matches the .hero-r stage colour (--ink) and renders in
-  // the opaque pass, so grid lines behind the base fail the depth test.
-  // It sits a hair under the contact shadows (y 0.002) and under the mug foot
-  // (y 0.005), so it hides only the grid.
-  const MASK_MARGIN = 0.5;              // extra cover on each side of the base
-  const deskMask = new THREE.Mesh(
-    new THREE.PlaneGeometry(TUNE.base.w + MASK_MARGIN * 2, TUNE.base.d + MASK_MARGIN * 2),
-    new THREE.MeshBasicMaterial({ color: 0x1b1a18, depthWrite: true, toneMapped: false }),
-  );
-  deskMask.rotation.x = -Math.PI / 2;
-  deskMask.position.set(0, 0.0015, TUNE.base.z);
-  pc.add(deskMask);
-
   // ─────────────────────────────────────────── contact shadows
   // Normal-blended (not additive) dark pools: the canvas is transparent, so
   // these composite straight onto the terracotta CSS stage and ground the
