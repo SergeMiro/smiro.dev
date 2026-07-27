@@ -146,7 +146,7 @@ function boot(container) {
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(w, h);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   // nothing is shaded any more — no shadow pass, no tone-mapping crush on
   // the white lines, no environment map (there is no PBR surface left).
   renderer.shadowMap.enabled = false;
@@ -650,9 +650,14 @@ function boot(container) {
   }
 
   // ─────────────────────────────────────────── screen (CanvasTexture plane)
+  // the drawing code works in a 1600×1067 space, but the backing store is half
+  // that — a quarter of the pixels to fill and upload every frame. Every draw
+  // function scales the context to match, so no coordinate below changes.
   const SC_W = 1600, SC_H = 1067;      // canvas resolution the drawing code uses
+  const RES = 0.5;                     // backing-store scale
   const sc = document.createElement('canvas');
-  sc.width = SC_W; sc.height = SC_H;
+  sc.width = Math.ceil(SC_W * RES); sc.height = Math.ceil(SC_H * RES);
+  const SX = sc.width / SC_W, SY = sc.height / SC_H;
   const g2 = sc.getContext('2d');
   const screenTex = new THREE.CanvasTexture(sc);
   screenTex.minFilter = THREE.LinearFilter;
@@ -924,8 +929,14 @@ function boot(container) {
     g2.fillStyle = gr; g2.fillRect(0, 0, SC_W, SC_H);
   }
 
+  // the canvas is only re-uploaded to the GPU 20×/s — the screen content never
+  // moves fast enough to need one upload per frame.
+  const TEX_MS = 50;
+  let lastDraw = 0, lastDrawTerm = 0, lastDrawRes = 0;
+
   function drawEditor(t) {
     const T = txt();
+    g2.save(); g2.scale(SX, SY);
     g2.fillStyle = SCR.paper; g2.fillRect(0, 0, SC_W, SC_H);
     // the code sheet — a lighter panel inset from the chrome
     g2.fillStyle = SCR.sheet; g2.fillRect(78, 64, SC_W - 78, SC_H - 64);
@@ -993,13 +1004,16 @@ function boot(container) {
     paperGrain();
     bezelShade();
     glassGlare();
-    screenTex.needsUpdate = true;
+    g2.restore();
+    const now = performance.now();
+    if (now - lastDraw > TEX_MS) { screenTex.needsUpdate = true; lastDraw = now; }
   }
 
   const TERM_PER_LINE = 580;
   const TERM_HOLD = 1200;
   function drawTerminal(t) {
     const T = txt();
+    g2.save(); g2.scale(SX, SY);
     g2.fillStyle = SCR.paper; g2.fillRect(0, 0, SC_W, SC_H);
     g2.fillStyle = SCR.chrome; g2.fillRect(0, 0, SC_W, 72);
     g2.fillStyle = SCR.line; g2.fillRect(0, 71, SC_W, 1);
@@ -1039,7 +1053,9 @@ function boot(container) {
     paperGrain();
     bezelShade();
     glassGlare();
-    screenTex.needsUpdate = true;
+    g2.restore();
+    const now = performance.now();
+    if (now - lastDrawTerm > TEX_MS) { screenTex.needsUpdate = true; lastDrawTerm = now; }
   }
 
   let avatarImg = null, avatarReady = false;
@@ -1051,6 +1067,7 @@ function boot(container) {
 
   function drawResult(t) {
     const T = txt();
+    g2.save(); g2.scale(SX, SY);
     g2.fillStyle = SCR.paper; g2.fillRect(0, 0, SC_W, SC_H);
     g2.fillStyle = SCR.chrome; g2.fillRect(0, 0, SC_W, 96);
     g2.fillStyle = SCR.line; g2.fillRect(0, 95, SC_W, 1);
@@ -1116,7 +1133,9 @@ function boot(container) {
     g2.restore();
     bezelShade();
     glassGlare();
-    screenTex.needsUpdate = true;
+    g2.restore();
+    const now = performance.now();
+    if (now - lastDrawRes > TEX_MS) { screenTex.needsUpdate = true; lastDrawRes = now; }
   }
 
   // ─────────────────────────────────────────── animation loop
