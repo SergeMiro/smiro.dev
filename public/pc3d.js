@@ -603,6 +603,9 @@ function boot(container) {
     // the Enter affordance rides on the base so any base pose applies to it
     kbFx.position.copy(base.position);
     kbFx.rotation.copy(base.rotation);
+
+    // scale the whole rig so it fills the hero column
+    pc.scale.setScalar(1.18);
   }
 
   // ─────────────────────────────────────────── screen (CanvasTexture plane)
