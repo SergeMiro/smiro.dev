@@ -306,18 +306,30 @@ function boot(container) {
       return Math.pow(1 - r, 1.6);
     };
     const push = (x, z) => { pos.push(x, 0, z); col.push(1, 1, 1, fade(x, z)); };
+    // the base is a wireframe with no solid fill, so grid lines under it would
+    // read straight through the slab. drop the segments it covers (small margin
+    // so they clip just inside its edge); anything crossing the border stays.
+    const B = TUNE.base, margin = 0.1;
+    const insideBase = (x, z) => (
+      x > -B.w / 2 - margin && x < B.w / 2 + margin &&
+      z > B.z - B.d / 2 - margin && z < B.z + B.d / 2 + margin
+    );
+    const seg = (x0, z0, x1, z1) => {
+      if (insideBase(x0, z0) && insideBase(x1, z1)) return;
+      push(x0, z0); push(x1, z1);
+    };
     for (let i = 0; i <= nx; i++) {
       const x = -D.w / 2 + i * sx;
       for (let j = 0; j < nz; j++) {
         const z0 = D.z - D.d / 2 + j * sz;
-        push(x, z0); push(x, z0 + sz);
+        seg(x, z0, x, z0 + sz);
       }
     }
     for (let j = 0; j <= nz; j++) {
       const z = D.z - D.d / 2 + j * sz;
       for (let i = 0; i < nx; i++) {
         const x0 = -D.w / 2 + i * sx;
-        push(x0, z); push(x0 + sx, z);
+        seg(x0, z, x0 + sx, z);
       }
     }
     const g = new THREE.BufferGeometry();
