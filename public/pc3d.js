@@ -195,7 +195,7 @@ function boot(container) {
     focusCam: { x: 0.37, y: 1.8, z: 5.0 },
     focusLook: { x: 0.0, y: 1.1, z: 0.3 },
     focusFrame: { w: 5.0, h: 3.8 },
-    zoomMs: 1300,              // duration of the push-in / pull-out (cubic-eased)
+    zoomMs: 650,               // duration of the push-in / pull-out (cubic-eased) — 50 % faster
     zoomSpeed: 0.075,          // per-frame follow lerp on top of it, at 60 fps
     // screen plane pose, LID-LOCAL. 3:2 to match the canvas — do not distort.
     screen: { x: 0, y: 1.44, z: 0.014, w: 3.84, h: 2.56 },
@@ -929,10 +929,9 @@ function boot(container) {
   function onLeave(e) {
     hasPointer = false;
     proximity = 0;
-    // Pull back out when the mouse abandons the stage. Guarded on pointerType
-    // because touch fires pointerleave immediately after pointerup — a tap that
-    // zoomed in would otherwise zoom straight back out.
-    if (state === 'focused' && (!e || e.pointerType === 'mouse')) exitFocus();
+    // NOTE: camera stays zoomed in once focused — only a CV click in the
+    // `result` state brings it back out.  The old pointerleave → exitFocus
+    // path was removed on purpose (user request).
   }
 
   function rayHit() {
@@ -976,7 +975,9 @@ function boot(container) {
       // zoomed in, the panel and the key are both generous targets
       if (rayHit().intersectObjects([screen, enterKey, enterRing], false).length) startBuild();
     } else if (state === 'result' && hoverCV) {
-      location.href = lang() === 'fr' ? '/cv-fr' : '/cv';
+      // return to idle, then navigate to the CV page
+      exitFocus();
+      setTimeout(() => { location.href = lang() === 'fr' ? '/cv-fr' : '/cv'; }, 700);
     }
   }
   function enterFocus() {
@@ -987,7 +988,7 @@ function boot(container) {
     container.style.cursor = 'pointer';
   }
   function exitFocus() {
-    if (state !== 'focused') return;
+    if (state !== 'focused' && state !== 'building' && state !== 'result') return;
     state = 'typing';
     container.style.cursor = 'default';
   }
@@ -1296,7 +1297,7 @@ function boot(container) {
     // always takes TUNE.zoomMs; the camera then *follows* that target with a
     // fast per-frame lerp, which absorbs a resize snap or a reversal without a
     // jump. placeCamera() is deliberately absent — see its comment.
-    setFocus(state === 'focused' ? 1 : 0);
+    setFocus(state === 'focused' || state === 'building' || state === 'result' ? 1 : 0);
     if (reduceMotion) {
       focusZoom = focusTo;
       aimCamera(focusZoom);
