@@ -840,7 +840,11 @@ function boot(container) {
   // directly, so calling it per frame would stamp on the zoom animation.
   function placeCamera() {
     solveCam(TUNE.cam, TUNE.look, TUNE.frame, camRest);
-    solveCam(TUNE.focusCam, TUNE.focusLook, TUNE.focusFrame, camZoom);
+    // POV: not solved — direct eye-level position looking at the screen.
+    // Screen centre is ≈ (0, 1.4, 0.2); keyboard sits below; touchpad is
+    // out of frame.  The aimCamera blend keeps the animation smooth.
+    camZoom.pos.set(0.0, 1.6, -1.3);
+    camZoom.look.set(0.0, 0.95, -0.15);
     aimCamera(focusZoom);
     camera.position.copy(camPos);
     camAt.copy(camLook);
