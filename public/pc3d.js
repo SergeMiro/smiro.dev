@@ -187,11 +187,10 @@ function boot(container) {
     cam: { x: 2.5, y: 4.25, z: 9.2 },
     look: { x: 0.4, y: 0.92, z: 0.3 },
     frame: { w: 7.7, h: 6.5 },
-    // the `focused` framing — straight-on POV: camera centered on the screen
-    // (x=0), looking at the screen–keyboard junction so the screen fills the
-    // upper portion of the view and the keyboard deck sits below it.
-    focusCam: { x: 0.0, y: 3.5, z: 5.0 },
-    focusLook: { x: 0.0, y: 1.0, z: -0.1 },
+    // the `focused` framing — straight-on POV: camera looks at the screen
+    // from eye level so it fills the view, with the keyboard deck below.
+    focusCam: { x: 0.0, y: 1.5, z: 4.5 },
+    focusLook: { x: 0.0, y: 1.1, z: 0.0 },
     focusFrame: { w: 5.0, h: 3.8 },
     zoomMs: 1300,              // duration of the push-in / pull-out (cubic-eased)
     zoomSpeed: 0.075,          // per-frame follow lerp on top of it, at 60 fps
@@ -835,12 +834,16 @@ function boot(container) {
     camPos.lerpVectors(camRest.pos, camZoom.pos, k);
     camLook.lerpVectors(camRest.look, camZoom.look, k);
   }
-  // Re-solve BOTH framings and snap the camera onto the current blend. Only
-  // apply() and the resize observer call this: it writes camera.position
-  // directly, so calling it per frame would stamp on the zoom animation.
+  // Re-solve the idle framing, then set the POV framing directly (so the
+  // camera sits where the user's eyes would be — solved distance is always
+  // too far for a real first-person feel).  Only apply() and the resize
+  // observer call this.
   function placeCamera() {
     solveCam(TUNE.cam, TUNE.look, TUNE.frame, camRest);
-    solveCam(TUNE.focusCam, TUNE.focusLook, TUNE.focusFrame, camZoom);
+    // Direct POV: camera at seated eye height, looking at the screen area.
+    // Screen fills ~90 % of the view horizontally; keyboard below.
+    camZoom.pos.set(0.37, 1.8, 5.0);
+    camZoom.look.set(0.0, 1.0, 0.3);
     aimCamera(focusZoom);
     camera.position.copy(camPos);
     camAt.copy(camLook);
