@@ -187,12 +187,12 @@ function boot(container) {
     cam: { x: 2.5, y: 4.25, z: 9.2 },
     look: { x: 0.4, y: 0.92, z: 0.3 },
     frame: { w: 7.7, h: 6.5 },
-    // the `focused` framing — first-person POV sitting at the laptop.
-    // Camera hovers above the keyboard looking down, as if the user leaned
-    // in to type.  Tight frame so the key deck and screen fill the view.
-    focusCam: { x: 0.3, y: 2.3, z: 1.0 },
-    focusLook: { x: 0.05, y: 0.25, z: 0.55 },
-    focusFrame: { w: 3.5, h: 2.8 },
+    // the `focused` framing — camera moves in ~2x closer, looking at the
+    // screen so it fills the upper ⅔ of the view and the keyboard sits at
+    // the bottom.  No touchpad.  Wireframe still reads as a coherent object.
+    focusCam: { x: 0.0, y: 2.8, z: 4.8 },
+    focusLook: { x: 0.0, y: 0.9, z: -0.1 },
+    focusFrame: { w: 4.0, h: 3.2 },
     zoomMs: 1300,              // duration of the push-in / pull-out (cubic-eased)
     zoomSpeed: 0.075,          // per-frame follow lerp on top of it, at 60 fps
     // screen plane pose, LID-LOCAL. 3:2 to match the canvas — do not distort.
@@ -840,11 +840,7 @@ function boot(container) {
   // directly, so calling it per frame would stamp on the zoom animation.
   function placeCamera() {
     solveCam(TUNE.cam, TUNE.look, TUNE.frame, camRest);
-    // POV: not solved — direct eye-level position looking at the screen.
-    // Screen centre is ≈ (0, 1.4, 0.2); keyboard sits below; touchpad is
-    // out of frame.  The aimCamera blend keeps the animation smooth.
-    camZoom.pos.set(0.0, 1.6, -1.3);
-    camZoom.look.set(0.0, 0.95, -0.15);
+    solveCam(TUNE.focusCam, TUNE.focusLook, TUNE.focusFrame, camZoom);
     aimCamera(focusZoom);
     camera.position.copy(camPos);
     camAt.copy(camLook);
