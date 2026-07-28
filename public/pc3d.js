@@ -39,6 +39,9 @@
    TUNE.focusCam/focusLook/focusFrame describe the same thing for the zoomed
    `focused` pose; the frame loop blends between the two solved framings, so
    placeCamera() only ever runs on resize and can never fight the animation.
+   Since v9 the focused framing is direct (not solved) — camZoom.pos/look
+   are read straight from TUNE.focusCam / TUNE.focusLook so the live-tuning
+   panel can adjust them interactively.
    ════════════════════════════════════════════════════════════════════════ */
 
 import * as THREE from 'three';
@@ -189,8 +192,8 @@ function boot(container) {
     frame: { w: 7.7, h: 6.5 },
     // the `focused` framing — straight-on POV: camera looks at the screen
     // from eye level so it fills the view, with the keyboard deck below.
-    focusCam: { x: 0.0, y: 1.5, z: 4.5 },
-    focusLook: { x: 0.0, y: 1.1, z: 0.0 },
+    focusCam: { x: 0.37, y: 1.8, z: 5.0 },
+    focusLook: { x: 0.0, y: 1.1, z: 0.3 },
     focusFrame: { w: 5.0, h: 3.8 },
     zoomMs: 1300,              // duration of the push-in / pull-out (cubic-eased)
     zoomSpeed: 0.075,          // per-frame follow lerp on top of it, at 60 fps
@@ -840,10 +843,9 @@ function boot(container) {
   // observer call this.
   function placeCamera() {
     solveCam(TUNE.cam, TUNE.look, TUNE.frame, camRest);
-    // Direct POV: camera at seated eye height, looking at the screen area.
-    // Screen fills ~90 % of the view horizontally; keyboard below.
-    camZoom.pos.set(0.37, 1.8, 5.0);
-    camZoom.look.set(0.0, 1.0, 0.3);
+    // Read POV values from TUNE so the control panel sliders work live.
+    camZoom.pos.set(TUNE.focusCam.x, TUNE.focusCam.y, TUNE.focusCam.z);
+    camZoom.look.set(TUNE.focusLook.x, TUNE.focusLook.y, TUNE.focusLook.z);
     aimCamera(focusZoom);
     camera.position.copy(camPos);
     camAt.copy(camLook);
