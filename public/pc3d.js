@@ -23,8 +23,8 @@
      idle      → cursor far. Editor at rest, first lines already typed.
      typing    → cursor approaches. Screen auto-types. Speed ∝ proximity.
      focused   → the user leaned toward the machine (hover proximity or click):
-                 the camera pushes in ~3x to an almost face-on view of the
-                 screen, with the keyboard deck visible at the bottom.
+                 the camera pushes in to a straight-on POV: screen fills the
+                 upper frame, the keyboard deck sits below, no side angle.
                  All idle sway stops.  The Enter ring glows at full strength.
      building  → user clicked the screen or Enter. Terminal runs a fake `build`.
      result    → a "browser" pops up with a clickable CV preview.
@@ -187,12 +187,12 @@ function boot(container) {
     cam: { x: 2.5, y: 4.25, z: 9.2 },
     look: { x: 0.4, y: 0.92, z: 0.3 },
     frame: { w: 7.7, h: 6.5 },
-    // the `focused` framing — camera moves in ~3x, looking almost face-on at
-    // the screen so it fills the majority of the view; the keyboard sits at
-    // the bottom and the touchpad falls out of frame.
-    focusCam: { x: 0.5, y: 1.8, z: 5.0 },
-    focusLook: { x: 0.0, y: 1.3, z: -0.1 },
-    focusFrame: { w: 3.2, h: 2.6 },
+    // the `focused` framing — straight-on POV: camera centered on the screen
+    // (x=0), looking at the screen–keyboard junction so the screen fills the
+    // upper portion of the view and the keyboard deck sits below it.
+    focusCam: { x: 0.0, y: 3.5, z: 5.0 },
+    focusLook: { x: 0.0, y: 1.0, z: -0.1 },
+    focusFrame: { w: 5.0, h: 3.8 },
     zoomMs: 1300,              // duration of the push-in / pull-out (cubic-eased)
     zoomSpeed: 0.075,          // per-frame follow lerp on top of it, at 60 fps
     // screen plane pose, LID-LOCAL. 3:2 to match the canvas — do not distort.
