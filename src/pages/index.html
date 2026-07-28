@@ -3003,6 +3003,7 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
   let panel = null;
   function applyTweaks(t){
     document.documentElement.style.setProperty('--brick', t.accentColor);
+    if (window.__pc3d && __pc3d.setAccent) __pc3d.setAccent(t.accentColor);
     const banner = document.getElementById('avatar-chat');
     if(banner) banner.style.display = t.showAvatarChat ? '' : 'none';
     const txt = document.querySelector('.am-l1');

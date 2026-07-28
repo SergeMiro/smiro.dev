@@ -162,7 +162,7 @@ function boot(container) {
   container.appendChild(renderer.domElement);
 
   // ─────────────────────────────────────────── live-tuning values
-  const LINE = 0xe86830;   // warm orange — matches brick accent
+  let LINE = 0xe86830;   // warm orange — matches brick accent; updated by setAccent()
   const ACCENT = 0xffd9a8; // warm highlight for the Enter affordance + webcam
   const SHADE = 0x6d2408;  // burnt-umber contact shadow on the "desk"
 
@@ -333,6 +333,25 @@ function boot(container) {
     m.renderOrder = -1;
     return m;
   }
+
+  // ─────────────────────────────────────────── accent sync
+  // Reads --brick from CSS, parses it to a number and pushes it into every
+  // wireframe material.  Called once on boot and every time the user picks a
+  // new accent in the tweaks panel.  Accepts an explicit hex string (like
+  // "#c2622a") or undefined (reads from CSS).
+  const WIRE_MATS = [matEdge, matDetail, matHalo, matDesk];
+  function setAccent(hex) {
+    if (!hex) {
+      const css = getComputedStyle(document.documentElement).getPropertyValue('--brick').trim();
+      if (!css) return;
+      hex = css;
+    }
+    const num = parseInt(hex.replace(/^#/, ''), 16);
+    if (isNaN(num)) return;
+    LINE = num;
+    for (const m of WIRE_MATS) m.color.set(num);
+  }
+  function syncAccent() { setAccent(); }
 
   // ─────────────────────────────────────────── desk
   // line grid with per-vertex alpha so it dissolves at the edges instead of
@@ -840,6 +859,7 @@ function boot(container) {
     placeCamera();
   }
   apply();
+  syncAccent();           // read initial --brick from CSS
   pc.rotation.y = TUNE.rotY;
 
   // live-tuning handle exposed for console fiddling
@@ -852,6 +872,8 @@ function boot(container) {
     //   __pc3d.focus(); __pc3d.TUNE.focusFrame.w = 5.2; __pc3d.placeCamera()
     focus: () => enterFocus(),
     unfocus: () => exitFocus(),
+    setAccent,
+    syncAccent,
     get state() { return state; },
     get focusZoom() { return focusZoom; },
   };
