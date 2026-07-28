@@ -9,13 +9,15 @@
      · lid        — slab hinged at the back, open ~110°, with a screen aperture
      · hinge      — two short barrels bridging base and lid
      · headphones — two ear cups (flat ellipses), arched headband, cable
-     · mug + desk — a little life, plus a line grid that fades out to nothing
+     · desk       — a line grid that fades out to nothing
 
-   The ONLY solid surface is the screen plane: a CanvasTexture showing the
-   live editor / terminal / CV, and the surface raycasting reads for hover
-   and click on the CV card. Glow is faked with additive sprites plus a
-   slightly-scaled additive copy of the wireframe — no post-processing, so
-   the canvas stays transparent over the CSS background of .hero-r.
+   The only surface you are meant to SEE is the screen plane: a CanvasTexture
+   showing the live editor / terminal / CV, and the surface raycasting reads
+   for hover and click on the CV card. Two more solids hide inside the shell
+   (see matFill) so the lid and the slab do not read as glass. Glow is faked
+   with additive sprites plus a slightly-scaled additive copy of the wireframe
+   — no post-processing, so the canvas stays transparent over the CSS
+   background of .hero-r.
 
    Story / state machine, driven by cursor proximity to the deck's Enter key:
      idle      → cursor far. Editor at rest, first lines already typed.
@@ -167,7 +169,6 @@ function boot(container) {
     deck: { w: 3.62, d: 1.26, z: -0.62, cols: 14, rows: 5 }, // key block, base-local
     pad: { w: 1.52, d: 0.94, z: 0.78 },                      // touchpad, base-local
     hp: { x: 1.85, z: 0.58, rot: -0.32, s: 0.85 },            // headphones close to laptop
-    mug: { x: -2.52, z: -0.42, r: 0.27, h: 0.48 },   // tall mug: h ≈ 1.8 × r
     desk: { w: 9.8, d: 5.8, z: 0.45, step: 0.4 },
     // ink weights (animated slightly around these)
     line: { edge: 0.95, detail: 0.5, halo: 0.11, desk: 0.32 },
@@ -194,6 +195,18 @@ function boot(container) {
   const matDetail = new THREE.LineBasicMaterial({ color: LINE, transparent: true, opacity: TUNE.line.detail, depthWrite: false });
   const matHalo = new THREE.LineBasicMaterial({ color: LINE, transparent: true, opacity: TUNE.line.halo, depthWrite: false, blending: THREE.AdditiveBlending });
   const matDesk = new THREE.LineBasicMaterial({ color: LINE, vertexColors: true, transparent: true, opacity: TUNE.line.desk, depthWrite: false });
+
+  // ─────────────────────────────────────────── shell fills
+  // A part drawn as two outlines with nothing between them reads as glass: the
+  // far edge shows straight through the near one and the machine looks like a
+  // ghost. These panels sit *inside* the lid and the slab in the page beige,
+  // two-thirds opaque — quiet enough that the orange ink still carries the
+  // drawing, solid enough (they write depth, unlike every line material here)
+  // to hide the back edges and the desk grid behind the shell.
+  const matFill = new THREE.MeshBasicMaterial({
+    color: 0xf4f1e8, transparent: true, opacity: 0.66,
+    side: THREE.DoubleSide, toneMapped: false,
+  });
 
   // soft radial sprite used for every glow AND every contact shadow in the
   // scene. Alpha reaches 0 at the rim, so additive blending never darkens
@@ -289,6 +302,19 @@ function boot(container) {
       })
     );
     m.rotation.x = -Math.PI / 2;
+    return m;
+  }
+  // solid rounded-rect panel, built from the same rrPts outline the wireframe
+  // uses so the fill can never poke out past a rounded corner. renderOrder
+  // pulls it to the head of the transparent queue: it has to lay its depth
+  // down before the lines and the desk grid, or they would paint over it.
+  function fillPanel(plane, cu, cv, ru, rv, r, seg) {
+    const pts = rrPts(plane, cu, cv, ru, rv, r, seg, 0);
+    const iv = plane === 'xy' ? 1 : 2;
+    const shape = new THREE.Shape(pts.slice(0, -1).map((p) => new THREE.Vector2(p[0], p[iv])));
+    const m = new THREE.Mesh(new THREE.ShapeGeometry(shape), matFill);
+    if (plane === 'xz') m.rotation.x = Math.PI / 2;   // stand the shape up flat
+    m.renderOrder = -1;
     return m;
   }
 
@@ -412,6 +438,12 @@ function boot(container) {
     }
     pushPath(D, rrPts('xz', 0, -B.d / 2 + 0.1, iw * 0.72, 0.055, 0.027, 2, kTop));
 
+    // inner shelf, halfway up the slab: blocks the underside outline and the
+    // thickness posts from reading through the top face
+    const fill = fillPanel('xz', 0, 0, B.w - 0.02, B.d - 0.02, B.r, 5);
+    fill.position.y = B.h / 2;
+    g.add(fill);
+
     g.add(segments(E, matEdge));
     g.add(segments(D, matDetail));
 
@@ -450,6 +482,13 @@ function boot(container) {
     // chin: a thin brand line, keeps the bezel from reading empty
     const chinY = S.y - S.h / 2 - 0.085;
     pushSeg(D, -0.34, chinY, zf + 0.003, 0.34, chinY, zf + 0.003);
+
+    // the panel's inside face, on the back plane so it sits behind the bezel
+    // ink and behind the screen. No aperture is cut for the screen: that plane
+    // is the one opaque surface in the scene and covers this one on its own.
+    const fill = fillPanel('xy', 0, L.h / 2, L.w - 0.02, L.h - 0.02, L.r, 5);
+    fill.position.z = zb;
+    g.add(fill);
     return { group: g, E, D };
   }
 
@@ -543,64 +582,6 @@ function boot(container) {
     return g;
   }
 
-  // ─────────────────────────────────────────── mug (a bit of life)
-  //  A proper coffee mug, not a teacup: tall straight-walled cylinder, thick
-  //  rim, coffee line inside, and a C-shaped strap handle whose four ends all
-  //  land on the wall silhouette (x = M.x - r) so it reads as welded on.
-  function buildMug(E, D) {
-    const M = TUNE.mug;
-    const rz = M.r * 0.95;              // a hair elliptical so it reads in 3/4
-    const rb = M.r * 0.96;              // barely-tapered foot — walls stay straight
-    const yTop = M.h, yBase = 0.005;
-
-    // rim: outer edge + inner lip → hollow, thick-walled
-    pushPath(E, arcPts('xz', M.x, M.z, M.r, rz, yTop, 30));
-    pushPath(D, arcPts('xz', M.x, M.z, M.r * 0.87, rz * 0.87, yTop - 0.018, 26));
-    // coffee surface, sitting a little below the rim
-    pushPath(D, arcPts('xz', M.x, M.z, M.r * 0.80, rz * 0.80, yTop - M.h * 0.2, 24));
-    // foot: bottom edge + inset ring so it plants on the desk
-    pushPath(E, arcPts('xz', M.x, M.z, rb, rb * 0.95, yBase, 26));
-    pushPath(D, arcPts('xz', M.x, M.z, rb * 0.8, rb * 0.76, yBase + 0.02, 22));
-    // straight walls
-    for (let i = 0; i < 14; i++) {
-      const a = (i / 14) * Math.PI * 2;
-      const c = Math.cos(a), s = Math.sin(a);
-      pushSeg(D, M.x + c * rb, yBase, M.z + s * rb * 0.95,
-                 M.x + c * M.r, yTop, M.z + s * rz);
-    }
-
-    // handle — on the far side so it never crosses the laptop silhouette.
-    // Half-turn sweep, so both ends of both edges sit at x = cx on the wall.
-    const cx = M.x - M.r * 0.98, cy = M.h * 0.52;
-    const HS = 24, A0 = Math.PI * 0.5, A1 = Math.PI * 1.5;
-    const band = 0.045, hru = 0.17, hrv = M.h * 0.34;
-    const outer = arcPts('xy', cx, cy, hru + band, hrv + band * 0.8, M.z, HS, A0, A1);
-    const inner = arcPts('xy', cx, cy, hru - band, hrv - band * 0.8, M.z, HS, A0, A1);
-    pushPath(E, outer);
-    pushPath(E, inner);
-    // close the strap where it meets the body, then a few ribs across the band
-    for (const i of [0, HS]) {
-      pushSeg(E, outer[i][0], outer[i][1], outer[i][2], inner[i][0], inner[i][1], inner[i][2]);
-    }
-    for (let i = 4; i < HS; i += 4) {
-      pushSeg(D, outer[i][0], outer[i][1], outer[i][2], inner[i][0], inner[i][1], inner[i][2]);
-    }
-
-    // two wisps of steam
-    for (const s of [-1, 1]) {
-      const pts = [];
-      for (let i = 0; i <= 10; i++) {
-        const t = i / 10;
-        pts.push([
-          M.x + s * 0.07 + Math.sin(t * 4.2 + s) * 0.045,
-          M.h + 0.05 + t * 0.38,
-          M.z - 0.02 + s * 0.03,
-        ]);
-      }
-      pushPath(D, pts);
-    }
-  }
-
   // ─────────────────────────────────────────── scene graph
   //  pc ── wire      (rebuilt from TUNE by build())
   //     ├─ halo      (additive copy of wire, scaled a hair for the glow)
@@ -638,17 +619,17 @@ function boot(container) {
 
     wire.add(lidWire);
 
-    const E = [], D = [];
-    buildMug(E, D);
-    wire.add(segments(E, matEdge));
-    wire.add(segments(D, matDetail));
-
     pc.add(wire);
 
     // glow copy: same geometry, additive ink, scaled a hair so the lines
     // read as if they bleed light instead of being hairline-flat.
+    // the shell fills come along in the clone — hide them, or a second copy
+    // of every panel would double the wash and write depth a hair too wide.
     halo = wire.clone(true);
-    halo.traverse((o) => { if (o.isLine || o.isLineSegments) o.material = matHalo; });
+    halo.traverse((o) => {
+      if (o.isLine || o.isLineSegments) o.material = matHalo;
+      else if (o.isMesh) o.visible = false;
+    });
     halo.scale.setScalar(TUNE.halo);
     haloLid = halo.getObjectByName('lid');
     pc.add(halo);
@@ -707,13 +688,13 @@ function boot(container) {
   led.scale.setScalar(0.12);
   lidFx.add(led);
 
-  // ─────────────────────────────────────────── contact shadows
-  // Normal-blended (not additive) dark pools: the canvas is transparent, so
-  // these composite straight onto the terracotta CSS stage and ground the
-  // props instead of leaving them floating over the grid.
+  // ─────────────────────────────────────────── contact shadow
+  // Normal-blended (not additive) dark pool: the canvas is transparent, so it
+  // composites straight onto the terracotta CSS stage and grounds the laptop
+  // instead of leaving it floating over the grid.
   const shadowLaptop = softPlane(6.2, 4.2, SHADE, 0.3, false);
-  const shadowMug = softPlane(1.1, 1.1, SHADE, 0.2, false);
-  [shadowLaptop, shadowMug].forEach((s) => { s.position.y = 0.002; pc.add(s); });
+  shadowLaptop.position.y = 0.002;
+  pc.add(shadowLaptop);
 
   // ─────────────────────────────────────────── Enter-key interaction group
   const kbFx = new THREE.Group();
@@ -773,7 +754,6 @@ function boot(container) {
 
   function placeShadows() {
     shadowLaptop.position.set(0, 0.002, TUNE.base.z - 0.15);
-    shadowMug.position.set(TUNE.mug.x, 0.003, TUNE.mug.z);
   }
 
   // The camera is framed rather than placed: TUNE.cam only sets the viewing
