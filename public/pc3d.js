@@ -22,9 +22,10 @@
    Story / state machine, driven by cursor proximity to the deck's Enter key:
      idle      → cursor far. Editor at rest, first lines already typed.
      typing    → cursor approaches. Screen auto-types. Speed ∝ proximity.
-     focused   → cursor reached the deck (or tapped the machine): the camera
-                 dollies in over ~1.3 s until the panel owns the frame, the
-                 keys are legible and the Enter ring sits at full glow.
+     focused   → the user leaned toward the machine (hover proximity or click):
+                 the camera drops into a seated POV — hovering above the keyboard
+                 looking down, as if you just sat at the laptop.  All idle sway
+                 stops.  The Enter ring glows at full strength.
      building  → user clicked the screen or Enter. Terminal runs a fake `build`.
      result    → a "browser" pops up with a clickable CV preview.
 
@@ -186,15 +187,12 @@ function boot(container) {
     cam: { x: 2.5, y: 4.25, z: 9.2 },
     look: { x: 0.4, y: 0.92, z: 0.3 },
     frame: { w: 7.7, h: 6.5 },
-    // the `focused` framing, solved exactly the same way. It is a dolly, not a
-    // orbit: the elevation barely changes (~20° → ~24°, which is also where the
-    // 110°-open panel is face-on) and the eye simply walks in from z≈11 to
-    // z≈7, so the push-in reads as leaning toward the machine. focusFrame is
-    // ~5.6 wide against a 4.53-wide screen → the panel takes ~78 % of the
-    // column's width, with the key deck still in the bottom fifth.
-    focusCam: { x: 1.1, y: 4.0, z: 4.6 },
-    focusLook: { x: 0.25, y: 1.5, z: -0.95 },
-    focusFrame: { w: 5.6, h: 4.3 },
+    // the `focused` framing — first-person POV sitting at the laptop.
+    // Camera hovers above the keyboard looking down, as if the user leaned
+    // in to type.  Tight frame so the key deck and screen fill the view.
+    focusCam: { x: 0.3, y: 2.3, z: 1.0 },
+    focusLook: { x: 0.05, y: 0.25, z: 0.55 },
+    focusFrame: { w: 3.5, h: 2.8 },
     zoomMs: 1300,              // duration of the push-in / pull-out (cubic-eased)
     zoomSpeed: 0.075,          // per-frame follow lerp on top of it, at 60 fps
     // screen plane pose, LID-LOCAL. 3:2 to match the canvas — do not distort.
@@ -1269,10 +1267,8 @@ function boot(container) {
     prev = now;
     const elapsed = now - t0;
 
-    // the whole desk floats and sways gently. screen, deck and the Enter
-    // affordance are children, so they ride along and raycasting stays
-    // correct without extra bookkeeping.
-    if (!reduceMotion) {
+    // the whole desk floats and sways gently — except when the user leans in
+    if (!reduceMotion && state !== 'focused') {
       pc.position.y = Math.sin(elapsed * 0.0009) * 0.035;
       pc.rotation.y = TUNE.rotY + Math.sin(elapsed * 0.00045) * TUNE.sway;
       pc.rotation.x = Math.sin(elapsed * 0.00062) * TUNE.sway * 0.18;
@@ -1280,7 +1276,7 @@ function boot(container) {
 
     // the lid breathes open and shut by a fraction of a degree — the wire
     // panel, its halo copy and the screen node all share one angle.
-    const la = lidAngle() + (reduceMotion ? 0 : Math.sin(elapsed * 0.0007) * TUNE.breathe);
+    const la = lidAngle() + ((reduceMotion || state === 'focused') ? 0 : Math.sin(elapsed * 0.0007) * TUNE.breathe);
     if (lidWire) lidWire.rotation.x = la;
     if (haloLid) haloLid.rotation.x = la;
     lidFx.rotation.x = la;
