@@ -22,8 +22,10 @@
    Story / state machine, driven by cursor proximity to the deck's Enter key:
      idle      → cursor far. Editor at rest, first lines already typed.
      typing    → cursor approaches. Screen auto-types. Speed ∝ proximity.
-     ready     → cursor near the deck. Enter ring glows + rises.
-     building  → user clicked Enter. Terminal runs a fake `build`.
+     focused   → cursor reached the deck (or tapped the machine): the camera
+                 dollies in over ~1.3 s until the panel owns the frame, the
+                 keys are legible and the Enter ring sits at full glow.
+     building  → user clicked the screen or Enter. Terminal runs a fake `build`.
      result    → a "browser" pops up with a clickable CV preview.
 
    Screen clicks/hover resolved via raycasting → UV → canvas pixels.
@@ -33,6 +35,9 @@
    Enter key, set __pc3d.TUNE.enter then call placeEnter() (not apply()).
    The camera is framed, not placed: TUNE.cam only gives the direction, and
    the distance is solved so TUNE.frame always fits the column (any aspect).
+   TUNE.focusCam/focusLook/focusFrame describe the same thing for the zoomed
+   `focused` pose; the frame loop blends between the two solved framings, so
+   placeCamera() only ever runs on resize and can never fight the animation.
    ════════════════════════════════════════════════════════════════════════ */
 
 import * as THREE from 'three';
@@ -181,6 +186,17 @@ function boot(container) {
     cam: { x: 2.5, y: 4.25, z: 9.2 },
     look: { x: 0.4, y: 0.92, z: 0.3 },
     frame: { w: 7.7, h: 6.5 },
+    // the `focused` framing, solved exactly the same way. It is a dolly, not a
+    // orbit: the elevation barely changes (~20° → ~24°, which is also where the
+    // 110°-open panel is face-on) and the eye simply walks in from z≈11 to
+    // z≈7, so the push-in reads as leaning toward the machine. focusFrame is
+    // ~5.6 wide against a 4.53-wide screen → the panel takes ~78 % of the
+    // column's width, with the key deck still in the bottom fifth.
+    focusCam: { x: 1.1, y: 4.0, z: 4.6 },
+    focusLook: { x: 0.25, y: 1.5, z: -0.95 },
+    focusFrame: { w: 5.6, h: 4.3 },
+    zoomMs: 1300,              // duration of the push-in / pull-out (cubic-eased)
+    zoomSpeed: 0.075,          // per-frame follow lerp on top of it, at 60 fps
     // screen plane pose, LID-LOCAL. 3:2 to match the canvas — do not distort.
     screen: { x: 0, y: 1.44, z: 0.014, w: 3.84, h: 2.56 },
     // Enter-key pose in base-local space — re-derived by build()
@@ -592,6 +608,9 @@ function boot(container) {
   scene.add(pc);
 
   let wire = null, halo = null, lidWire = null, haloLid = null;
+  // everything a click can land on and still mean "the laptop" — rebuilt by
+  // build() because the shell fills are part of the rebuildable wireframe
+  let laptopHits = [];
 
   function disposeTree(root) {
     root.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
@@ -637,6 +656,13 @@ function boot(container) {
     // the Enter affordance rides on the base so any base pose applies to it
     kbFx.position.copy(base.position);
     kbFx.rotation.copy(base.rotation);
+
+    // Click targets for "did they tap the machine?". The drawing is hairlines
+    // and all but impossible to hit, so the two matFill panels stand in for the
+    // slab and the panel — they are already solid meshes covering both. Only
+    // `wire` is walked, so the hidden fills in the halo clone stay out of it.
+    laptopHits = [screen, enterKey];
+    wire.traverse((o) => { if (o.isMesh && o.material === matFill) laptopHits.push(o); });
 
     // scale the whole rig so it fills the hero column
     pc.scale.setScalar(1.18);
@@ -760,13 +786,48 @@ function boot(container) {
   // direction, and the distance is solved so TUNE.frame fits at any aspect —
   // a tall narrow column pulls back instead of cropping the laptop.
   const camDir = new THREE.Vector3();
-  function placeCamera() {
-    const K = TUNE.cam, L = TUNE.look, F = TUNE.frame;
+  const camRest = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
+  const camZoom = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
+  const camPos = new THREE.Vector3();   // blended eye  — what the loop chases
+  const camLook = new THREE.Vector3();  // blended target
+  const camAt = new THREE.Vector3();    // the target actually being looked at
+
+  // ── the push-in. `focusZoom` is the eased 0…1 blend between the two solved
+  // framings; it is driven by wall-clock (see frame()) rather than a bare
+  // per-frame lerp so the move always lands in TUNE.zoomMs whatever the frame
+  // rate, and a reversal mid-flight starts from wherever the camera got to.
+  let focusZoom = 0, focusFrom = 0, focusTo = 0, focusT0 = 0;
+  const easeInOut = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+  function setFocus(v) {
+    if (focusTo === v) return;          // guard: never restart a live transition
+    focusFrom = focusZoom;
+    focusTo = v;
+    focusT0 = performance.now();
+  }
+
+  // solve the eye distance along (look → cam) that makes F fit the column
+  function solveCam(K, L, F, out) {
     camDir.set(K.x - L.x, K.y - L.y, K.z - L.z).normalize();
     const halfTan = Math.tan((camera.fov * Math.PI / 180) / 2);
     const d = Math.max(F.h / 2 / halfTan, F.w / 2 / (halfTan * Math.max(0.2, camera.aspect)));
-    camera.position.set(L.x + camDir.x * d, L.y + camDir.y * d, L.z + camDir.z * d);
-    camera.lookAt(L.x, L.y, L.z);
+    out.pos.set(L.x + camDir.x * d, L.y + camDir.y * d, L.z + camDir.z * d);
+    out.look.set(L.x, L.y, L.z);
+  }
+  // blend rest → focus into camPos/camLook. Cheap; safe to call every frame.
+  function aimCamera(k) {
+    camPos.lerpVectors(camRest.pos, camZoom.pos, k);
+    camLook.lerpVectors(camRest.look, camZoom.look, k);
+  }
+  // Re-solve BOTH framings and snap the camera onto the current blend. Only
+  // apply() and the resize observer call this: it writes camera.position
+  // directly, so calling it per frame would stamp on the zoom animation.
+  function placeCamera() {
+    solveCam(TUNE.cam, TUNE.look, TUNE.frame, camRest);
+    solveCam(TUNE.focusCam, TUNE.focusLook, TUNE.focusFrame, camZoom);
+    aimCamera(focusZoom);
+    camera.position.copy(camPos);
+    camAt.copy(camLook);
+    camera.lookAt(camAt);
     camera.updateProjectionMatrix();
   }
 
@@ -787,6 +848,12 @@ function boot(container) {
     apply, build, placeScreen, placeEnter, placeShadows, placeCamera,
     get wire() { return wire; },
     get lid() { return lidWire; },
+    // drive the zoom by hand while tuning focusCam/focusLook/focusFrame:
+    //   __pc3d.focus(); __pc3d.TUNE.focusFrame.w = 5.2; __pc3d.placeCamera()
+    focus: () => enterFocus(),
+    unfocus: () => exitFocus(),
+    get state() { return state; },
+    get focusZoom() { return focusZoom; },
   };
 
   // ─────────────────────────────────────────── state + interaction
@@ -821,14 +888,27 @@ function boot(container) {
     return { x: (vWorld.x * 0.5 + 0.5) * w, y: (-vWorld.y * 0.5 + 0.5) * h };
   }
 
-  function onMove(e) {
+  // A touch pointer can go straight to pointerdown with no pointermove ahead of
+  // it, so the press reads its own coordinates rather than trusting onMove to
+  // have run — otherwise the first tap on a phone hits `hasPointer === false`.
+  function track(e) {
     const r = renderer.domElement.getBoundingClientRect();
     mouseX = e.clientX - r.left;
     mouseY = e.clientY - r.top;
     hasPointer = true;
+  }
+  function onMove(e) {
+    track(e);
     if (state === 'result') updateHover();
   }
-  function onLeave() { hasPointer = false; proximity = 0; }
+  function onLeave(e) {
+    hasPointer = false;
+    proximity = 0;
+    // Pull back out when the mouse abandons the stage. Guarded on pointerType
+    // because touch fires pointerleave immediately after pointerup — a tap that
+    // zoomed in would otherwise zoom straight back out.
+    if (state === 'focused' && (!e || e.pointerType === 'mouse')) exitFocus();
+  }
 
   function rayHit() {
     ndc.x = (mouseX / w) * 2 - 1;
@@ -853,16 +933,41 @@ function boot(container) {
     container.style.cursor = over ? 'pointer' : 'default';
   }
 
-  function onDown() {
+  // hover threshold that pulls the camera in on its own. Deliberately past the
+  // "press ⏎" ramp (0.45) so the affordance is read before the frame changes,
+  // and never used to leave `focused` — the push-in moves the Enter key on
+  // screen, so a proximity-driven exit would oscillate.
+  const FOCUS_AT = 0.62;
+
+  function onDown(e) {
+    if (e) track(e);
     if (!hasPointer) return;
-    if ((state === 'idle' || state === 'typing') && proximity > 0.3) {
-      const hit = rayHit().intersectObjects([enterKey, enterRing], false).length > 0;
-      if (hit || proximity > 0.5) startBuild();
+    if (state === 'result') updateHover();   // taps arrive without a hover pass
+    if (state === 'idle' || state === 'typing') {
+      // Tapping anywhere on the machine leans in first. At the resting framing
+      // the Enter key is a handful of pixels wide — far too small to ask for.
+      if (proximity > 0.1 || rayHit().intersectObjects(laptopHits, false).length) enterFocus();
+    } else if (state === 'focused') {
+      // zoomed in, the panel and the key are both generous targets
+      if (rayHit().intersectObjects([screen, enterKey, enterRing], false).length) startBuild();
     } else if (state === 'result' && hoverCV) {
       location.href = lang() === 'fr' ? '/cv-fr' : '/cv';
     }
   }
+  function enterFocus() {
+    if (state !== 'idle' && state !== 'typing') return;   // guard: one way in
+    state = 'focused';
+    typed = Math.max(typed, restChars());
+    container.classList.add('is-engaged');
+    container.style.cursor = 'pointer';
+  }
+  function exitFocus() {
+    if (state !== 'focused') return;
+    state = 'typing';
+    container.style.cursor = 'default';
+  }
   function startBuild() {
+    if (state === 'building' || state === 'result') return;
     state = 'building';
     buildStart = performance.now();
     container.style.cursor = 'default';
@@ -981,8 +1086,9 @@ function boot(container) {
       g2.fillRect(cursorX + 2, cursorY - 30, 4, 40);
     }
 
-    // prompt chip bottom-right
-    const ready = proximity > 0.45;
+    // prompt chip bottom-right — pinned on once the camera has leaned in, so
+    // the panel asks for the keypress for as long as it fills the frame
+    const ready = state === 'focused' || proximity > 0.45;
     const label = ready ? T.hintReady : T.hint;
     g2.font = '600 27px ui-monospace, monospace';
     const tw = g2.measureText(label).width + 52;
@@ -1163,25 +1269,53 @@ function boot(container) {
     matDetail.opacity = TUNE.line.detail + pulse * 0.6;
     matHalo.opacity = Math.max(0, TUNE.line.halo + pulse * 0.6);
 
-    if (hasPointer && (state === 'idle' || state === 'typing')) {
+    // ── camera. The blend target is time-driven and cubic-eased so the dolly
+    // always takes TUNE.zoomMs; the camera then *follows* that target with a
+    // fast per-frame lerp, which absorbs a resize snap or a reversal without a
+    // jump. placeCamera() is deliberately absent — see its comment.
+    setFocus(state === 'focused' ? 1 : 0);
+    if (reduceMotion) {
+      focusZoom = focusTo;
+      aimCamera(focusZoom);
+      camera.position.copy(camPos);
+      camAt.copy(camLook);
+    } else {
+      // a reversal covers less ground, so it gets proportionally less time
+      const span = TUNE.zoomMs * Math.max(0.15, Math.abs(focusTo - focusFrom));
+      const p = Math.min(1, (now - focusT0) / span);
+      focusZoom = focusFrom + (focusTo - focusFrom) * easeInOut(p);
+      aimCamera(focusZoom);
+      const k = 1 - Math.pow(1 - TUNE.zoomSpeed, dt * 60);
+      camera.position.lerp(camPos, k);
+      camAt.lerp(camLook, k);
+    }
+    camera.lookAt(camAt);
+
+    if (hasPointer && (state === 'idle' || state === 'typing' || state === 'focused')) {
       const ep = enterScreenPx();
       const d = Math.hypot(mouseX - ep.x, mouseY - ep.y);
       const radius = Math.max(140, Math.min(w, h) * 0.7);
       proximity = Math.max(0, Math.min(1, 1 - d / radius));
     }
+    // reaching the deck leans in on its own — no click needed on desktop
+    if ((state === 'idle' || state === 'typing') && proximity > FOCUS_AT) enterFocus();
 
-    if (state === 'idle' || state === 'typing') {
-      if (proximity > 0.04) {
-        state = 'typing';
-        const cps = 5 + proximity * proximity * 160;
+    if (state === 'idle' || state === 'typing' || state === 'focused') {
+      const zoomed = state === 'focused';
+      if (proximity > 0.04 || zoomed) {
+        if (!zoomed) state = 'typing';
+        // zoomed in the listing is the subject, so it finishes at full tilt
+        const cps = zoomed ? 190 : 5 + proximity * proximity * 160;
         typed = Math.min(totalChars(), typed + cps * dt);
       }
-      container.classList.toggle('is-engaged', proximity > 0.12);
+      container.classList.toggle('is-engaged', zoomed || proximity > 0.12);
 
-      const want = Math.max(0, Math.min(1, (proximity - 0.24) / 0.52));
+      const want = zoomed ? 1 : Math.max(0, Math.min(1, (proximity - 0.24) / 0.52));
       enterGlow += (want - enterGlow) * 0.16;
       enterFx.position.y = TUNE.enter.y + (Math.sin(elapsed * 0.006) * 0.014 + 0.016) * want;
-      const ringWant = want > 0.15 ? 0.55 + Math.sin(elapsed * 0.006) * 0.3 : 0;
+      // full glow once focused — the key is the only thing left to do
+      const ringWant = zoomed ? 0.9 + Math.sin(elapsed * 0.006) * 0.1
+        : want > 0.15 ? 0.55 + Math.sin(elapsed * 0.006) * 0.3 : 0;
       matEnterRing.opacity += (ringWant - matEnterRing.opacity) * 0.18;
       enterRing.scale.setScalar(1 + want * 0.16);
       enterPool.material.opacity += (enterGlow * 0.5 - enterPool.material.opacity) * 0.16;

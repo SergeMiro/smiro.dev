@@ -1,0 +1,1150 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - link "Serge avatar s miro" [ref=e4] [cursor=pointer]:
+      - /url: /
+      - generic "Serge avatar":
+        - generic:
+          - img "Serge Miro"
+      - generic [ref=e5]: s
+      - generic [ref=e6]: miro
+    - generic [ref=e7]:
+      - link "work" [ref=e8] [cursor=pointer]:
+        - /url: "#repos"
+      - link "repos" [ref=e9] [cursor=pointer]:
+        - /url: "#repos"
+      - link "stack" [ref=e10] [cursor=pointer]:
+        - /url: "#stack"
+      - link "agents" [ref=e11] [cursor=pointer]:
+        - /url: "#agents"
+      - generic "my job play — live alerts from france travail / linkedin / indeed" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]:
+          - generic [ref=e14]:
+            - link "12" [ref=e15]:
+              - /url: https://linkedin.com
+            - link "7" [ref=e19]:
+              - /url: https://indeed.com
+            - link "23" [ref=e24]:
+              - /url: https://francetravail.fr
+          - generic [ref=e29]:
+            - text: Mes alertes emploi
+            - generic [ref=e30]: en direct
+          - generic [ref=e31]: ▾
+      - link "↗ hire me" [ref=e32] [cursor=pointer]:
+        - /url: mailto:serge@smiro.dev
+  - complementary [ref=e33]:
+    - button "Open chat with Serge's AI avatar" [ref=e34] [cursor=pointer]:
+      - button "dismiss" [ref=e35]: ×
+      - generic [ref=e36]:
+        - generic [ref=e37]:
+          - text: Chat with my
+          - emphasis [ref=e38]: AI avatar
+          - text: 😇
+        - generic [ref=e39]: ask anything · before we meet →
+      - generic [ref=e43]:
+        - generic:
+          - img "Serge avatar"
+  - banner [ref=e45]:
+    - generic [ref=e46]:
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - text: for
+          - generic [ref=e50]: recruiters & hiring managers
+        - heading "I don't apply for jobs. I build a system to find them." [level=1] [ref=e51]:
+          - text: I don't
+          - generic [ref=e52]: apply
+          - text: for jobs. I
+          - emphasis [ref=e53]: build a system
+          - text: to find them.
+        - paragraph [ref=e54]:
+          - text: While other candidates refresh job boards and miss windows, my n8n+AI pipeline sees a vacancy 4–8 minutes after it's posted, filters it, drafts the application, and pings me on Telegram.
+          - strong [ref=e55]: You're reading this because the system worked.
+        - generic [ref=e56]:
+          - generic [ref=e57]:
+            - generic [ref=e58]: avg. detection
+            - generic [ref=e59]:
+              - emphasis [ref=e60]: ~6
+              - text: min
+          - generic [ref=e61]:
+            - generic [ref=e62]: platforms
+            - emphasis [ref=e64]: "3"
+          - generic [ref=e65]:
+            - generic [ref=e66]: years building
+            - emphasis [ref=e68]: "15"
+          - generic [ref=e69]:
+            - generic [ref=e70]: based in
+            - generic [ref=e71]: Dijon
+      - complementary "Interactive 3D computer — bring your cursor toward the keyboard" [ref=e72]
+    - generic [ref=e75]:
+      - generic [ref=e76]:
+        - generic [ref=e77]: "01"
+        - heading [level=3] [ref=e78]:
+          - text: Full-stack at
+          - emphasis [ref=e79]: AI speed
+        - paragraph [ref=e80]: I prototype with Claude Code & Cursor and harden with 15 years of engineering. Frontend, backend, infrastructure — idea to production in days, not sprints.
+        - generic [ref=e81]:
+          - generic [ref=e82]: Claude Code
+          - generic [ref=e83]: Cursor
+          - generic [ref=e84]: TypeScript
+          - generic [ref=e85]: React
+          - generic [ref=e86]: Node
+          - generic [ref=e87]: Python
+      - generic [ref=e88]:
+        - generic [ref=e89]: "02"
+        - heading [level=3] [ref=e90]:
+          - text: AI
+          - emphasis [ref=e91]: agents
+        - paragraph [ref=e92]: Agentic systems that do real work — not chatbots. An executor performs, a reviewer scores, the loop runs until ≥90% quality. RAG, MCP, evals, fallbacks.
+        - generic [ref=e93]:
+          - generic [ref=e94]: Claude
+          - generic [ref=e95]: OpenAI
+          - generic [ref=e96]: RAG
+          - generic [ref=e97]: MCP
+          - generic [ref=e98]: Fine-tuning
+      - generic [ref=e99]:
+        - generic [ref=e100]: "03"
+        - heading [level=3] [ref=e101]:
+          - text: n8n
+          - emphasis [ref=e102]: automation
+        - paragraph [ref=e103]: Self-hosted n8n on a VPS I provision, deploy and harden myself. Workflows that run 24/7, integrate 50+ services, and replace 90% of manual ops.
+        - generic [ref=e104]:
+          - generic [ref=e105]: n8n
+          - generic [ref=e106]: VPS
+          - generic [ref=e107]: Docker
+          - generic [ref=e108]: OWASP
+          - generic [ref=e109]: Webhooks
+  - banner [ref=e110]:
+    - generic [ref=e111]:
+      - generic [ref=e112]:
+        - generic [ref=e113]:
+          - text: for
+          - generic [ref=e115]: recruiters & hiring managers
+        - heading "I don't apply for jobs. I build a system to find them." [level=1] [ref=e116]:
+          - text: I don't
+          - generic [ref=e117]: apply
+          - text: for jobs. I
+          - emphasis [ref=e118]: build a system
+          - text: to find them.
+        - paragraph [ref=e119]:
+          - text: While other candidates refresh job boards and miss windows, my n8n+AI pipeline sees a vacancy 4–8 minutes after it's posted, filters it, drafts the application, and pings me on Telegram.
+          - strong [ref=e120]: You're reading this because the system worked.
+        - generic [ref=e121]:
+          - generic [ref=e122]:
+            - generic [ref=e123]: avg. detection
+            - generic [ref=e124]:
+              - emphasis [ref=e125]: ~6
+              - text: min
+          - generic [ref=e126]:
+            - generic [ref=e127]: platforms
+            - emphasis [ref=e129]: "3"
+          - generic [ref=e130]:
+            - generic [ref=e131]: years building
+            - emphasis [ref=e133]: "15"
+          - generic [ref=e134]:
+            - generic [ref=e135]: based in
+            - generic [ref=e136]: Dijon
+      - complementary [ref=e137]:
+        - generic [ref=e138]: tl;dr — what you get
+        - heading [level=2] [ref=e139]:
+          - text: A senior who
+          - emphasis [ref=e140]: ships
+          - text: ", not just talks."
+        - paragraph [ref=e141]: AI engineer on a 15-year IT foundation. I build with AI daily — and ship working products in days.
+        - list [ref=e142]:
+          - listitem [ref=e143]: Vibe coding daily · Claude Code · Cursor
+          - listitem [ref=e144]: Multi-agent systems · RAG · MCP
+          - listitem [ref=e145]: "Full-stack: React · Node · Python · TypeScript"
+          - listitem [ref=e146]: "Self-hosted infra: VPS, Docker, n8n, security"
+          - listitem [ref=e147]: Production mindset — not prototypes
+        - link "↗ contact serge@smiro.dev" [ref=e148] [cursor=pointer]:
+          - /url: mailto:serge@smiro.dev
+    - generic [ref=e149]:
+      - generic [ref=e150]:
+        - generic [ref=e151]: "01"
+        - heading [level=3] [ref=e152]:
+          - text: Full-stack at
+          - emphasis [ref=e153]: AI speed
+        - paragraph [ref=e154]: I prototype with Claude Code & Cursor and harden with 15 years of engineering. Frontend, backend, infrastructure — idea to production in days, not sprints.
+        - generic [ref=e155]:
+          - generic [ref=e156]: Claude Code
+          - generic [ref=e157]: Cursor
+          - generic [ref=e158]: TypeScript
+          - generic [ref=e159]: React
+          - generic [ref=e160]: Node
+          - generic [ref=e161]: Python
+      - generic [ref=e162]:
+        - generic [ref=e163]: "02"
+        - heading [level=3] [ref=e164]:
+          - text: AI
+          - emphasis [ref=e165]: agents
+        - paragraph [ref=e166]: Agentic systems that do real work — not chatbots. An executor performs, a reviewer scores, the loop runs until ≥90% quality. RAG, MCP, evals, fallbacks.
+        - generic [ref=e167]:
+          - generic [ref=e168]: Claude
+          - generic [ref=e169]: OpenAI
+          - generic [ref=e170]: RAG
+          - generic [ref=e171]: MCP
+          - generic [ref=e172]: Fine-tuning
+      - generic [ref=e173]:
+        - generic [ref=e174]: "03"
+        - heading [level=3] [ref=e175]:
+          - text: n8n
+          - emphasis [ref=e176]: automation
+        - paragraph [ref=e177]: Self-hosted n8n on a VPS I provision, deploy and harden myself. Workflows that run 24/7, integrate 50+ services, and replace 90% of manual ops.
+        - generic [ref=e178]:
+          - generic [ref=e179]: n8n
+          - generic [ref=e180]: VPS
+          - generic [ref=e181]: Docker
+          - generic [ref=e182]: OWASP
+          - generic [ref=e183]: Webhooks
+  - generic [ref=e184]:
+    - generic [ref=e185]:
+      - generic [ref=e186]:
+        - generic [ref=e187]:
+          - generic [ref=e188]: /01
+          - generic [ref=e189]: case study · my job alerts
+        - heading [level=2] [ref=e190]:
+          - text: How I get to
+          - emphasis [ref=e191]: the inbox
+          - text: first.
+      - paragraph [ref=e192]: A live system I built and run for myself. It's also the proof that what I describe in pillar 02–03 actually works in production. Here's the entire pipeline.
+    - generic [ref=e193]:
+      - generic [ref=e194]:
+        - heading [level=3] [ref=e195]:
+          - text: My Job Alerts
+          - emphasis [ref=e196]: · workflow
+        - generic [ref=e197]:
+          - generic [ref=e198]: source
+          - generic [ref=e199]: ai agent
+          - generic [ref=e200]: filter
+          - generic [ref=e201]: database
+          - generic [ref=e202]: output
+      - generic [ref=e203]:
+        - generic [ref=e204]:
+          - generic [ref=e205]: "0"
+          - generic [ref=e206]: trigger
+        - generic [ref=e207]:
+          - generic [ref=e208]: "1"
+          - generic [ref=e209]: sources
+        - generic [ref=e210]:
+          - generic [ref=e211]: "2"
+          - generic [ref=e212]: scrape
+        - generic [ref=e213]:
+          - generic [ref=e214]: "3"
+          - generic [ref=e215]: filter
+        - generic [ref=e216]:
+          - generic [ref=e217]: "4"
+          - generic [ref=e218]: store
+        - generic [ref=e219]:
+          - generic [ref=e220]: "5"
+          - generic [ref=e221]: act
+      - generic [ref=e222]:
+        - generic [ref=e225]:
+          - button "Cron trigger" [ref=e226] [cursor=pointer]
+          - button "LinkedIn" [ref=e232] [cursor=pointer]:
+            - generic [ref=e233]: in
+          - button "France Travail" [ref=e235] [cursor=pointer]:
+            - generic [ref=e236]: ft
+          - button "Indeed" [ref=e238] [cursor=pointer]:
+            - generic [ref=e239]: id
+          - button "Firecrawl" [ref=e240] [cursor=pointer]:
+            - generic [ref=e241]: FC
+          - button "Extractor agent" [ref=e243] [cursor=pointer]:
+            - generic [ref=e244]: AI
+          - button "Geo allowlist" [ref=e246] [cursor=pointer]
+          - button "Salary floor" [ref=e251] [cursor=pointer]
+          - button "Stack denylist" [ref=e256] [cursor=pointer]
+          - button "Cross-platform dedupe" [ref=e261] [cursor=pointer]
+          - button "Postgres" [ref=e267] [cursor=pointer]:
+            - generic [ref=e268]: DB
+          - button "Telegram alert" [ref=e270] [cursor=pointer]:
+            - generic [ref=e271]: TG
+          - button "Application agent" [ref=e273] [cursor=pointer]:
+            - generic [ref=e274]: AI
+          - button "Analytics agent" [ref=e276] [cursor=pointer]
+        - generic [ref=e279]:
+          - generic [ref=e280]: live · a job moving through
+          - generic [ref=e281]:
+            - text: at
+            - emphasis [ref=e282]: sources
+            - text: · LinkedIn
+        - tooltip
+        - tooltip "01 · source LinkedIn Saved filter URL — role, seniority, geo, freshness. Polled every 5 min. cron · every 5m":
+          - generic: 01 · source
+          - heading "LinkedIn" [level=4]
+          - paragraph: Saved filter URL — role, seniority, geo, freshness. Polled every 5 min.
+          - generic: cron · every 5m
+        - tooltip "01 · source France Travail Official API + saved searches. Most active FR source. cron · every 5m":
+          - generic: 01 · source
+          - heading "France Travail" [level=4]
+          - paragraph: Official API + saved searches. Most active FR source.
+          - generic: cron · every 5m
+        - tooltip "01 · source Indeed Role + location + 24h freshness filter. cron · every 5m":
+          - generic: 01 · source
+          - heading "Indeed" [level=4]
+          - paragraph: Role + location + 24h freshness filter.
+          - generic: cron · every 5m
+    - generic [ref=e283]:
+      - generic [ref=e284]:
+        - generic [ref=e285]:
+          - emphasis [ref=e286]: ~6
+          - text: min
+        - generic [ref=e287]: avg. detection
+      - generic [ref=e288]:
+        - generic [ref=e289]:
+          - emphasis [ref=e290]: "3"
+          - text: ×
+        - generic [ref=e291]: platforms unified
+      - generic [ref=e292]:
+        - emphasis [ref=e294]: "0"
+        - generic [ref=e295]: manual scrolling
+      - generic [ref=e296]:
+        - emphasis [ref=e298]: 24/7
+        - generic [ref=e299]: running on my VPS
+  - generic [ref=e300]:
+    - generic [ref=e301]:
+      - generic [ref=e302]:
+        - generic [ref=e303]:
+          - generic [ref=e304]: /02
+          - generic [ref=e305]: open source · github
+        - heading "Dépôts GitHub" [level=2] [ref=e306]
+      - paragraph [ref=e307]:
+        - text: The work I keep on top of my GitHub — AI products, full-stack apps and the platform code behind them. Live from
+        - link "@SergeMiro" [ref=e308] [cursor=pointer]:
+          - /url: https://github.com/SergeMiro
+        - text: .
+    - generic [ref=e309]:
+      - link "01 architecture · typescript ASCoFacade A TypeScript facade layer — a clean, typed integration interface that hides third-party complexity behind one API. TypeScript Architecture API TypeScript ★ 0" [ref=e310] [cursor=pointer]:
+        - /url: https://github.com/SergeMiro/ASCoFacade
+        - generic [ref=e311]: "01"
+        - generic [ref=e312]:
+          - generic [ref=e313]: architecture · typescript
+          - heading "ASCoFacade" [level=3] [ref=e314]
+          - paragraph [ref=e315]: A TypeScript facade layer — a clean, typed integration interface that hides third-party complexity behind one API.
+        - generic [ref=e316]:
+          - generic [ref=e317]:
+            - generic [ref=e318]: TypeScript
+            - generic [ref=e319]: Architecture
+            - generic [ref=e320]: API
+          - generic [ref=e322]:
+            - generic [ref=e324]: TypeScript
+            - generic [ref=e325]:
+              - text: ★
+              - generic [ref=e326]: "0"
+      - link "02 telephony · analytics SDA Real-time telephony API & analytics platform built at Fimainfo — call routing, live stats and SLA monitoring. Node.js T-SQL REST JavaScript ★ 0" [ref=e330] [cursor=pointer]:
+        - /url: https://github.com/SergeMiro/SDA
+        - generic [ref=e331]: "02"
+        - generic [ref=e332]:
+          - generic [ref=e333]: telephony · analytics
+          - heading "SDA" [level=3] [ref=e334]
+          - paragraph [ref=e335]: Real-time telephony API & analytics platform built at Fimainfo — call routing, live stats and SLA monitoring.
+        - generic [ref=e336]:
+          - generic [ref=e337]:
+            - generic [ref=e338]: Node.js
+            - generic [ref=e339]: T-SQL
+            - generic [ref=e340]: REST
+          - generic [ref=e342]:
+            - generic [ref=e344]: JavaScript
+            - generic [ref=e345]:
+              - text: ★
+              - generic [ref=e346]: "0"
+      - link "03 e-commerce · react way2buy Online shopping app — a full e-commerce front end with cart, checkout and product catalogue in React / TypeScript. React TypeScript E-commerce TypeScript ★ 0" [ref=e350] [cursor=pointer]:
+        - /url: https://github.com/SergeMiro/way2buy
+        - generic [ref=e351]: "03"
+        - generic [ref=e352]:
+          - generic [ref=e353]: e-commerce · react
+          - heading "way2buy" [level=3] [ref=e354]
+          - paragraph [ref=e355]: Online shopping app — a full e-commerce front end with cart, checkout and product catalogue in React / TypeScript.
+        - generic [ref=e356]:
+          - generic [ref=e357]:
+            - generic [ref=e358]: React
+            - generic [ref=e359]: TypeScript
+            - generic [ref=e360]: E-commerce
+          - generic [ref=e362]:
+            - generic [ref=e364]: TypeScript
+            - generic [ref=e365]:
+              - text: ★
+              - generic [ref=e366]: "0"
+      - link "04 web app · automotive MorganAuto Web app for an automotive dealer — vehicle catalogue, listings and customer-facing UI in React / TypeScript. React TypeScript Web app TypeScript ★ 0" [ref=e370] [cursor=pointer]:
+        - /url: https://github.com/SergeMiro/MorganAuto
+        - generic [ref=e371]: "04"
+        - generic [ref=e372]:
+          - generic [ref=e373]: web app · automotive
+          - heading "MorganAuto" [level=3] [ref=e374]
+          - paragraph [ref=e375]: Web app for an automotive dealer — vehicle catalogue, listings and customer-facing UI in React / TypeScript.
+        - generic [ref=e376]:
+          - generic [ref=e377]:
+            - generic [ref=e378]: React
+            - generic [ref=e379]: TypeScript
+            - generic [ref=e380]: Web app
+          - generic [ref=e382]:
+            - generic [ref=e384]: TypeScript
+            - generic [ref=e385]:
+              - text: ★
+              - generic [ref=e386]: "0"
+      - link "05 AI · compliance · RAG SimplifyEU AI solutions for EU business — LLM-powered workflows that automate multilingual compliance and back-office paperwork. LLM RAG LangChain Python ★ 0" [ref=e390] [cursor=pointer]:
+        - /url: https://github.com/SergeMiro/SimplifyEU
+        - generic [ref=e391]: "05"
+        - generic [ref=e392]:
+          - generic [ref=e393]: AI · compliance · RAG
+          - heading "SimplifyEU" [level=3] [ref=e394]
+          - paragraph [ref=e395]: AI solutions for EU business — LLM-powered workflows that automate multilingual compliance and back-office paperwork.
+        - generic [ref=e396]:
+          - generic [ref=e397]:
+            - generic [ref=e398]: LLM
+            - generic [ref=e399]: RAG
+            - generic [ref=e400]: LangChain
+          - generic [ref=e402]:
+            - generic [ref=e404]: Python
+            - generic [ref=e405]:
+              - text: ★
+              - generic [ref=e406]: "0"
+      - link "06 portfolio · AI avatar smiro.dev My portfolio & AI avatar — a full-stack site with an embedded LLM chat trained on my CV and projects. Next.js Claude API TypeScript HTML ★ 0" [ref=e410] [cursor=pointer]:
+        - /url: https://github.com/SergeMiro/smiro.dev
+        - generic [ref=e411]: "06"
+        - generic [ref=e412]:
+          - generic [ref=e413]: portfolio · AI avatar
+          - heading "smiro.dev" [level=3] [ref=e414]
+          - paragraph [ref=e415]: My portfolio & AI avatar — a full-stack site with an embedded LLM chat trained on my CV and projects.
+        - generic [ref=e416]:
+          - generic [ref=e417]:
+            - generic [ref=e418]: Next.js
+            - generic [ref=e419]: Claude API
+            - generic [ref=e420]: TypeScript
+          - generic [ref=e422]:
+            - generic [ref=e424]: HTML
+            - generic [ref=e425]:
+              - text: ★
+              - generic [ref=e426]: "0"
+      - link "07 AI agents · back-office Vistalid Multi-agent back-office for FR call-centre campaigns. Executor works, reviewer grades, loop runs until score ≥ 90%. 30+ hrs/week saved per team. Yes, including URSSAF. Next.js Claude API Postgres n8n Docker production · v3.2" [ref=e430] [cursor=pointer]:
+        - /url: "#repos"
+        - generic [ref=e431]: "07"
+        - generic [ref=e432]:
+          - generic [ref=e433]: AI agents · back-office
+          - heading "Vistalid" [level=3] [ref=e434]
+          - paragraph [ref=e435]: Multi-agent back-office for FR call-centre campaigns. Executor works, reviewer grades, loop runs until score ≥ 90%. 30+ hrs/week saved per team. Yes, including URSSAF.
+        - generic [ref=e436]:
+          - generic [ref=e437]:
+            - generic [ref=e438]: Next.js
+            - generic [ref=e439]: Claude API
+            - generic [ref=e440]: Postgres
+            - generic [ref=e441]: n8n
+            - generic [ref=e442]: Docker
+          - generic [ref=e443]: production · v3.2
+      - link "08 AI · documents · n8n Parser AI Inbox → structured JSON. Executor extracts, reviewer checks, n8n routes. Eats messy emails for breakfast. Python OpenAI n8n production" [ref=e448] [cursor=pointer]:
+        - /url: "#repos"
+        - generic [ref=e449]: "08"
+        - generic [ref=e450]:
+          - generic [ref=e451]: AI · documents · n8n
+          - heading "Parser AI" [level=3] [ref=e452]
+          - paragraph [ref=e453]: Inbox → structured JSON. Executor extracts, reviewer checks, n8n routes. Eats messy emails for breakfast.
+        - generic [ref=e454]:
+          - generic [ref=e455]:
+            - generic [ref=e456]: Python
+            - generic [ref=e457]: OpenAI
+            - generic [ref=e458]: n8n
+          - generic [ref=e459]: production
+      - link "09 stats · security · monitoring Supervision Stats agents collect, security agents sniff, dashboards complain. Multi-tenant, SLA-aware, sleep-friendly. Node Grafana Prometheus production" [ref=e464] [cursor=pointer]:
+        - /url: "#repos"
+        - generic [ref=e465]: "09"
+        - generic [ref=e466]:
+          - generic [ref=e467]: stats · security · monitoring
+          - heading "Supervision" [level=3] [ref=e468]
+          - paragraph [ref=e469]: Stats agents collect, security agents sniff, dashboards complain. Multi-tenant, SLA-aware, sleep-friendly.
+        - generic [ref=e470]:
+          - generic [ref=e471]:
+            - generic [ref=e472]: Node
+            - generic [ref=e473]: Grafana
+            - generic [ref=e474]: Prometheus
+          - generic [ref=e475]: production
+      - link "10 devops · crypto Trading Bot Multi-exchange bot — signals, risk-mgmt, back-tests. Personal lab. Not financial advice (please). Python WebSockets Postgres testing" [ref=e480] [cursor=pointer]:
+        - /url: "#repos"
+        - generic [ref=e481]: "10"
+        - generic [ref=e482]:
+          - generic [ref=e483]: devops · crypto
+          - heading "Trading Bot" [level=3] [ref=e484]
+          - paragraph [ref=e485]: Multi-exchange bot — signals, risk-mgmt, back-tests. Personal lab. Not financial advice (please).
+        - generic [ref=e486]:
+          - generic [ref=e487]:
+            - generic [ref=e488]: Python
+            - generic [ref=e489]: WebSockets
+            - generic [ref=e490]: Postgres
+          - generic [ref=e491]: testing
+    - link "view all 16 repositories on GitHub" [ref=e497] [cursor=pointer]:
+      - /url: https://github.com/SergeMiro
+  - generic [ref=e500]:
+    - generic [ref=e501]:
+      - generic [ref=e502]:
+        - generic [ref=e503]:
+          - generic [ref=e504]: /03
+          - generic [ref=e505]: what this means for you
+        - heading [level=2] [ref=e506]:
+          - text: The pipeline is the
+          - emphasis [ref=e507]: portfolio
+          - text: .
+      - paragraph [ref=e508]: If you're hiring for a senior engineering role with AI, automation, or platform components — these are the patterns I'd bring to your team on day one.
+    - generic [ref=e509]:
+      - generic [ref=e510]:
+        - heading [level=3] [ref=e511]:
+          - text: I think in
+          - emphasis [ref=e512]: systems
+          - text: ", not tickets."
+        - paragraph [ref=e513]: The pipeline above wasn't a ticket — I saw a workflow problem, designed end-to-end, shipped. Same approach to product work.
+        - paragraph [ref=e514]: "\"Production over prototype\" isn't a slogan — it's how I scope."
+      - generic [ref=e515]:
+        - heading [level=3] [ref=e516]:
+          - text: AI is a
+          - emphasis [ref=e517]: tool
+          - text: ", not the product."
+        - paragraph [ref=e518]: Shipping LLM features since GPT-3.5. I know where AI breaks (eval, hallucination, cost, latency) and how to ship around it. Claude is one piece — deterministic code catches its mistakes.
+        - paragraph [ref=e519]:
+          - text: "\"Senior\" with AI means knowing when"
+          - emphasis [ref=e520]: not
+          - text: to use it.
+      - generic [ref=e521]:
+        - heading [level=3] [ref=e522]:
+          - text: I run my own
+          - emphasis [ref=e523]: infra
+          - text: .
+        - paragraph [ref=e524]: VPS, Docker, n8n, Postgres, Firecrawl, Telegram bots — self-hosted and hardened (OWASP, firewalls, secrets), on hardware I pay for. I'd rather understand a system than rent it.
+        - paragraph [ref=e525]: If I can't run it locally, I don't trust it in prod.
+      - generic [ref=e526]:
+        - heading [level=3] [ref=e527]:
+          - text: I write
+          - emphasis [ref=e528]: French
+          - text: "& English."
+        - paragraph [ref=e529]: Dijon, FR — open to remote / hybrid across FR & EU. Specs, reviews, customer copy in both.
+        - paragraph [ref=e530]: Fluent FR · senior-level EN · native UA/RU. C++ in CSS.
+  - generic [ref=e531]:
+    - generic [ref=e532]:
+      - generic [ref=e533]:
+        - generic [ref=e534]:
+          - generic [ref=e535]: /04
+          - generic [ref=e536]: ideas & writing
+        - heading [level=2] [ref=e537]:
+          - text: Things I keep coming
+          - emphasis [ref=e538]: back to
+          - text: .
+      - paragraph [ref=e539]: Groundbreaking papers, essays, and moments in AI, programming & systems. Swipe / drag the stack.
+    - generic [ref=e540]:
+      - generic [ref=e542]:
+        - generic [ref=e544]:
+          - generic [ref=e545]:
+            - generic [ref=e546]: essay · 2011
+            - heading "why software is eating the world" [level=3] [ref=e547]: why software iseating the world
+            - paragraph [ref=e548]: marc andreessen · 2011
+          - paragraph [ref=e549]: "\"Every company is a software company now. This was the op-ed that lit the match.\""
+        - generic:
+          - generic:
+            - generic:
+              - generic: manifesto · 2001
+              - heading "the agile manifesto" [level=3]: the agilemanifesto
+              - paragraph: 17 devs, utah · 2001
+            - paragraph: "\"Individuals and interactions over processes and tools. Still misread 25 years on.\""
+        - generic:
+          - generic:
+            - generic:
+              - generic: principle
+              - heading "worse is better" [level=3]: worse isbetter
+              - paragraph: richard p. gabriel · 1989
+            - paragraph: "\"MIT vs New Jersey school. The essay that explains why Unix won.\""
+        - generic:
+          - generic:
+            - generic:
+              - generic: paper · 1998
+              - heading "the anatomy of a search engine" [level=3]: the anatomy ofa search engine
+              - paragraph: brin & page · 1998
+            - paragraph: "\"Google in 20 pages. Reread it — most of it still rhymes with the modern stack.\""
+        - generic:
+          - generic:
+            - generic:
+              - generic: talk · 2007
+              - heading "the last programming language" [level=3]: the lastprogramminglanguage
+              - paragraph: robert c. martin · 2007
+            - paragraph: "\"A case that Clojure (or its descendants) will be our final abstraction. Controversial, still.\""
+      - generic [ref=e550]: Rotating — drag to take control
+    - generic [ref=e556]:
+      - button "Previous" [ref=e557] [cursor=pointer]
+      - generic [ref=e560]:
+        - button "idea 1" [ref=e561] [cursor=pointer]
+        - button "idea 2" [ref=e562] [cursor=pointer]
+        - button "idea 3" [ref=e563] [cursor=pointer]
+        - button "idea 4" [ref=e564] [cursor=pointer]
+        - button "idea 5" [ref=e565] [cursor=pointer]
+      - button "Next" [ref=e566] [cursor=pointer]
+  - generic [ref=e569]:
+    - generic [ref=e570]:
+      - generic [ref=e571]:
+        - generic [ref=e572]:
+          - generic [ref=e573]: /05
+          - generic [ref=e574]: the stack
+        - heading [level=2] [ref=e575]:
+          - text: Tools I reach for
+          - emphasis [ref=e576]: daily
+          - text: .
+      - paragraph [ref=e577]: Opinionated. Self-hosted by default. Boring where it needs to be, sharp where it matters.
+    - generic [ref=e578]:
+      - generic [ref=e579]:
+        - generic [ref=e580]: drag to rearrange · double-click to edit · employers, drop a tool →
+        - generic [ref=e581]:
+          - button "↻ shuffle" [ref=e582] [cursor=pointer]
+          - button "⊞ tidy" [ref=e583] [cursor=pointer]
+          - button "+ suggest a tool" [ref=e584] [cursor=pointer]:
+            - generic [ref=e585]: +
+            - generic [ref=e586]: suggest a tool
+      - generic [ref=e587]:
+        - generic [ref=e588]:
+          - button "×" [ref=e589] [cursor=pointer]
+          - generic [ref=e590]:
+            - generic [ref=e591]: f
+            - generic [ref=e592]: r
+            - generic [ref=e593]: a
+            - generic [ref=e594]: m
+            - generic [ref=e595]: e
+            - generic [ref=e596]: w
+            - generic [ref=e597]: o
+            - generic [ref=e598]: r
+            - generic [ref=e599]: k
+          - generic [ref=e600]:
+            - generic [ref=e601]:
+              - generic [ref=e602]: "N"
+              - generic [ref=e603]: e
+              - generic [ref=e604]: x
+              - generic [ref=e605]: t
+              - generic [ref=e606]: .
+              - generic [ref=e607]: j
+              - generic [ref=e608]: s
+            - generic [ref=e609]:
+              - generic [ref=e610]: —
+              - generic [ref=e611]: Camille
+              - generic [ref=e612]: ·
+              - generic [ref=e613]: Doctolib
+        - generic [ref=e614]:
+          - button "×" [ref=e615] [cursor=pointer]
+          - generic [ref=e616]:
+            - generic [ref=e617]: b
+            - generic [ref=e618]: a
+            - generic [ref=e619]: c
+            - generic [ref=e620]: k
+            - generic [ref=e621]: e
+            - generic [ref=e622]: "n"
+            - generic [ref=e623]: d
+          - generic [ref=e624]:
+            - generic [ref=e625]:
+              - generic [ref=e626]: F
+              - generic [ref=e627]: a
+              - generic [ref=e628]: s
+              - generic [ref=e629]: t
+              - generic [ref=e630]: A
+              - generic [ref=e631]: P
+              - generic [ref=e632]: I
+            - generic [ref=e633]:
+              - generic [ref=e634]: —
+              - generic [ref=e635]: Lucas
+              - generic [ref=e636]: ·
+              - generic [ref=e637]: Qonto
+        - generic [ref=e638]:
+          - button "×" [ref=e639] [cursor=pointer]
+          - generic [ref=e640]:
+            - generic [ref=e641]: d
+            - generic [ref=e642]: a
+            - generic [ref=e643]: t
+            - generic [ref=e644]: a
+            - generic [ref=e645]: b
+            - generic [ref=e646]: a
+            - generic [ref=e647]: s
+            - generic [ref=e648]: e
+          - generic [ref=e649]:
+            - generic [ref=e650]:
+              - generic [ref=e651]: P
+              - generic [ref=e652]: o
+              - generic [ref=e653]: s
+              - generic [ref=e654]: t
+              - generic [ref=e655]: g
+              - generic [ref=e656]: r
+              - generic [ref=e657]: e
+              - generic [ref=e658]: s
+            - generic [ref=e659]:
+              - generic [ref=e660]: —
+              - generic [ref=e661]: Marie
+              - generic [ref=e662]: ·
+              - generic [ref=e663]: Alan
+        - generic [ref=e664]:
+          - button "×" [ref=e665] [cursor=pointer]
+          - generic [ref=e666]:
+            - generic [ref=e667]: b
+            - generic [ref=e668]: a
+            - generic [ref=e669]: a
+            - generic [ref=e670]: s
+          - generic [ref=e671]:
+            - generic [ref=e672]:
+              - generic [ref=e673]: S
+              - generic [ref=e674]: u
+              - generic [ref=e675]: p
+              - generic [ref=e676]: a
+              - generic [ref=e677]: b
+              - generic [ref=e678]: a
+              - generic [ref=e679]: s
+              - generic [ref=e680]: e
+            - generic [ref=e681]:
+              - generic [ref=e682]: —
+              - generic [ref=e683]: Thomas
+              - generic [ref=e684]: ·
+              - generic [ref=e685]: Swile
+        - generic [ref=e686]:
+          - button "×" [ref=e687] [cursor=pointer]
+          - generic [ref=e688]:
+            - generic [ref=e689]: l
+            - generic [ref=e690]: l
+            - generic [ref=e691]: m
+            - generic [ref=e692]: g
+            - generic [ref=e693]: l
+            - generic [ref=e694]: u
+            - generic [ref=e695]: e
+          - generic [ref=e696]:
+            - generic [ref=e697]:
+              - generic [ref=e698]: L
+              - generic [ref=e699]: a
+              - generic [ref=e700]: "n"
+              - generic [ref=e701]: g
+              - generic [ref=e702]: C
+              - generic [ref=e703]: h
+              - generic [ref=e704]: a
+              - generic [ref=e705]: i
+              - generic [ref=e706]: "n"
+            - generic [ref=e707]:
+              - generic [ref=e708]: —
+              - generic [ref=e709]: Inès
+              - generic [ref=e710]: ·
+              - generic [ref=e711]: Mistral AI
+        - generic [ref=e712]:
+          - button "×" [ref=e713] [cursor=pointer]
+          - generic [ref=e714]:
+            - generic [ref=e715]: a
+            - generic [ref=e716]: i
+          - generic [ref=e717]:
+            - generic [ref=e718]:
+              - generic [ref=e719]: C
+              - generic [ref=e720]: l
+              - generic [ref=e721]: a
+              - generic [ref=e722]: u
+              - generic [ref=e723]: d
+              - generic [ref=e724]: e
+              - generic [ref=e725]: A
+              - generic [ref=e726]: P
+              - generic [ref=e727]: I
+            - generic [ref=e728]:
+              - generic [ref=e729]: —
+              - generic [ref=e730]: Hugo
+              - generic [ref=e731]: ·
+              - generic [ref=e732]: Hugging Face
+        - generic [ref=e733]:
+          - button "×" [ref=e734] [cursor=pointer]
+          - generic [ref=e735]:
+            - generic [ref=e736]: f
+            - generic [ref=e737]: l
+            - generic [ref=e738]: o
+            - generic [ref=e739]: w
+            - generic [ref=e740]: s
+          - generic [ref=e741]:
+            - generic [ref=e742]:
+              - generic [ref=e743]: "n"
+              - generic [ref=e744]: "8"
+              - generic [ref=e745]: "n"
+            - generic [ref=e746]:
+              - generic [ref=e747]: —
+              - generic [ref=e748]: Léa
+              - generic [ref=e749]: ·
+              - generic [ref=e750]: BlaBlaCar
+        - generic [ref=e751]:
+          - button "×" [ref=e752] [cursor=pointer]
+          - generic [ref=e753]:
+            - generic [ref=e754]: e
+            - generic [ref=e755]: d
+            - generic [ref=e756]: g
+            - generic [ref=e757]: e
+          - generic [ref=e758]:
+            - generic [ref=e759]:
+              - generic [ref=e760]: V
+              - generic [ref=e761]: e
+              - generic [ref=e762]: r
+              - generic [ref=e763]: c
+              - generic [ref=e764]: e
+              - generic [ref=e765]: l
+            - generic [ref=e766]:
+              - generic [ref=e767]: —
+              - generic [ref=e768]: Antoine
+              - generic [ref=e769]: ·
+              - generic [ref=e770]: Contentsquare
+        - generic [ref=e771]:
+          - button "×" [ref=e772] [cursor=pointer]
+          - generic [ref=e773]:
+            - generic [ref=e774]: i
+            - generic [ref=e775]: "n"
+            - generic [ref=e776]: f
+            - generic [ref=e777]: r
+            - generic [ref=e778]: a
+          - generic [ref=e779]:
+            - generic [ref=e780]:
+              - generic [ref=e781]: D
+              - generic [ref=e782]: o
+              - generic [ref=e783]: c
+              - generic [ref=e784]: k
+              - generic [ref=e785]: e
+              - generic [ref=e786]: r
+            - generic [ref=e787]:
+              - generic [ref=e788]: —
+              - generic [ref=e789]: Sarah
+              - generic [ref=e790]: ·
+              - generic [ref=e791]: Datadog
+        - generic [ref=e792]:
+          - button "×" [ref=e793] [cursor=pointer]
+          - generic [ref=e794]:
+            - generic [ref=e795]: p
+            - generic [ref=e796]: r
+            - generic [ref=e797]: o
+            - generic [ref=e798]: x
+            - generic [ref=e799]: "y"
+          - generic [ref=e800]:
+            - generic [ref=e801]:
+              - generic [ref=e802]: T
+              - generic [ref=e803]: r
+              - generic [ref=e804]: a
+              - generic [ref=e805]: e
+              - generic [ref=e806]: f
+              - generic [ref=e807]: i
+              - generic [ref=e808]: k
+            - generic [ref=e809]:
+              - generic [ref=e810]: —
+              - generic [ref=e811]: Maxime
+              - generic [ref=e812]: ·
+              - generic [ref=e813]: Algolia
+        - generic [ref=e814]:
+          - button "×" [ref=e815] [cursor=pointer]
+          - generic [ref=e816]:
+            - generic [ref=e817]: s
+            - generic [ref=e818]: e
+            - generic [ref=e819]: r
+            - generic [ref=e820]: v
+            - generic [ref=e821]: e
+            - generic [ref=e822]: r
+            - generic [ref=e823]: s
+          - generic [ref=e824]:
+            - generic [ref=e825]:
+              - generic [ref=e826]: H
+              - generic [ref=e827]: e
+              - generic [ref=e828]: t
+              - generic [ref=e829]: z
+              - generic [ref=e830]: "n"
+              - generic [ref=e831]: e
+              - generic [ref=e832]: r
+            - generic [ref=e833]:
+              - generic [ref=e834]: —
+              - generic [ref=e835]: Julie
+              - generic [ref=e836]: ·
+              - generic [ref=e837]: Ledger
+        - generic [ref=e838]:
+          - button "×" [ref=e839] [cursor=pointer]
+          - generic [ref=e840]:
+            - generic [ref=e841]: c
+            - generic [ref=e842]: s
+            - generic [ref=e843]: s
+          - generic [ref=e844]:
+            - generic [ref=e845]:
+              - generic [ref=e846]: T
+              - generic [ref=e847]: a
+              - generic [ref=e848]: i
+              - generic [ref=e849]: l
+              - generic [ref=e850]: w
+              - generic [ref=e851]: i
+              - generic [ref=e852]: "n"
+              - generic [ref=e853]: w
+            - generic [ref=e854]:
+              - generic [ref=e855]: —
+              - generic [ref=e856]: Nicolas
+              - generic [ref=e857]: ·
+              - generic [ref=e858]: PayFit
+  - generic [ref=e859]:
+    - generic [ref=e860]:
+      - generic [ref=e861]:
+        - generic [ref=e862]:
+          - generic [ref=e863]: /06
+          - generic [ref=e864]: ai agents
+        - heading [level=2] [ref=e865]:
+          - text: A roster of
+          - emphasis [ref=e866]: specialists
+          - text: ", on call."
+      - paragraph [ref=e867]: 50+ purpose-built agents grouped by role. Pick one — its orb wakes up, listens, thinks, generates.
+    - generic [ref=e868]:
+      - generic [ref=e869]:
+        - generic [ref=e870]:
+          - generic [ref=e871]: session
+          - generic [ref=e872]: idle
+        - generic [ref=e875]: research · senior
+        - heading "Atlas" [level=3] [ref=e876]
+        - paragraph [ref=e877]: Synthesizes long documents, runs multi-source comparisons, returns sourced briefs.
+        - generic [ref=e878]:
+          - generic [ref=e879]: rag
+          - generic [ref=e880]: citations
+          - generic [ref=e881]: pdf
+        - generic [ref=e882]:
+          - button "▶ start" [ref=e883] [cursor=pointer]
+          - button "stop" [ref=e884] [cursor=pointer]
+        - generic [ref=e885]:
+          - button "idle" [ref=e886] [cursor=pointer]
+          - button "listening" [ref=e887] [cursor=pointer]
+          - button "thinking" [ref=e888] [cursor=pointer]
+          - button "generating" [ref=e889] [cursor=pointer]
+          - button "speaking" [ref=e890] [cursor=pointer]
+      - generic [ref=e891]:
+        - generic [ref=e892]:
+          - generic [ref=e893]: ⌕
+          - textbox "search agents — name, role, tag…" [ref=e894]
+          - generic [ref=e895]: /
+          - generic [ref=e896]: 45 agents · 8 groups
+        - generic [ref=e897]:
+          - generic [ref=e898]:
+            - generic [ref=e899] [cursor=pointer]:
+              - generic [ref=e900]: Research & Analysis
+              - generic [ref=e901]: 7 agents
+              - button "Toggle Research & Analysis" [ref=e902]
+            - generic [ref=e907]:
+              - generic [ref=e910] [cursor=pointer]:
+                - generic [ref=e911]: Atlas
+                - generic [ref=e912]: long-doc synthesis
+              - generic [ref=e915] [cursor=pointer]:
+                - generic [ref=e916]: Cartographer
+                - generic [ref=e917]: topic mapping
+              - generic [ref=e920] [cursor=pointer]:
+                - generic [ref=e921]: Dossier
+                - generic [ref=e922]: company deep-dive
+              - generic [ref=e925] [cursor=pointer]:
+                - generic [ref=e926]: Citrine
+                - generic [ref=e927]: literature review
+              - generic [ref=e930] [cursor=pointer]:
+                - generic [ref=e931]: Periscope
+                - generic [ref=e932]: market scanner
+              - generic [ref=e935] [cursor=pointer]:
+                - generic [ref=e936]: Forager
+                - generic [ref=e937]: web crawler
+              - generic [ref=e940] [cursor=pointer]:
+                - generic [ref=e941]: Verdict
+                - generic [ref=e942]: fact-check
+          - generic [ref=e943]:
+            - generic [ref=e944] [cursor=pointer]:
+              - generic [ref=e945]: Writing & Editorial
+              - generic [ref=e946]: 6 agents
+              - button "Toggle Writing & Editorial" [ref=e947]
+            - generic [ref=e950]:
+              - generic [ref=e953] [cursor=pointer]:
+                - generic [ref=e954]: Quill
+                - generic [ref=e955]: long-form writer
+              - generic [ref=e958] [cursor=pointer]:
+                - generic [ref=e959]: Margin
+                - generic [ref=e960]: editor
+              - generic [ref=e963] [cursor=pointer]:
+                - generic [ref=e964]: Headline
+                - generic [ref=e965]: copywriter
+              - generic [ref=e968] [cursor=pointer]:
+                - generic [ref=e969]: Linguist
+                - generic [ref=e970]: translator
+              - generic [ref=e973] [cursor=pointer]:
+                - generic [ref=e974]: Memo
+                - generic [ref=e975]: summarizer
+              - generic [ref=e978] [cursor=pointer]:
+                - generic [ref=e979]: Beacon
+                - generic [ref=e980]: newsletter
+          - generic [ref=e981]:
+            - generic [ref=e982] [cursor=pointer]:
+              - generic [ref=e983]: Engineering
+              - generic [ref=e984]: 7 agents
+              - button "Toggle Engineering" [ref=e985]
+            - generic [ref=e988]:
+              - generic [ref=e991] [cursor=pointer]:
+                - generic [ref=e992]: Forge
+                - generic [ref=e993]: code generator
+              - generic [ref=e996] [cursor=pointer]:
+                - generic [ref=e997]: Bisect
+                - generic [ref=e998]: debugger
+              - generic [ref=e1001] [cursor=pointer]:
+                - generic [ref=e1002]: Refactor
+                - generic [ref=e1003]: code surgeon
+              - generic [ref=e1006] [cursor=pointer]:
+                - generic [ref=e1007]: Spec
+                - generic [ref=e1008]: api designer
+              - generic [ref=e1011] [cursor=pointer]:
+                - generic [ref=e1012]: Migrate
+                - generic [ref=e1013]: schema mover
+              - generic [ref=e1016] [cursor=pointer]:
+                - generic [ref=e1017]: Lint
+                - generic [ref=e1018]: reviewer
+              - generic [ref=e1021] [cursor=pointer]:
+                - generic [ref=e1022]: Sentry
+                - generic [ref=e1023]: security auditor
+          - generic [ref=e1024]:
+            - generic [ref=e1025] [cursor=pointer]:
+              - generic [ref=e1026]: Data & Analytics
+              - generic [ref=e1027]: 5 agents
+              - button "Toggle Data & Analytics" [ref=e1028]
+            - generic [ref=e1031]:
+              - generic [ref=e1034] [cursor=pointer]:
+                - generic [ref=e1035]: Tally
+                - generic [ref=e1036]: analyst
+              - generic [ref=e1039] [cursor=pointer]:
+                - generic [ref=e1040]: Augur
+                - generic [ref=e1041]: forecaster
+              - generic [ref=e1044] [cursor=pointer]:
+                - generic [ref=e1045]: Cluster
+                - generic [ref=e1046]: segmenter
+              - generic [ref=e1049] [cursor=pointer]:
+                - generic [ref=e1050]: Anomaly
+                - generic [ref=e1051]: outlier hunter
+              - generic [ref=e1054] [cursor=pointer]:
+                - generic [ref=e1055]: Ledger
+                - generic [ref=e1056]: finance analyst
+          - generic [ref=e1057]:
+            - generic [ref=e1058] [cursor=pointer]:
+              - generic [ref=e1059]: Operations & Productivity
+              - generic [ref=e1060]: 6 agents
+              - button "Toggle Operations & Productivity" [ref=e1061]
+            - generic [ref=e1064]:
+              - generic [ref=e1067] [cursor=pointer]:
+                - generic [ref=e1068]: Inbox
+                - generic [ref=e1069]: email triage
+              - generic [ref=e1072] [cursor=pointer]:
+                - generic [ref=e1073]: Calendar
+                - generic [ref=e1074]: scheduler
+              - generic [ref=e1077] [cursor=pointer]:
+                - generic [ref=e1078]: Receipt
+                - generic [ref=e1079]: expense parser
+              - generic [ref=e1082] [cursor=pointer]:
+                - generic [ref=e1083]: Hire
+                - generic [ref=e1084]: recruiter
+              - generic [ref=e1087] [cursor=pointer]:
+                - generic [ref=e1088]: Standup
+                - generic [ref=e1089]: team digest
+              - generic [ref=e1092] [cursor=pointer]:
+                - generic [ref=e1093]: Tracker
+                - generic [ref=e1094]: task wrangler
+          - generic [ref=e1095]:
+            - generic [ref=e1096] [cursor=pointer]:
+              - generic [ref=e1097]: Creative & Brand
+              - generic [ref=e1098]: 5 agents
+              - button "Toggle Creative & Brand" [ref=e1099]
+            - generic [ref=e1102]:
+              - generic [ref=e1105] [cursor=pointer]:
+                - generic [ref=e1106]: Palette
+                - generic [ref=e1107]: art director
+              - generic [ref=e1110] [cursor=pointer]:
+                - generic [ref=e1111]: Mock
+                - generic [ref=e1112]: ui designer
+              - generic [ref=e1115] [cursor=pointer]:
+                - generic [ref=e1116]: Storyboard
+                - generic [ref=e1117]: video planner
+              - generic [ref=e1120] [cursor=pointer]:
+                - generic [ref=e1121]: Naming
+                - generic [ref=e1122]: name finder
+              - generic [ref=e1125] [cursor=pointer]:
+                - generic [ref=e1126]: Voice
+                - generic [ref=e1127]: tone of voice
+          - generic [ref=e1128]:
+            - generic [ref=e1129] [cursor=pointer]:
+              - generic [ref=e1130]: Customer & Support
+              - generic [ref=e1131]: 4 agents
+              - button "Toggle Customer & Support" [ref=e1132]
+            - generic [ref=e1135]:
+              - generic [ref=e1138] [cursor=pointer]:
+                - generic [ref=e1139]: Concierge
+                - generic [ref=e1140]: frontline support
+              - generic [ref=e1143] [cursor=pointer]:
+                - generic [ref=e1144]: Triage
+                - generic [ref=e1145]: ticket router
+              - generic [ref=e1148] [cursor=pointer]:
+                - generic [ref=e1149]: Onboard
+                - generic [ref=e1150]: onboarding guide
+              - generic [ref=e1153] [cursor=pointer]:
+                - generic [ref=e1154]: Survey
+                - generic [ref=e1155]: feedback synth
+          - generic [ref=e1156]:
+            - generic [ref=e1157] [cursor=pointer]:
+              - generic [ref=e1158]: Voice & Realtime
+              - generic [ref=e1159]: 5 agents
+              - button "Toggle Voice & Realtime" [ref=e1160]
+            - generic [ref=e1163]:
+              - generic [ref=e1166] [cursor=pointer]:
+                - generic [ref=e1167]: Echo
+                - generic [ref=e1168]: voice assistant
+              - generic [ref=e1171] [cursor=pointer]:
+                - generic [ref=e1172]: Scribe
+                - generic [ref=e1173]: transcriber
+              - generic [ref=e1176] [cursor=pointer]:
+                - generic [ref=e1177]: Caption
+                - generic [ref=e1178]: subtitle gen
+              - generic [ref=e1181] [cursor=pointer]:
+                - generic [ref=e1182]: Interview
+                - generic [ref=e1183]: live interviewer
+              - generic [ref=e1186] [cursor=pointer]:
+                - generic [ref=e1187]: Phone
+                - generic [ref=e1188]: call agent
+  - generic [ref=e1190]:
+    - heading [level=2] [ref=e1191]:
+      - text: Want this kind of
+      - emphasis [ref=e1192]: system thinking
+      - text: on your team?
+    - paragraph [ref=e1193]: I'm open to AI engineering and senior full-stack roles — fully remote across EU, or hybrid in France. The CV is one click away — though honestly, this page is most of it.
+    - generic [ref=e1194]:
+      - link "↗ serge@smiro.dev" [ref=e1195] [cursor=pointer]:
+        - /url: mailto:serge@smiro.dev
+      - link "CV · AI engineer (EN)" [ref=e1196] [cursor=pointer]:
+        - /url: /cv
+      - link "see my projects" [ref=e1197] [cursor=pointer]:
+        - /url: /
+      - link "↗ github" [ref=e1198] [cursor=pointer]:
+        - /url: https://github.com/SergeMiro
+  - contentinfo [ref=e1199]:
+    - generic [ref=e1200]: © 2026 Serge Miro · handcrafted in Dijon, FR
+    - generic [ref=e1201]:
+      - link "← back to portfolio" [ref=e1202] [cursor=pointer]:
+        - /url: /
+      - text: · v2 · apr '26
+  - button "Open theme settings" [ref=e1203] [cursor=pointer]
+  - dialog "Theme settings":
+    - generic:
+      - generic: Theme · Settings
+      - button "Close": ×
+    - generic:
+      - generic:
+        - generic: Accent color
+        - generic: Terracotta
+      - generic:
+        - button "Terracotta"
+        - button "Rust"
+        - button "Olive"
+        - button "Forest"
+        - button "Teal"
+        - button "Denim"
+        - button "Plum"
+        - button "Mauve"
+        - button "Mustard"
+    - generic:
+      - generic:
+        - generic: Background
+        - generic: Cream
+      - generic:
+        - button "Cream"
+        - button "Paper"
+        - button "Ivory"
+        - button "Linen"
+        - button "Sand"
+        - button "Mist"
+        - button "Sky"
+        - button "Blush"
+        - button "Sage"
+    - generic:
+      - generic:
+        - generic: Language
+        - generic: english
+      - group "Language":
+        - button "FR · français"
+        - button "EN · english"
+    - generic:
+      - generic: changes persist on this device
+      - button "reset"
