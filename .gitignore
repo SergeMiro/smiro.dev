@@ -27,3 +27,4 @@ pnpm-debug.log*
 # original video sources — only keep optimized mp4/webm/jpg in public/
 public/*.mov
 public/video-source.*
+.playwright-mcp/
