@@ -216,11 +216,10 @@ function boot(container) {
   // A part drawn as two outlines with nothing between them reads as glass: the
   // far edge shows straight through the near one and the machine looks like a
   // ghost. These panels sit *inside* the lid and the slab in the page beige,
-  // two-thirds opaque — quiet enough that the orange ink still carries the
-  // drawing, solid enough (they write depth, unlike every line material here)
-  // to hide the back edges and the desk grid behind the shell.
+  // fully opaque — they write depth and hide the back edges and the desk grid
+  // behind the shell.
   const matFill = new THREE.MeshBasicMaterial({
-    color: 0xf4f1e8, transparent: true, opacity: 0.66,
+    color: 0xf4f1e8, transparent: false, opacity: 1,
     side: THREE.DoubleSide, toneMapped: false,
   });
 
@@ -713,6 +712,13 @@ function boot(container) {
   const screen = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN_W, SCREEN_H), screenMat);
   screen.name = 'screen';
   lidFx.add(screen);
+
+  // back panel — same size as the screen, sits behind it so the lid reads solid
+  const lidBack = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN_W, SCREEN_H), matFill);
+  lidBack.name = 'lid-back';
+  lidBack.position.z = -0.01;        // one step behind the screen plane
+  lidBack.renderOrder = -1;
+  lidFx.add(lidBack);
 
   // light spilling out of the panel (nothing in the scene is lit any more,
   // so the bloom is drawn, not computed). Sits behind the plane so only the
