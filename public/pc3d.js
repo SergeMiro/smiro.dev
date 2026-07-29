@@ -63,10 +63,10 @@ function boot(container) {
   // ─────────────────────────────────────────── content (EN / FR)
   const C = {
     en: {
-      file: 'hire-serge.html',
+      file: 'hire-sergiy.html',
       code: [
         [['<!-- ', 'c'], ['found by my pipeline · written by me', 'c'], [' -->', 'c']],
-        [['<candidate ', 't'], ['id', 'a'], ['=', 'p'], ['"serge"', 's'], [' risk', 'a'], ['=', 'p'], ['"0.00"', 's'], ['>', 't']],
+        [['<candidate ', 't'], ['id', 'a'], ['=', 'p'], ['"sergiy"', 's'], [' risk', 'a'], ['=', 'p'], ['"0.00"', 's'], ['>', 't']],
         [['  <skill>', 't'], ['multi-agent systems that ship', 'x'], ['</skill>', 't']],
         [['  <skill>', 't'], ['15 yrs in IT · 5 yrs in prod', 'x'], ['</skill>', 't']],
         [['  <skill>', 't'], ['reads the docs, then the source', 'x'], ['</skill>', 't']],
@@ -96,10 +96,10 @@ function boot(container) {
       hintReady: 'press  ⏎  Enter',
     },
     fr: {
-      file: 'recruter-serge.html',
+      file: 'recruter-sergiy.html',
       code: [
         [['<!-- ', 'c'], ['trouvé par mon pipeline · écrit par moi', 'c'], [' -->', 'c']],
-        [['<candidat ', 't'], ['id', 'a'], ['=', 'p'], ['"serge"', 's'], [' risque', 'a'], ['=', 'p'], ['"0.00"', 's'], ['>', 't']],
+        [['<candidat ', 't'], ['id', 'a'], ['=', 'p'], ['"sergiy"', 's'], [' risque', 'a'], ['=', 'p'], ['"0.00"', 's'], ['>', 't']],
         [['  <atout>', 't'], ['systèmes multi-agents qui tournent', 'x'], ['</atout>', 't']],
         [['  <atout>', 't'], ['15 ans IT · 5 ans en prod', 'x'], ['</atout>', 't']],
         [['  <atout>', 't'], ['lit la doc, puis le code source', 'x'], ['</atout>', 't']],

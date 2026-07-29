@@ -26,7 +26,7 @@ window.I18N_FR = {
 
     "hero.eyebrow":       "Dijon, FR · full-stack · agents IA · n8n",
     "hero.title":         "Je construis",
-    "hero.sub":           "Serge Miro — dev full-stack, 5+ ans à livrer, beaucoup trop à débugger. Je conçois des systèmes multi-agents : un <strong>exécuteur</strong> bosse sur une tâche, un <strong>réviseur</strong> le note — boucle jusqu'à ce que le score atteigne 90 %. Le reste de mes journées : automatiser les corvées d'entreprise avec n8n pour que les humains s'occupent du reste.",
+    "hero.sub":           "Sergiy Miro — dev full-stack, 5+ ans à livrer, beaucoup trop à débugger. Je conçois des systèmes multi-agents : un <strong>exécuteur</strong> bosse sur une tâche, un <strong>réviseur</strong> le note — boucle jusqu'à ce que le score atteigne 90 %. Le reste de mes journées : automatiser les corvées d'entreprise avec n8n pour que les humains s'occupent du reste.",
     "hero.cta1":          "projets sélectionnés →",
     "hero.cta2":          "voir le CV / télécharger",
     "hero.years":         "ans de dev",
@@ -108,7 +108,7 @@ window.I18N_FR = {
     "contact.idx":        "me contacter",
     "contact.h2":         "Besoin d'un",
         "contact.kick":       "Je prends quelques projets sélectionnés — systèmes multi-agents, automatisation n8n back-office, apps full-stack natives IA, ou sauvetage de codebase en rade. Je réponds sous 24h (l'agent exécuteur me le rappelle).",
-    "footer.left":        "© 2026 Serge Miro · fait main à Dijon, FR",
+    "footer.left":        "© 2026 Sergiy Miro · fait main à Dijon, FR",
     "footer.right":       "smiro"
   },
 
@@ -123,11 +123,11 @@ window.I18N_FR = {
     "Chat with my":                  "Parlez avec mon",
     "AI avatar":                     "avatar IA",
     "ask anything · before we meet": "posez vos questions · avant qu'on se rencontre",
-    "Serge's":                       "Serge,",
+    "Sergiy's":                       "Sergiy,",
     "online · ready to talk":        "en ligne · prêt à discuter",
     "Talk by voice":                 "Parler à la voix",
     "or pick a question":            "ou choisissez une question",
-    "Hi 👋 I'm Serge's":             "Salut 👋 Je suis l'avatar IA de Serge",
+    "Hi 👋 I'm Sergiy's":             "Salut 👋 Je suis l'avatar IA de Sergiy",
     "— trained on his CV, projects and case studies. Ask me anything.":
                                      "— entraîné sur son CV, ses projets et ses études de cas. Posez-moi vos questions.",
     "HR":                            "RH",
@@ -303,8 +303,8 @@ window.I18N_FR = {
     "↗ serge@smiro.dev":             "↗ serge@smiro.dev",
     "see selected work":             "voir les projets",
     "↗ github":                      "↗ github",
-    "© 2026 Serge Miro · handcrafted in Dijon, FR":
-      "© 2026 Serge Miro · fait main à Dijon, FR",
+    "© 2026 Sergiy Miro · handcrafted in Dijon, FR":
+      "© 2026 Sergiy Miro · fait main à Dijon, FR",
     "← back to portfolio":           "← retour au portfolio",
     "· v2 · apr '26":                "· v2 · avr. '26",
 

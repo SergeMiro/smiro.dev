@@ -2343,8 +2343,8 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
       <span></span><span></span><span></span>
     </button>
     <a class="logo-mk" href="/">
-      <span class="logo-face" aria-label="Serge avatar">
-        <span class="mask"><img src="/assets/avatar-serge.png" alt="Serge Miro"></span>
+      <span class="logo-face" aria-label="Sergiy avatar">
+        <span class="mask"><img src="/assets/avatar-serge.png" alt="Sergiy Miro"></span>
       </span>
       <span class="s">s</span><span class="miro">miro</span>
     </a>
@@ -2387,7 +2387,7 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
 
 <!-- AVATAR CHAT (right rail) -->
 <aside class="avatar-chat" id="avatar-chat">
-  <div class="avatar-invite" id="avatar-invite" role="button" tabindex="0" aria-label="Open chat with Serge's AI avatar" style="border-radius: 14px; padding: 0px 8px 8px 22px">
+  <div class="avatar-invite" id="avatar-invite" role="button" tabindex="0" aria-label="Open chat with Sergiy's AI avatar" style="border-radius: 14px; padding: 0px 8px 8px 22px">
     <span class="avatar-close" id="avatar-close" role="button" tabindex="0" aria-label="dismiss">×</span>
     <div class="avatar-msg">
       <div class="am-l1">Chat with my <em>AI avatar</em> 😇</div>
@@ -2401,14 +2401,14 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
         <span class="orb-ring"></span>
         <span class="orb-ring r2"></span>
         <span class="orb-ring r3"></span>
-        <div class="orb-mask"><img src="/assets/avatar-serge.png" alt="Serge avatar"></div>
+        <div class="orb-mask"><img src="/assets/avatar-serge.png" alt="Sergiy avatar"></div>
       </div>
       <span class="orb-online"></span>
     </div>
   </div>
 
   <div class="chat-overlay" id="chat-overlay">
-    <div class="chat-panel" id="chat-panel" role="dialog" aria-label="Chat with Serge's AI avatar">
+    <div class="chat-panel" id="chat-panel" role="dialog" aria-label="Chat with Sergiy's AI avatar">
       <!-- voice hero -->
       <div class="chat-voice">
         <button class="cv-close" id="ch-close" aria-label="close chat">×</button>
@@ -2416,9 +2416,9 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
           <span class="cv-ring"></span>
           <span class="cv-ring r2"></span>
           <span class="cv-ring r3"></span>
-          <div class="cv-disk"><div class="cv-mask"><img src="/assets/avatar-serge.png" alt="Serge avatar"></div></div>
+          <div class="cv-disk"><div class="cv-mask"><img src="/assets/avatar-serge.png" alt="Sergiy avatar"></div></div>
         </div>
-        <div class="cv-name">Serge's <em>AI avatar</em></div>
+        <div class="cv-name">Sergiy's <em>AI avatar</em></div>
         <div class="cv-tagline">online · ready to talk</div>
         <button class="cv-call-btn" id="cv-call">
           <span class="cv-mic">🎙</span>
@@ -2429,7 +2429,7 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
       <!-- text fallback / suggested -->
       <div class="chat-body" id="chat-body">
         <div class="chat-bubble bot">
-          Hi 👋 I'm Serge's <em>AI avatar</em> — trained on his CV, projects and case studies. Ask me anything.
+          Hi 👋 I'm Sergiy's <em>AI avatar</em> — trained on his CV, projects and case studies. Ask me anything.
         </div>
       </div>
       <div class="chat-suggest" id="chat-suggest">
@@ -2486,7 +2486,8 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
     </div>
     <aside class="hero-r pc-stage" aria-label="Interactive 3D computer — bring your cursor toward the keyboard">
       <div id="pc3d-mount" class="pc3d-mount" data-i18n-skip></div>
-      <button id="pc3d-tune-btn" class="pc3d-tune-btn" onclick="toggleTune()">⚙ Tune POV</button>
+      <!-- dev-only POV sliders; un-comment to dial the framing in again -->
+      <!-- <button id="pc3d-tune-btn" class="pc3d-tune-btn" onclick="toggleTune()">⚙ Tune POV</button> -->
       <div id="pc3d-tune" class="pc3d-tune-panel">
         <div class="pc3d-tune-group">
           <label>Camera Position</label>
@@ -3019,7 +3020,7 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
 </section>
 
 <footer>
-  <div>© 2026 Serge Miro · handcrafted in Dijon, FR</div>
+  <div>© 2026 Sergiy Miro · handcrafted in Dijon, FR</div>
   <div><a href="/">← back to portfolio</a> · v2 · apr '26</div>
 </footer>
 
@@ -3111,7 +3112,7 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
     if(orbSmall) orbSmall.classList.add('speaking');
     if(orbBig) orbBig.classList.add('speaking');
     try{
-      const sys = "You are the AI avatar of Serge Miro (smiro.dev) — AI engineer & full-stack developer, 15 years in IT, 5+ years shipping production code. He builds multi-agent systems (executor/reviewer loops to >=90% quality), RAG pipelines, MCP integrations and n8n automations; vibe-codes daily with Claude Code & Cursor; fine-tunes open-source LLMs (Unsloth, LoRA); stack: React, Next.js, Node, Python, TypeScript, Postgres, SQL Server; provisions and hardens his own VPS infra (Docker, OWASP). Based in Dijon, France — fully remote across EU. Answer briefly (2–4 sentences), in the language of the question (English / French / Russian), in first person, professional and warm. If you don't know the precise answer, suggest emailing serge@smiro.dev.";
+      const sys = "You are the AI avatar of Sergiy Miro (smiro.dev) — AI engineer & full-stack developer, 15 years in IT, 5+ years shipping production code. He builds multi-agent systems (executor/reviewer loops to >=90% quality), RAG pipelines, MCP integrations and n8n automations; vibe-codes daily with Claude Code & Cursor; fine-tunes open-source LLMs (Unsloth, LoRA); stack: React, Next.js, Node, Python, TypeScript, Postgres, SQL Server; provisions and hardens his own VPS infra (Docker, OWASP). Based in Dijon, France — fully remote across EU. Answer briefly (2–4 sentences), in the language of the question (English / French / Russian), in first person, professional and warm. If you don't know the precise answer, suggest emailing serge@smiro.dev.";
       const reply = await window.claude.complete({
         messages: [
           {role:'user', content: sys + "\n\nEmployer's question: " + q}
@@ -3121,7 +3122,7 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
       addBubble(reply || "Sorry, I couldn't answer that. Please write to serge@smiro.dev", 'bot');
     } catch(err){
       typing.remove();
-      addBubble('AI connection is temporarily unavailable. Please write to Serge directly: serge@smiro.dev', 'bot');
+      addBubble('AI connection is temporarily unavailable. Please write to Sergiy directly: serge@smiro.dev', 'bot');
     }
     // stop speaking waves
     if(orbSmall) orbSmall.classList.remove('speaking');
