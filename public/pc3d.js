@@ -941,10 +941,9 @@ function boot(container) {
   }
   function onLeave(e) {
     hasPointer = false;
-    window.__hoveringLaptop = false;
     proximity = 0;
-    // camera zooms out when the cursor leaves the laptop or canvas
-    // — hover-on-laptop triggers the push-in, leaving exits it.
+    // camera stays zoomed in once focused — only a CV click in the
+    // `result` state brings it back out.
   }
 
   function rayHit() {
@@ -984,8 +983,8 @@ function boot(container) {
       // Tapping anywhere on the machine leans in first. At the resting framing
       // the Enter key is a handful of pixels wide — far too small to ask for.
       if (proximity > 0.1 || rayHit().intersectObjects(laptopHits, false).length) enterFocus();
-    } else if (state === 'focused') {
-      // zoomed in, the panel and the key are both generous targets
+    } else if (state === 'focused' && focusZoom > 0.99) {
+      // zoomed in and fully transitioned — the panel and the key are both generous targets
       if (rayHit().intersectObjects([screen, enterKey, enterRing], false).length) startBuild();
     } else if (state === 'result' && hoverCV) {
       // return to idle, then navigate to the CV page
@@ -1334,10 +1333,9 @@ function boot(container) {
       const radius = Math.max(140, Math.min(w, h) * 0.7);
       proximity = Math.max(0, Math.min(1, 1 - d / radius));
     }
-    // reaching the deck leans in on its own — no click needed on desktop
     // hover on the 3D laptop model triggers the push-in; proximity still works as fallback
     if ((state === 'idle' || state === 'typing') && (window.__hoveringLaptop || proximity > FOCUS_AT)) enterFocus();
-    if (state === 'focused' && !window.__hoveringLaptop && proximity < 0.2) exitFocus();
+    // once focused, camera stays zoomed in — only a CV click in result brings it back
 
     if (state === 'idle' || state === 'typing' || state === 'focused') {
       const zoomed = state === 'focused';
