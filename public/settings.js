@@ -16,11 +16,7 @@
     { id: 'terracotta', label: 'Terracotta',  value: 'oklch(0.62 0.16 38)'  },
     { id: 'rust',       label: 'Rust',        value: 'oklch(0.55 0.13 28)'  },
     { id: 'olive',      label: 'Olive',       value: 'oklch(0.58 0.11 115)' },
-    { id: 'forest',     label: 'Forest',      value: 'oklch(0.52 0.10 155)' },
-    { id: 'teal',       label: 'Teal',        value: 'oklch(0.56 0.10 195)' },
     { id: 'denim',      label: 'Denim',       value: 'oklch(0.55 0.11 245)' },
-    { id: 'plum',       label: 'Plum',        value: 'oklch(0.50 0.12 340)' },
-    { id: 'mauve',      label: 'Mauve',       value: 'oklch(0.55 0.09 355)' },
     { id: 'mustard',    label: 'Mustard',     value: 'oklch(0.62 0.12 85)'  },
   ];
 
@@ -31,10 +27,6 @@
     { id: 'ivory',    label: 'Ivory',     value: '#fbf7ec' },
     { id: 'linen',    label: 'Linen',     value: '#efebe1' },
     { id: 'sand',     label: 'Sand',      value: '#ece4d2' },
-    { id: 'mist',     label: 'Mist',      value: '#eef0ed' },
-    { id: 'sky',      label: 'Sky',       value: '#eaf0f3' },
-    { id: 'blush',    label: 'Blush',     value: '#f3ebe6' },
-    { id: 'sage',     label: 'Sage',      value: '#e9ede3' },
   ];
 
   const DEFAULTS = { accent: 'terracotta', background: 'cream' };
