@@ -10,7 +10,9 @@
 
 export const config = { runtime: 'edge' };
 
-const RATE_LIMIT_MAX = 5;
+// The agents section invites visitors to try several teams, so one probe per
+// team has to fit inside the window.
+const RATE_LIMIT_MAX = 12;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const MAX_SYSTEM_PROMPT_CHARS = 6000;
 const MAX_USER_MESSAGE_CHARS = 1500;
@@ -108,9 +110,20 @@ export default async function handler(req: Request): Promise<Response> {
     return json({ error: 'systemPrompt and messages are required' }, 400);
   }
 
-  // Pick model: requested → fallback to first wired-up model
+  // Pick model: requested → first wired-up model. `candidates` keeps one model
+  // per remaining provider so a dead key (expired OpenRouter, exhausted Gemini
+  // quota) degrades to the next provider instead of breaking the demo.
   const requested = MODELS.find((m) => m.id === (body.model || DEFAULT_MODEL_ID));
   const wiredUp = requested && process.env[PROVIDER_ENV[requested.provider]] ? requested : pickFallbackModel();
+  const candidates: ModelDef[] = [];
+  if (wiredUp) {
+    candidates.push(wiredUp);
+    for (const m of MODELS) {
+      if (!process.env[PROVIDER_ENV[m.provider]]) continue;
+      if (candidates.some((c) => c.provider === m.provider)) continue;
+      candidates.push(m);
+    }
+  }
   if (!wiredUp) {
     return json({ error: 'no_provider_configured', message: 'No LLM provider is configured. Set OPENROUTER_API_KEY, GROQ_API_KEY, or GEMINI_API_KEY.' }, 503);
   }
@@ -136,13 +149,12 @@ export default async function handler(req: Request): Promise<Response> {
     `- For coding tasks: small representative example + high-level outline.\n` +
     `- Stay in the role above; never mention which model you are.`;
 
-  const apiKey = process.env[PROVIDER_ENV[wiredUp.provider]]!;
-  let upstream: Response;
+  function callProvider(model: ModelDef): Promise<Response> {
+    const apiKey = process.env[PROVIDER_ENV[model.provider]]!;
 
-  try {
-    if (wiredUp.provider === 'openrouter' || wiredUp.provider === 'groq') {
+    if (model.provider === 'openrouter' || model.provider === 'groq') {
       const endpoint =
-        wiredUp.provider === 'openrouter'
+        model.provider === 'openrouter'
           ? 'https://openrouter.ai/api/v1/chat/completions'
           : 'https://api.groq.com/openai/v1/chat/completions';
 
@@ -150,52 +162,71 @@ export default async function handler(req: Request): Promise<Response> {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
       };
-      if (wiredUp.provider === 'openrouter') {
+      if (model.provider === 'openrouter') {
         headers['HTTP-Referer'] = 'https://smiro.dev';
         headers['X-Title'] = 'smiro.dev agent sandbox';
       }
 
       const reqBody: Record<string, unknown> = {
-        model: wiredUp.upstreamId,
+        model: model.upstreamId,
         stream: true,
         max_tokens: 800,
         temperature: 0.7,
         messages: [{ role: 'system', content: fullSystem }, ...history],
       };
       // OpenRouter — strip reasoning tokens so the visible reply isn't truncated by them.
-      if (wiredUp.provider === 'openrouter') reqBody.reasoning = { exclude: true };
+      if (model.provider === 'openrouter') reqBody.reasoning = { exclude: true };
 
-      upstream = await fetch(endpoint, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(reqBody),
-      });
-    } else {
-      // Gemini REST streaming
-      const geminiHistory = history.map((m) => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.content }],
-      }));
-      upstream = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${wiredUp.upstreamId}:streamGenerateContent?alt=sse&key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: fullSystem }] },
-            contents: geminiHistory,
-            generationConfig: { maxOutputTokens: 600, temperature: 0.7, topP: 0.95 },
-          }),
-        }
-      );
+      return fetch(endpoint, { method: 'POST', headers, body: JSON.stringify(reqBody) });
     }
-  } catch (e) {
-    return json({ error: 'upstream_fetch_failed', detail: String(e) }, 502);
+
+    // Gemini REST streaming
+    const geminiHistory = history.map((m) => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }],
+    }));
+    return fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model.upstreamId}:streamGenerateContent?alt=sse&key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: fullSystem }] },
+          contents: geminiHistory,
+          generationConfig: { maxOutputTokens: 600, temperature: 0.7, topP: 0.95 },
+        }),
+      }
+    );
   }
 
-  if (!upstream.ok || !upstream.body) {
-    const detail = await upstream.text().catch(() => '');
-    return json({ error: 'upstream_error', status: upstream.status, detail: detail.slice(0, 500) }, 502);
+  let upstream: Response | null = null;
+  let used: ModelDef = wiredUp;
+  let lastStatus = 0;
+  let lastDetail = '';
+
+  for (const candidate of candidates) {
+    let res: Response;
+    try {
+      res = await callProvider(candidate);
+    } catch (e) {
+      lastDetail = String(e);
+      continue;
+    }
+    if (res.ok && res.body) {
+      upstream = res;
+      used = candidate;
+      break;
+    }
+    lastStatus = res.status;
+    lastDetail = await res.text().catch(() => '');
+  }
+
+  if (!upstream || !upstream.body) {
+    return json(
+      { error: 'upstream_error', status: lastStatus, detail: lastDetail.slice(0, 500),
+        message: 'Every configured model refused the request. Try again in a minute.' },
+      502
+    );
   }
 
   // Adapter: parse upstream SSE chunk → text delta
@@ -234,7 +265,7 @@ export default async function handler(req: Request): Promise<Response> {
             if (delta) controller.enqueue(enc.encode(`data: ${JSON.stringify({ delta })}\n\n`));
           }
         }
-        controller.enqueue(enc.encode(`data: ${JSON.stringify({ done: true, remaining: rate.remaining, model: wiredUp.id })}\n\n`));
+        controller.enqueue(enc.encode(`data: ${JSON.stringify({ done: true, remaining: rate.remaining, model: used.id })}\n\n`));
       } catch (e) {
         controller.enqueue(enc.encode(`data: ${JSON.stringify({ error: String(e) })}\n\n`));
       } finally {
@@ -250,7 +281,7 @@ export default async function handler(req: Request): Promise<Response> {
       'Cache-Control': 'no-cache, no-transform',
       Connection: 'keep-alive',
       'X-RateLimit-Remaining': String(rate.remaining),
-      'X-Model-Used': wiredUp.id,
+      'X-Model-Used': used.id,
     },
   });
 }

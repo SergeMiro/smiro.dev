@@ -1175,8 +1175,12 @@ footer a:hover{color:var(--brick)}
 }
 .avatar-orb .orb-disk img{
   position:absolute;
-  width:140%;height:auto;
-  left:50%;top:50%;
+  /* 133% (was 140%) pushes the portrait 5% back on z, and top:57% (was 50%)
+     drops the head 7% of the disk height — together they bring the whole
+     head, hair included, inside the circular mask. At 140%/50% the crown
+     was clipped (5.6% of the head fell outside the circle). */
+  width:133%;height:auto;
+  left:50%;top:57%;
   transform:translate(-50%,-50%);
   display:block;
   filter:drop-shadow(0 2px 4px rgba(27,26,24,.25));
@@ -1338,8 +1342,9 @@ footer a:hover{color:var(--brick)}
   overflow:hidden;pointer-events:none;
 }
 .cv-orb .cv-disk img{
-  position:absolute;width:80%;height:auto;
-  left:50%;top:50%;transform:translate(-50%,-50%);
+  /* same framing as .avatar-orb: 5% back on z, head 7% lower */
+  position:absolute;width:76%;height:auto;
+  left:50%;top:57%;transform:translate(-50%,-50%);
   display:block;
   filter:drop-shadow(0 3px 5px rgba(27,26,24,.28));
 }
@@ -2066,7 +2071,8 @@ footer a:hover{color:var(--brick)}
   border:1px solid var(--line-2);
   padding:32px 28px 28px;
   min-height:520px;
-  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:18px;
+  /* the orb shares the stage with the sandbox now, so the gaps are tighter */
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:13px;
   color:#f4eedd;
   box-shadow:0 30px 60px -30px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.04);
   overflow:hidden;
@@ -2090,9 +2096,9 @@ footer a:hover{color:var(--brick)}
   color:rgba(244,238,221,.85);
 }
 .orb-canvas-wrap{
-  position:relative;width:340px;height:340px;display:grid;place-items:center;z-index:2;
+  position:relative;width:260px;height:260px;display:grid;place-items:center;z-index:2;
 }
-canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
+canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
 .orb-aura{
   position:absolute;inset:-30px;border-radius:50%;
   background:radial-gradient(circle, oklch(0.55 0.09 220 / .28), oklch(0.42 0.07 250 / .12) 45%, transparent 65%);
@@ -2144,12 +2150,110 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
   display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:4px;
 }
 .orb-state{
-  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
-  padding:5px 9px;border-radius:5px;cursor:pointer;
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  padding:5px 7px;border-radius:5px;cursor:pointer;
   background:rgba(244,238,221,.04);color:rgba(244,238,221,.55);
   border:1px solid rgba(244,238,221,.08);
 }
 .orb-state.on{background:oklch(0.7 0.16 50 / .2);color:oklch(0.85 0.12 60);border-color:oklch(0.7 0.16 50 / .4)}
+/* the state track mirrors the live run — clicking it would lie, so it can't */
+.orb-states .orb-state{cursor:default;pointer-events:none}
+
+/* ── how the system is wired: one line, six beats ── */
+.hflow{
+  list-style:none;margin:28px 0 0;padding:0;
+  display:grid;grid-template-columns:repeat(6,1fr);gap:10px;
+  counter-reset:none;
+}
+@media (max-width:1100px){.hflow{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:620px){.hflow{grid-template-columns:repeat(2,1fr)}}
+.hflow li{
+  position:relative;
+  padding:14px 14px 13px;border-radius:11px;
+  background:var(--bg);border:1px solid var(--line);
+  display:flex;flex-direction:column;gap:5px;
+  transition:border-color .2s, transform .2s, box-shadow .2s;
+}
+.hflow li:hover{border-color:var(--ink);transform:translateY(-2px);box-shadow:0 10px 20px -14px rgba(27,26,24,.28)}
+/* the arrow between beats — hidden on the last of each row by the grid itself */
+.hflow li:not(:last-child)::after{
+  content:"→";position:absolute;right:-11px;top:50%;transform:translateY(-50%);
+  font-family:var(--font-mono);font-size:12px;color:var(--faint);z-index:2;
+}
+@media (max-width:1100px){.hflow li:nth-child(3n)::after{content:none}}
+@media (max-width:620px){
+  .hflow li:nth-child(3n)::after{content:"→"}
+  .hflow li:nth-child(2n)::after{content:none}
+}
+.hflow .n{
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;color:var(--faint);
+}
+.hflow b{
+  font-family:var(--font-serif);font-weight:500;font-size:15px;letter-spacing:-.01em;color:var(--ink);
+}
+.hflow i{font-style:normal;font-size:11.5px;line-height:1.45;color:var(--muted)}
+
+/* ── live sandbox inside the orb stage ── */
+.sbx-log{
+  width:100%;max-height:190px;overflow-y:auto;
+  display:none;flex-direction:column;gap:8px;
+  margin-top:2px;padding-right:2px;
+  font-size:12.5px;line-height:1.5;text-align:left;
+  scrollbar-width:thin;
+}
+.sbx-log.on{display:flex}
+.sbx-log .b{
+  padding:9px 12px;border-radius:11px;
+  border:1px solid rgba(244,238,221,.1);
+  background:rgba(244,238,221,.05);
+  color:rgba(244,238,221,.85);
+  white-space:pre-wrap;overflow-wrap:anywhere;
+}
+.sbx-log .b.you{
+  align-self:flex-end;max-width:88%;
+  background:oklch(0.7 0.16 50 / .16);border-color:oklch(0.7 0.16 50 / .3);
+  color:#f7efe0;
+}
+.sbx-log .b.err{border-color:oklch(0.6 0.19 25 / .45);color:oklch(0.85 0.1 40)}
+.sbx-log .b .cur{
+  display:inline-block;width:7px;height:13px;vertical-align:-2px;
+  background:oklch(0.8 0.14 55);animation:sbxCur 1s steps(2) infinite;
+}
+@keyframes sbxCur{0%,100%{opacity:1}50%{opacity:0}}
+.sbx-qs{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;width:100%}
+.sbx-q{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.02em;
+  padding:6px 10px;border-radius:99px;cursor:pointer;text-align:left;
+  background:rgba(244,238,221,.05);color:rgba(244,238,221,.7);
+  border:1px dashed rgba(244,238,221,.18);
+  transition:all .18s;
+}
+.sbx-q:hover{background:rgba(244,238,221,.12);color:#f4eedd;border-color:rgba(244,238,221,.4)}
+.sbx-form{
+  width:100%;display:flex;gap:8px;align-items:center;margin-top:2px;
+}
+.sbx-form input{
+  flex:1;min-width:0;
+  font-family:var(--font-mono);font-size:12px;color:#f4eedd;
+  background:rgba(244,238,221,.06);
+  border:1px solid rgba(244,238,221,.16);border-radius:99px;
+  padding:11px 15px;outline:none;
+  transition:border-color .2s, background .2s;
+}
+.sbx-form input:focus{border-color:oklch(0.75 0.15 55 / .7);background:rgba(244,238,221,.1)}
+.sbx-form input::placeholder{color:rgba(244,238,221,.4)}
+.sbx-send{
+  flex-shrink:0;width:38px;height:38px;border-radius:50%;cursor:pointer;
+  border:none;color:#1b1a18;font-size:13px;
+  background:linear-gradient(135deg, oklch(0.78 0.16 60), oklch(0.64 0.18 32));
+  transition:filter .2s, transform .2s;
+}
+.sbx-send:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.sbx-send[disabled]{opacity:.45;cursor:progress;transform:none}
+.sbx-foot{
+  font-family:var(--font-mono);font-size:9.5px;line-height:1.5;letter-spacing:.02em;
+  color:rgba(244,238,221,.42);text-align:center;margin:0;max-width:300px;
+}
 
 /* right: agent groups */
 .agents-grid{display:flex;flex-direction:column;gap:24px}
@@ -2285,7 +2389,59 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
 
 .agent-tx{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
 .agent-name{font-size:13.5px;font-weight:500;color:var(--ink);letter-spacing:-.005em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.agent-role{font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent-role{font-family:var(--font-mono);font-size:10px;line-height:1.4;color:var(--muted);letter-spacing:.04em;overflow-wrap:anywhere}
+
+/* ── team header extras: the repo it lives in, its status, a way in ── */
+.agroup-h .repo{
+  font-family:var(--font-mono);font-size:10px;color:var(--muted);
+  padding:3px 7px;border-radius:5px;background:var(--bg-2);border:1px solid var(--line);
+  flex-shrink:0;
+}
+.abadge{
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+  padding:3px 7px;border-radius:99px;flex-shrink:0;
+  background:oklch(0.6 0.14 145 / .12);color:oklch(0.45 0.12 145);
+  border:1px solid oklch(0.6 0.14 145 / .3);
+}
+.abadge.wip{
+  background:oklch(0.75 0.15 75 / .16);color:oklch(0.48 0.12 70);
+  border-color:oklch(0.75 0.15 75 / .4);
+}
+.agroup-blurb{
+  margin:0;padding:14px 16px 0;
+  font-size:13px;line-height:1.6;color:var(--ink-2);
+}
+.agroup-blurb b{font-weight:500;color:var(--ink)}
+.agroup-try{
+  display:inline-flex;align-items:center;gap:7px;margin:12px 16px 0;
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+  padding:8px 13px;border-radius:99px;cursor:pointer;
+  background:var(--ink);color:var(--bg);border:1px solid var(--ink);
+  transition:filter .2s, transform .2s;
+}
+.agroup-try:hover{filter:brightness(1.25);transform:translateY(-1px)}
+
+/* the model tier each agent runs on — a detail that says "this is real" */
+.agent-meta{display:flex;align-items:center;gap:5px;margin-top:2px}
+.agent-chip{
+  font-family:var(--font-mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;
+  padding:2px 5px;border-radius:4px;
+  background:var(--bg-2);border:1px solid var(--line);color:var(--muted);
+}
+.agent-card .go{
+  position:absolute;right:9px;top:50%;transform:translateY(-50%) scale(.7);
+  font-size:10px;color:var(--brick);opacity:0;transition:opacity .18s, transform .18s;
+  pointer-events:none;
+}
+.agent-card:hover .go{opacity:1;transform:translateY(-50%) scale(1)}
+.agent-card.on:hover .go{opacity:0}
+/* Hermes just routed a task here — the card says so for a few seconds */
+.agent-card.routed{
+  border-color:oklch(0.6 0.14 145);
+  box-shadow:0 0 0 3px oklch(0.6 0.14 145 / .16);
+  animation:routedIn .5s ease both;
+}
+@keyframes routedIn{from{transform:translateY(4px);opacity:.4}to{transform:none;opacity:1}}
 
 @media (max-width:560px){
   .orb-canvas-wrap{width:280px;height:280px}
@@ -2955,17 +3111,27 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
 <section id="agents">
   <div class="shead">
     <div>
-      <div class="sidx"><span class="n">/06</span><span data-i18n="agents.idx">ai agents</span></div>
-      <h2 data-i18n-html="agents.h2">A roster of <em>specialists</em>, on call.</h2>
+      <div class="sidx"><span class="n">/06</span><span data-i18n="agents.idx">agent system</span></div>
+      <h2 data-i18n-html="agents.h2">One orchestrator, <em>five teams</em>. Go ahead — poke them.</h2>
     </div>
-    <p class="kick" data-i18n="agents.kick">50+ purpose-built agents grouped by role. Pick one — its orb wakes up, listens, thinks, generates.</p>
+    <p class="kick" data-i18n="agents.kick">This is the system I run every day: ai-agents-config — five Claude Code profiles driven by Hermes, my orchestrator, on my own VPS. Pick a team, hand it a real task, read the answer right here. No sign-up, no sales call.</p>
   </div>
 
+  <!-- how the system is wired: one line, six beats -->
+  <ol class="hflow" id="hflow">
+    <li><span class="n">01</span><b>you</b><i data-i18n="flow.1">one message — Telegram or CLI</i></li>
+    <li><span class="n">02</span><b>Hermes</b><i data-i18n="flow.2">reads the task, picks the team and the model</i></li>
+    <li><span class="n">03</span><b>profile</b><i data-i18n="flow.3">one team wakes up — dev, seo, marketing, security, design</i></li>
+    <li><span class="n">04</span><b>agents</b><i data-i18n="flow.4">plan → build → hand off through a shared scratchpad</i></li>
+    <li><span class="n">05</span><b>gate</b><i data-i18n="flow.5">a reviewer scores it and a verifier boots it — or it loops</i></li>
+    <li><span class="n">06</span><b>you</b><i data-i18n="flow.6">working software, with the evidence attached</i></li>
+  </ol>
+
   <div class="agents-wrap">
-    <!-- LEFT: orb stage -->
+    <!-- LEFT: the live sandbox -->
     <div class="orb-stage">
       <div class="orb-meta">
-        <span class="live-dot" data-i18n="orb.session">session</span>
+        <span class="live-dot" data-i18n="orb.session">live sandbox</span>
         <span class="orb-state-pill" id="orb-state-pill">idle</span>
       </div>
 
@@ -2974,31 +3140,35 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
         <canvas class="orb" id="orb-canvas" width="680" height="680"></canvas>
       </div>
 
-      <div class="orb-role" id="orb-role">research · senior</div>
-      <h3 class="orb-name" id="orb-name">Atlas</h3>
-      <p class="orb-desc" id="orb-desc">Synthesizes long documents, runs multi-source comparisons, returns sourced briefs.</p>
+      <div class="orb-role" id="orb-role">hermes · orchestrator</div>
+      <h3 class="orb-name" id="orb-name">Hermes</h3>
+      <p class="orb-desc" id="orb-desc">The wire between me and every team. Give it a task — it tells you who it would wake up and why.</p>
       <div class="orb-tags" id="orb-tags"></div>
 
-      <div class="orb-actions">
-        <button class="orb-btn primary" id="orb-start" data-i18n="orb.start">▶ start</button>
-        <button class="orb-btn" id="orb-stop" data-i18n="orb.stop">stop</button>
-      </div>
       <div class="orb-states" id="orb-states">
-        <button class="orb-state" data-st="idle" data-i18n="orb.idle">idle</button>
+        <button class="orb-state on" data-st="idle" data-i18n="orb.idle">idle</button>
         <button class="orb-state" data-st="listening" data-i18n="orb.listening">listening</button>
         <button class="orb-state" data-st="thinking" data-i18n="orb.thinking">thinking</button>
-        <button class="orb-state on" data-st="generating" data-i18n="orb.generating">generating</button>
-        <button class="orb-state" data-st="speaking" data-i18n="orb.speaking">speaking</button>
+        <button class="orb-state" data-st="generating" data-i18n="orb.generating">generating</button>
       </div>
+
+      <div class="sbx-log" id="sbx-log" aria-live="polite"></div>
+      <div class="sbx-qs" id="sbx-qs"></div>
+
+      <form class="sbx-form" id="sbx-form" autocomplete="off">
+        <input id="sbx-in" data-i18n-placeholder="give this agent a real task…" placeholder="give this agent a real task…" maxlength="400" />
+        <button type="submit" class="sbx-send" id="sbx-send" data-i18n-aria="run the agent">▶</button>
+      </form>
+      <p class="sbx-foot" id="sbx-foot" data-i18n="sbx.foot">Real model, no tools — it explains what it would do. My real agents run on my VPS with file, shell and DB access.</p>
     </div>
 
-    <!-- RIGHT: search + groups -->
+    <!-- RIGHT: search + teams -->
     <div class="agents-grid">
       <div class="agents-search">
         <span class="ico">⌕</span>
-        <input id="agents-q" data-i18n-attr="placeholder|agents.search" placeholder="search agents — name, role, tag…" />
+        <input id="agents-q" data-i18n-placeholder="search agents — name, role, tag…" placeholder="search agents — name, role, tag…" />
         <span class="kbd">/</span>
-        <span class="agents-count" id="agents-count">52 agents · 8 groups</span>
+        <span class="agents-count" id="agents-count">31 agents · 6 teams</span>
       </div>
       <div id="agents-groups"></div>
     </div>
@@ -4752,68 +4922,137 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
 
   // ─── Agent data ─────────────────────────────
   // groups w/ accent color (warm palette) + agents
-  const GROUPS = [
-    {id:'research', title:'Research & Analysis', color:'oklch(0.68 0.16 50)', agents:[
-      {n:'Atlas',     r:'long-doc synthesis',   d:'Synthesizes long documents, runs multi-source comparisons, returns sourced briefs.', tags:['rag','citations','pdf']},
-      {n:'Cartographer', r:'topic mapping',     d:'Maps unfamiliar fields into a navigable structure with key papers and people.', tags:['research','maps']},
-      {n:'Dossier',   r:'company deep-dive',    d:'Pulls company filings, news, hiring trends — produces a 2-page brief.', tags:['finance','news']},
-      {n:'Citrine',   r:'literature review',    d:'Academic mode — searches, ranks, summarizes peer-reviewed work.', tags:['arxiv','science']},
-      {n:'Periscope', r:'market scanner',       d:'Watches a niche and flags weekly movement.', tags:['monitor','digest']},
-      {n:'Forager',   r:'web crawler',          d:'Goes deep into a target site and extracts a clean dataset.', tags:['scrape','etl']},
-      {n:'Verdict',   r:'fact-check',           d:'Verifies claims against trusted sources, flags inconsistencies.', tags:['fact-check']},
-    ]},
-    {id:'writing', title:'Writing & Editorial', color:'oklch(0.7 0.14 35)', agents:[
-      {n:'Quill',     r:'long-form writer',     d:'Drafts essays, posts and longer-form pieces with consistent voice.', tags:['blog','essay']},
-      {n:'Margin',    r:'editor',               d:'Line edits for clarity, cuts fluff, preserves voice.', tags:['edit','copy']},
-      {n:'Headline',  r:'copywriter',           d:'Punchy titles, hooks and CTAs. Refuses corporate filler.', tags:['marketing']},
-      {n:'Linguist',  r:'translator',           d:'Translates with cultural nuance — not just words.', tags:['i18n']},
-      {n:'Memo',      r:'summarizer',           d:'Compresses meetings, threads and docs into actionable summaries.', tags:['summary']},
-      {n:'Beacon',    r:'newsletter',           d:'Curates and writes weekly newsletters in your voice.', tags:['newsletter']},
-    ]},
-    {id:'code', title:'Engineering', color:'oklch(0.7 0.13 80)', agents:[
-      {n:'Forge',     r:'code generator',       d:'Spins up scaffolds, components, tests in your stack.', tags:['scaffold','tests']},
-      {n:'Bisect',    r:'debugger',             d:'Reads stack traces, narrows the bug, suggests fixes.', tags:['debug']},
-      {n:'Refactor',  r:'code surgeon',         d:'Restructures code without changing behavior. Safer than you.', tags:['cleanup']},
-      {n:'Spec',      r:'api designer',         d:'Designs clean APIs and writes the OpenAPI spec.', tags:['api','rest']},
-      {n:'Migrate',   r:'schema mover',         d:'Plans and writes safe DB migrations.', tags:['sql','migrate']},
-      {n:'Lint',      r:'reviewer',             d:'Reviews PRs the way a senior would — patient and pointed.', tags:['review']},
-      {n:'Sentry',    r:'security auditor',     d:'Hunts for OWASP top-10 patterns and dependency CVEs.', tags:['security']},
-    ]},
-    {id:'data', title:'Data & Analytics', color:'oklch(0.65 0.15 65)', agents:[
-      {n:'Tally',     r:'analyst',              d:'Talks to your warehouse, returns charts and prose.', tags:['sql','bi']},
-      {n:'Augur',     r:'forecaster',           d:'Time-series predictions with honest confidence intervals.', tags:['forecast']},
-      {n:'Cluster',   r:'segmenter',            d:'Finds natural groupings in user/customer data.', tags:['ml']},
-      {n:'Anomaly',   r:'outlier hunter',       d:'Detects what does not fit and tells you why.', tags:['monitor']},
-      {n:'Ledger',    r:'finance analyst',      d:'P&L, runway, unit economics — quickly.', tags:['finance']},
-    ]},
-    {id:'ops', title:'Operations & Productivity', color:'oklch(0.72 0.12 90)', agents:[
-      {n:'Inbox',     r:'email triage',         d:'Sorts, drafts replies, surfaces what matters.', tags:['email']},
-      {n:'Calendar',  r:'scheduler',            d:'Books meetings without the ping-pong.', tags:['scheduling']},
-      {n:'Receipt',   r:'expense parser',       d:'Reads receipts/invoices, files them clean.', tags:['finance']},
-      {n:'Hire',      r:'recruiter',            d:'Sources, screens, drafts outreach.', tags:['hr']},
-      {n:'Standup',   r:'team digest',          d:'Reads PRs/Slack/Linear and writes the daily digest.', tags:['team']},
-      {n:'Tracker',   r:'task wrangler',        d:'Keeps the backlog clean, surfaces stale items.', tags:['linear']},
-    ]},
-    {id:'creative', title:'Creative & Brand', color:'oklch(0.74 0.14 30)', agents:[
-      {n:'Palette',   r:'art director',         d:'Mood-boards, palettes, type pairings.', tags:['design']},
-      {n:'Mock',      r:'ui designer',          d:'Drafts UI directions you can iterate from.', tags:['ui']},
-      {n:'Storyboard',r:'video planner',        d:'Storyboards short videos and motion pieces.', tags:['video']},
-      {n:'Naming',    r:'name finder',          d:'Generates names — checks domain + trademark hint.', tags:['brand']},
-      {n:'Voice',     r:'tone of voice',        d:'Defines and enforces brand voice in copy.', tags:['voice']},
-    ]},
-    {id:'support', title:'Customer & Support', color:'oklch(0.7 0.15 55)', agents:[
-      {n:'Concierge', r:'frontline support',    d:'Handles tier-1 tickets with empathy.', tags:['support']},
-      {n:'Triage',    r:'ticket router',        d:'Classifies and routes tickets fast.', tags:['triage']},
-      {n:'Onboard',   r:'onboarding guide',     d:'Walks new users through setup at their pace.', tags:['onboarding']},
-      {n:'Survey',    r:'feedback synth',       d:'Reads NPS/feedback, returns themes & quotes.', tags:['nps']},
-    ]},
-    {id:'voice', title:'Voice & Realtime', color:'oklch(0.68 0.16 40)', agents:[
-      {n:'Echo',      r:'voice assistant',      d:'Real-time conversational agent. Warm and concise.', tags:['voice']},
-      {n:'Scribe',    r:'transcriber',          d:'Live transcription with speaker diarization.', tags:['stt']},
-      {n:'Caption',   r:'subtitle gen',         d:'Generates clean subtitles from audio/video.', tags:['video']},
-      {n:'Interview', r:'live interviewer',     d:'Conducts research interviews, asks follow-ups.', tags:['research']},
-      {n:'Phone',     r:'call agent',           d:'Handles outbound/inbound calls for narrow tasks.', tags:['telephony']},
-    ]},
+  // ─── Agent data ─────────────────────────────
+  // The real roster from my `ai-agents-config` repo — one team per Claude Code
+  // profile, plus Hermes, the orchestrator that fronts all of them. `r` is the
+  // agent's beat, `d` what it owns, `m` the model tier it actually runs on.
+  // English source strings are translated at insert time by i18n.js (TEXT map).
+  const TEAMS = [
+    {id:'dev', title:'dev', repo:'dev-sm', hue:85, hue2:100, status:'live',
+     blurb:'The whole delivery chain, in order: architect writes the spec, design sets the system, front/back/db build it, platform ships it, SRE keeps it up. Then an adversarial reviewer scores the work against evidence and a runtime verifier boots the real stack. Nothing is "done" because I said so.',
+     stat:'11 plugins · 20 agents · 8 skills',
+     qs:['Plan a Next.js app that ingests 50k invoices a day.',
+         'Our LCP is 4s on mobile. Where do you look first?',
+         'Review this idea: RLS policies as the only authorization layer.'],
+     agents:[
+      {n:'product-architect', r:'spec · adr · decomposition', m:'opus',
+       d:'Writes the spec before anyone writes code: architecture decisions, task breakdown, NFR/SLO targets, the risk list.', tags:['spec','adr','nfr']},
+      {n:'design-director', r:'direction · tokens · motion', m:'opus',
+       d:'Owns the visual system — tokens, type, layout, motion — and reviews the UI that comes back against it.', tags:['design','tokens']},
+      {n:'frontend-engineer', r:'react · next · tailwind', m:'sonnet',
+       d:'Builds the interface: components, client state, accessibility, and the performance budget that keeps it quick.', tags:['react','a11y','perf']},
+      {n:'backend-engineer', r:'api · logic · integrations', m:'sonnet',
+       d:'Routes and business logic, validation, webhooks, queues, background jobs, third-party integrations.', tags:['api','jobs']},
+      {n:'database-engineer', r:'postgres · migrations · rls', m:'sonnet',
+       d:'Schema design, migrations, RLS policies, indexes — and the query plan behind whatever feels slow.', tags:['postgres','rls']},
+      {n:'platform-engineer', r:'deploy · ci · dns', m:'sonnet',
+       d:'Hosting, Docker, DNS and CDN, GitHub Actions, release flow — the unglamorous part that must never break.', tags:['docker','ci']},
+      {n:'sre-engineer', r:'incidents · logs · cache', m:'sonnet',
+       d:'Error tracking, logs, incident response, caching and rate limits, plus postmortems actually worth reading.', tags:['observability','cache']},
+      {n:'qa-engineer', r:'tests · playwright · e2e', m:'sonnet',
+       d:'Test strategy, unit and integration coverage, Playwright end-to-end, and hunting the regression before a user does.', tags:['tests','e2e']},
+      {n:'security-auditor', r:'auth · rls · owasp', m:'opus',
+       d:'Audits auth and permissions, RLS, secrets handling, dependency risk and OWASP classes before a release goes out.', tags:['owasp','secrets']},
+      {n:'code-reviewer', r:'adversarial review · 0–100', m:'opus',
+       d:'Scores the work, checks every acceptance criterion against real evidence — a test, a line, a command output — then approves, requests changes, or blocks.', tags:['gate','evidence']},
+      {n:'runtime-verifier', r:'boots the real stack', m:'sonnet',
+       d:'Migrates the database, starts backend and frontend, hits the endpoints, runs the e2e suite. Proof, not promises.', tags:['proof','smoke']},
+      {n:'typescript-reviewer', r:'types · async · node', m:'sonnet',
+       d:'Reads TS and JS for type safety, async correctness and Node/web security holes.', tags:['typescript']},
+      {n:'react-reviewer', r:'hooks · renders · boundaries', m:'sonnet',
+       d:'Hook correctness, wasted renders, server/client component boundaries, accessibility.', tags:['react']},
+      {n:'database-reviewer', r:'sql · plans · policies', m:'sonnet',
+       d:'Reviews SQL and migrations for correctness, query plans and policy gaps.', tags:['sql']},
+      {n:'performance-optimizer', r:'bottlenecks · bundles', m:'sonnet',
+       d:'Profiles first, then cuts: the real bottleneck, bundle weight, memory leaks, render churn.', tags:['perf']},
+      {n:'silent-failure-hunter', r:'swallowed errors', m:'sonnet',
+       d:'Hunts fail-open fallbacks and errors that vanish quietly — the bugs nobody ever reports.', tags:['reliability']},
+      {n:'type-design-analyzer', r:'invariants', m:'sonnet',
+       d:'Asks whether the types make bad states unrepresentable, or merely describe them.', tags:['types']},
+      {n:'refactor-cleaner', r:'dead code · advisory', m:'sonnet',
+       d:'Finds unused code, exports and duplication, then hands over a risk-ranked removal plan. Deletes nothing on its own.', tags:['cleanup']},
+      {n:'trend-scout', r:'ecosystem scan', m:'sonnet',
+       d:'Scans the Claude Code ecosystem for new agents, skills and MCP servers and scores them for quality and security.', tags:['scout']},
+      {n:'solution-evaluator', r:'adopt · trial · skip', m:'sonnet',
+       d:'Studies one candidate tool plus what developers actually say about it, then returns a verdict and how to wire it in.', tags:['evaluate']},
+     ]},
+
+    {id:'seo', title:'seo', repo:'seo-sm', hue:62, hue2:80, status:'live',
+     blurb:'An audit in layers, prioritised by ICE, then executed: crawl and indexation, Core Web Vitals, intent and clusters, internal linking, white-hat authority, and measurement in GSC and GA4. Every claim is tied to data — nobody here says "trust me, it will rank".',
+     stat:'5 plugins · 5 agents · 5 skills',
+     qs:['Traffic dropped 30% after our migration. Diagnose it.',
+         'Where do you start on a 5,000-page catalogue?',
+         'Build the cluster for "facture électronique" in France.'],
+     agents:[
+      {n:'seo-strategist', r:'audit direction · ice plan', m:'opus',
+       d:'Runs the audit layer by layer, predicts the anti-patterns, prioritises by ICE and owns the plan the others work from.', tags:['audit','plan']},
+      {n:'technical-seo-engineer', r:'crawl · index · cwv', m:'sonnet',
+       d:'Crawlability and indexation, sitemaps, robots, canonicals, hreflang, redirects, JSON-LD, Core Web Vitals.', tags:['technical','cwv']},
+      {n:'content-strategist', r:'intent · clusters · briefs', m:'sonnet',
+       d:'Keyword and intent research, SERP reading, topic clusters, on-page, internal linking and E-E-A-T.', tags:['content','serp']},
+      {n:'link-authority-strategist', r:'links · digital pr', m:'sonnet',
+       d:'Backlink profile, white-hat link building, digital PR, anchor mix — and a disavow when something toxic shows up.', tags:['authority']},
+      {n:'seo-analyst', r:'gsc · ga4 · forecast', m:'sonnet',
+       d:'Search Console and GA4, rank tracking, baseline → change → effect, forecasts and the report that follows.', tags:['analytics']},
+     ]},
+
+    {id:'marketing', title:'marketing', repo:'marketing-sm', hue:42, hue2:60, status:'live',
+     blurb:'Positioning and go-to-market, an editorial calendar that actually gets filled, paid media with budget caps and an approval gate before a euro moves, lifecycle email — and an analyst who checks the unit economics before anyone says "let\'s scale".',
+     stat:'5 plugins · 5 agents · 9 skills',
+     qs:['€5k a month, B2B SaaS in France. Where does it go?',
+         'Draft a 30-day launch calendar for an invoicing add-in.',
+         'Our CAC doubled in six weeks. What do you check first?'],
+     agents:[
+      {n:'marketing-strategist', r:'positioning · gtm · ice', m:'opus',
+       d:'Strategy, positioning, go-to-market, ICE prioritisation and the campaign plan everyone else executes.', tags:['strategy','gtm']},
+      {n:'content-marketer', r:'calendar · copy · organic', m:'sonnet',
+       d:'Content strategy and copy, editorial calendar, organic social and distribution — pillars before posts.', tags:['content']},
+      {n:'paid-media-buyer', r:'search · social · roas', m:'sonnet',
+       d:'Media plan and campaign structure, bidding, honest A/B tests, ROAS — with spend capped and gated on approval.', tags:['paid','roas']},
+      {n:'lifecycle-marketer', r:'email · crm · retention', m:'sonnet',
+       d:'Nurture flows, segmentation, retention, deliverability and opt-in hygiene that keeps you out of the spam folder.', tags:['crm','email']},
+      {n:'marketing-analyst', r:'attribution · cac/ltv', m:'sonnet',
+       d:'Funnel and cohort analysis, GA4, attribution and incrementality, CAC/LTV/ROAS, forecasting.', tags:['analytics']},
+     ]},
+
+    {id:'security', title:'security', repo:'security-sm', hue:15, hue2:35, status:'live',
+     blurb:'The gate before production. Auth and permissions, RLS, secrets, dependency risk, OWASP classes — Trail-of-Bits style, exploitability first: reachable, user-controlled, a real sink. Otherwise it is noise, and noise gets skipped. This team hires no new bodies: it borrows the auditor from the shared base and adds triage. Every outside skill is vetted before it is allowed to run.',
+     stat:'1 plugin · 2 agents · vetted adoptions',
+     qs:['We keep client documents in Supabase. What breaks first?',
+         'Review a JWT flow where the refresh token lives in localStorage.',
+         'Is a catch that returns `true` on error a vulnerability?'],
+     agents:[
+      {n:'security-auditor', r:'trail-of-bits method', m:'opus',
+       d:'The release gate: auth and permissions, RLS policies, input validation, secrets, dependency risk, OWASP top-10 classes.', tags:['audit','owasp']},
+      {n:'silent-failure-hunter', r:'fail-open hunting', m:'sonnet',
+       d:'Fail-open is a bypass: swallowed errors, permissive fallbacks, error propagation that dies halfway.', tags:['fail-open']},
+     ]},
+
+    {id:'design', title:'design', repo:'design-sm', hue:108, hue2:95, status:'wip',
+     blurb:'Half shipped, half on the bench. Direction, tokens and design review work today. Next: motion as a first-class layer — Rive state machines for anything that has to respond to a cursor, a scroll or a state change, and Lottie/dotLottie for the light vector stuff. Sites that move on purpose, at 60fps, in a few dozen kilobytes instead of a 3 MB video.',
+     stat:'1 live · 2 in build · rive + lottie',
+     qs:['Rive or Lottie for a 12-state onboarding sequence?',
+         'Design the motion for a hero that reacts to the cursor.',
+         'Set the tokens for a warm, editorial brand.'],
+     agents:[
+      {n:'design-director', r:'direction · tokens · review', m:'opus',
+       d:'Visual direction, design system and tokens, typography, layout, motion principles — then reviews what was built against them.', tags:['design','tokens']},
+      {n:'motion-engineer', r:'rive state machines', m:'sonnet', wip:true,
+       d:'Interactive motion authored as Rive state machines: hover, scroll and app state drive the animation instead of a looping export.', tags:['rive','interactive']},
+      {n:'lottie-engineer', r:'lottie · dotlottie', m:'sonnet', wip:true,
+       d:'The After Effects → Lottie/dotLottie pipeline: vector motion at 60fps, a few dozen KB, no video tag and no jank.', tags:['lottie','svg']},
+     ]},
+
+    {id:'hermes', title:'Hermes', repo:'hermes_agent', hue:32, hue2:50, status:'live',
+     blurb:'The wire between me and everything above. One entry point — a message in Telegram or a shell — and Hermes reads the task, wakes the right profile, picks the model per job, keeps the handoff between agents in a shared scratchpad, queues the long work in Postgres, and refuses to call anything finished without evidence. Ask it something below: it answers with the team it would wake and the order it would run them in.',
+     stat:'1 orchestrator · telegram + cli · systemd on my vps',
+     qs:['Our checkout is slow and invisible on Google. Who do you wake up?',
+         'Land a landing page with serious motion by Friday.',
+         'Audit our security — and prove the fixes actually hold.'],
+     agents:[
+      {n:'Hermes', r:'router · orchestrator', m:'opus', slug:'hermes',
+       d:'Reads the task, routes it to a team, picks the model, holds the handoff, queues long jobs, and gates the result on evidence.', tags:['routing','gates','telegram']},
+     ]},
   ];
 
   // ─── Particle orb ────────────────────────────
@@ -5053,129 +5292,354 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
   document.querySelectorAll('#orb-states .orb-state').forEach(b=>{
     b.addEventListener('click', ()=>setState(b.dataset.st));
   });
-  document.getElementById('orb-start').addEventListener('click', ()=>{
-    setState('listening');
-    setTimeout(()=>setState('thinking'), 800);
-    setTimeout(()=>setState('generating'), 1700);
-    setTimeout(()=>setState('speaking'), 4500);
-    setTimeout(()=>setState('idle'), 7500);
-  });
-  document.getElementById('orb-stop').addEventListener('click', ()=>setState('idle'));
-
-  // ─── Agent groups + selection ────────────────
+  // ─── Teams, selection, and the live sandbox ──
   const groupsEl = document.getElementById('agents-groups');
   const orbName = document.getElementById('orb-name');
   const orbRole = document.getElementById('orb-role');
   const orbDesc = document.getElementById('orb-desc');
   const orbTags = document.getElementById('orb-tags');
   const countEl = document.getElementById('agents-count');
+  const logEl = document.getElementById('sbx-log');
+  const qsEl = document.getElementById('sbx-qs');
+  const formEl = document.getElementById('sbx-form');
+  const inEl = document.getElementById('sbx-in');
+  const sendEl = document.getElementById('sbx-send');
+  const footEl = document.getElementById('sbx-foot');
+  const footEN = footEl.textContent;
 
-  // hue mapping per group (warm spectrum)
-  const HUES = { research:[40,60], writing:[20,45], code:[70,95], data:[55,80], ops:[80,100], creative:[15,40], support:[40,65], voice:[30,50] };
+  const slugOf = a => a.slug || a.n;
+  const lang = () => (window.I18N && window.I18N.getLang && window.I18N.getLang()) || 'en';
+  // The prose below is translated by i18n.js as it lands in the DOM (TEXT map).
+  // Interpolated strings can't be — those pick their language here.
+  const L = (en, fr) => (lang() === 'fr' ? fr : en);
 
-  let totalAgents = 0;
-  GROUPS.forEach(g=>totalAgents += g.agents.length);
-  countEl.textContent = `${totalAgents} agents · ${GROUPS.length} groups`;
+  // Every agent in one flat list — Hermes needs the roster to route, and the
+  // routing highlight needs to map a name in the reply back to its card.
+  const ALL = [];
+  TEAMS.forEach(t => t.agents.forEach(a => ALL.push({ team: t, agent: a })));
+  const rosterLine = TEAMS
+    .map(t => `${t.title} (${t.repo}): ` + t.agents.map(a => slugOf(a)).join(', '))
+    .join('\n');
 
-  let activeAgent = null;
+  // Distinct definitions only: security and design borrow agents from the dev
+  // marketplace (that's the point of a shared base), and counting a borrowed
+  // agent twice would inflate the roster. Agents still in build don't count.
+  const totalAgents = new Set(ALL.filter(x => !x.agent.wip).map(x => slugOf(x.agent))).size;
 
-  function selectAgent(g, a, cardEl){
-    activeAgent = a;
-    document.querySelectorAll('.agent-card.on').forEach(e=>e.classList.remove('on'));
-    if(cardEl) cardEl.classList.add('on');
-    orbName.innerHTML = `<em>${a.n[0]}</em>${a.n.slice(1)}`;
-    orbRole.textContent = `${g.title.toLowerCase()} · ${a.r}`;
-    orbDesc.textContent = a.d;
-    orbTags.innerHTML = a.tags.map(t=>`<span class="orb-tag">${t}</span>`).join('');
-    const [h1,h2] = HUES[g.id] || [40,60];
-    agentHue = h1; agentHue2 = h2;
-    // brief "thinking" wake on select
-    setState('thinking');
-    setTimeout(()=>setState('generating'), 600);
+  // ─── System prompts ──────────────────────────
+  // Each agent answers as itself. The shared tail is the part that is true of
+  // every agent in the system, so the sandbox does not have to invent it.
+  const SHARED = [
+    'You belong to Sergiy Mirochnyk\'s agent system (repo: ai-agents-config) — Claude Code profiles orchestrated by Hermes, running on a VPS Sergiy provisions and hardens himself.',
+    'House rules you always respect: evidence over assertion (a test, a line, a command output — never "trust me"); one owner per decision; hand off to the sibling agent whose job it actually is; production changes are gated on a reviewer score and a runtime check.',
+    'Answer like a senior colleague in an interview, not a chatbot: no preamble, no flattery, no restating the question. 120–180 words. Lead with the answer, then 3–5 tight bullets, then one line naming the next step and which sibling agent you would hand it to.',
+  ].join(' ');
+
+  function promptFor(team, a) {
+    const L = lang() === 'fr' ? 'French' : 'English';
+    if (slugOf(a) === 'hermes') {
+      return [
+        'You are Hermes, the orchestrator of Sergiy Mirochnyk\'s agent system (repo: ai-agents-config). You are the single entry point: a message arrives from Telegram or a shell, and you decide who works on it.',
+        'You own: reading the task, choosing which profile to wake (only one profile is active at a time), picking the model per job (Opus for architecture/review/audit, Sonnet for implementation), keeping the handoff between agents in a shared scratchpad, queueing long jobs in a Postgres queue for the conductor, and refusing to report "done" without evidence.',
+        'The roster you route to:\n' + rosterLine,
+        'When given a task, reply in this shape: (1) one line — which team and why; (2) the run order, naming the real agents from the roster, one line each with what they produce; (3) the gate — who reviews it and what evidence closes it; (4) a realistic first milestone. Name only agents that exist in the roster above.',
+        'Tone: crisp, senior, a little dry. 140–200 words, no preamble.',
+        'Reply in ' + L + ' unless the visitor writes in another language.',
+      ].join('\n\n');
+    }
+    return [
+      `You are ${slugOf(a)}, the ${a.r} specialist of the ${team.title} team (marketplace: ${team.repo}).`,
+      `What you own: ${a.d}`,
+      a.wip
+        ? 'Note: this role is still being built out in the repo, so say so in one short clause if it matters, then answer anyway with how you would do it.'
+        : '',
+      SHARED,
+      'Reply in ' + L + ' unless the visitor writes in another language.',
+    ].filter(Boolean).join('\n\n');
   }
 
-  function render(filter){
-    groupsEl.innerHTML = '';
-    const q = (filter||'').trim().toLowerCase();
-    let shown = 0;
-    GROUPS.forEach(g=>{
-      const matches = g.agents.filter(a=>{
-        if(!q) return true;
-        return a.n.toLowerCase().includes(q)
-          || a.r.toLowerCase().includes(q)
-          || (a.tags||[]).some(t=>t.toLowerCase().includes(q))
-          || g.title.toLowerCase().includes(q);
+  // ─── Sandbox transport ───────────────────────
+  let active = null;          // {team, agent}
+  let busy = false;
+  let history = [];           // per-agent conversation, reset on switch
+
+  function bubble(text, cls) {
+    logEl.classList.add('on');
+    const b = document.createElement('div');
+    b.className = 'b' + (cls ? ' ' + cls : '');
+    b.textContent = text;
+    logEl.appendChild(b);
+    logEl.scrollTop = logEl.scrollHeight;
+    return b;
+  }
+
+  function foot(msg) { footEl.textContent = msg; }
+  function footReset() { footEl.textContent = footEN; window.I18N && window.I18N.apply(); }
+
+  async function run(task) {
+    if (busy || !active || !task) return;
+    busy = true;
+    sendEl.disabled = true;
+    inEl.value = '';
+    qsEl.style.display = 'none';
+    bubble(task, 'you');
+    setState('listening');
+
+    const out = bubble('', '');
+    const cursor = document.createElement('span');
+    cursor.className = 'cur';
+    out.appendChild(cursor);
+    setState('thinking');
+    history.push({ role: 'user', content: task });
+
+    let text = '';
+    try {
+      const res = await fetch('/api/agent-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agentSlug: slugOf(active.agent),
+          agentName: active.agent.n,
+          systemPrompt: promptFor(active.team, active.agent),
+          messages: history.slice(-6),
+        }),
       });
-      if(!matches.length) return;
+
+      if (!res.ok || !res.body) {
+        let why = '';
+        try { why = (await res.json()).message || ''; } catch (e) {}
+        throw new Error(why || `the sandbox is unavailable (${res.status})`);
+      }
+
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let buf = '';
+      let first = true;
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() || '';
+        for (const raw of lines) {
+          const line = raw.trim();
+          if (!line.startsWith('data:')) continue;
+          let msg;
+          try { msg = JSON.parse(line.slice(5).trim()); } catch (e) { continue; }
+          if (msg.error) throw new Error(msg.error);
+          if (msg.delta) {
+            if (first) { first = false; setState('generating'); }
+            text += msg.delta;
+            out.textContent = text;
+            out.appendChild(cursor);
+            logEl.scrollTop = logEl.scrollHeight;
+          }
+          if (msg.done) {
+            const left = typeof msg.remaining === 'number' ? msg.remaining : null;
+            const runs = left === null ? '' : left + L(' runs left this hour · ', ' essais restants cette heure · ');
+            foot(`${msg.model || 'model'} · ${runs}` + L(
+              'my real agents run on my VPS with file, shell and DB access',
+              'mes vrais agents tournent sur mon VPS, avec accès fichiers, shell et base'));
+          }
+        }
+      }
+      cursor.remove();
+      if (!text.trim()) {
+        out.classList.add('err');
+        out.textContent = L('The model returned nothing. Try once more, or just email me.',
+          'Le modèle n\'a rien renvoyé. Réessayez, ou écrivez-moi directement.');
+      } else {
+        history.push({ role: 'assistant', content: text });
+        if (slugOf(active.agent) === 'hermes') highlightRouted(text);
+      }
+    } catch (err) {
+      cursor.remove();
+      out.classList.add('err');
+      out.textContent = L('Sandbox unavailable: ', 'Bac à sable indisponible : ') + (err.message || err) +
+        L('. The agents themselves are fine — they live on my VPS. Write to serge@smiro.dev and I will run yours by hand.',
+          '. Les agents eux-mêmes vont bien — ils vivent sur mon VPS. Écrivez à serge@smiro.dev et je lance le vôtre à la main.');
+    }
+
+    setState('idle');
+    busy = false;
+    sendEl.disabled = false;
+  }
+
+  // Hermes named some agents — light up their cards so the routing is visible,
+  // not just described. Matching is on the exact agent slug, so a hallucinated
+  // name simply lights nothing.
+  function highlightRouted(text) {
+    const low = text.toLowerCase();
+    const hits = ALL.filter(x => slugOf(x.agent) !== 'hermes' && low.includes(slugOf(x.agent).toLowerCase()));
+    if (!hits.length) return;
+    document.querySelectorAll('.agent-card.routed').forEach(e => e.classList.remove('routed'));
+    const teams = new Set(hits.map(h => h.team.id));
+    groupsEl.querySelectorAll('.agroup').forEach(g => {
+      if (teams.has(g.dataset.gid)) g.classList.add('open');
+    });
+    hits.forEach((h, i) => {
+      const card = groupsEl.querySelector(`.agent-card[data-slug="${slugOf(h.agent)}"]`);
+      if (!card) return;
+      setTimeout(() => card.classList.add('routed'), 90 * i);
+    });
+    setTimeout(() => document.querySelectorAll('.agent-card.routed').forEach(e => e.classList.remove('routed')), 9000);
+  }
+
+  // ─── Selection ───────────────────────────────
+  function selectAgent(t, a, cardEl) {
+    active = { team: t, agent: a };
+    history = [];
+    document.querySelectorAll('.agent-card.on').forEach(e => e.classList.remove('on'));
+    if (cardEl) cardEl.classList.add('on');
+    const nm = a.n;
+    orbName.innerHTML = `<em>${nm[0]}</em>${nm.slice(1)}`;
+    // two nodes, not one string — so the beat translates on its own
+    orbRole.innerHTML = `<span>${t.title}</span> · <span>${a.r}</span>`;
+    orbDesc.textContent = a.d;
+    orbTags.innerHTML = [a.m].concat(a.tags || []).map(x => `<span class="orb-tag">${x}</span>`).join('');
+    agentHue = t.hue; agentHue2 = t.hue2;
+    logEl.innerHTML = '';
+    logEl.classList.remove('on');
+    qsEl.style.display = '';
+    qsEl.innerHTML = '';
+    (t.qs || []).forEach(q => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'sbx-q';
+      b.textContent = q;
+      b.addEventListener('click', () => run(q));
+      qsEl.appendChild(b);
+    });
+    footReset();
+    setState('idle');
+  }
+
+  function setCount(q, shown) {
+    countEl.textContent = q
+      ? L(`${shown} of ${totalAgents} match "${q}"`, `${shown} sur ${totalAgents} pour « ${q} »`)
+      : L(`${totalAgents} agents · ${TEAMS.length} teams`, `${totalAgents} agents · ${TEAMS.length} équipes`);
+  }
+
+  function render(filter) {
+    groupsEl.innerHTML = '';
+    const q = (filter || '').trim().toLowerCase();
+    let shown = 0;
+    TEAMS.forEach(t => {
+      const matches = t.agents.filter(a => {
+        if (!q) return true;
+        return slugOf(a).toLowerCase().includes(q)
+          || a.r.toLowerCase().includes(q)
+          || (a.tags || []).some(x => x.toLowerCase().includes(q))
+          || t.title.toLowerCase().includes(q)
+          || t.repo.toLowerCase().includes(q);
+      });
+      if (!matches.length) return;
       shown += matches.length;
-      const [h1,h2] = HUES[g.id] || [40,60];
 
       const wrap = document.createElement('div');
       wrap.className = 'agroup';
-      wrap.dataset.gid = g.id;
-      wrap.style.setProperty('--g-color', `oklch(0.65 0.16 ${h1})`);
+      wrap.dataset.gid = t.id;
+      wrap.style.setProperty('--g-color', `oklch(0.65 0.16 ${t.hue})`);
       wrap.innerHTML = `
         <div class="agroup-h">
-          <div class="ttl" style="--g-color: oklch(0.65 0.16 ${h1})">${g.title}</div>
-          <div class="meta">${matches.length} ${matches.length===1?'agent':'agents'}</div>
-          <button class="agroup-toggle" type="button" aria-label="Toggle ${g.title}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-          </button>
+          <div class="ttl" style="--g-color: oklch(0.65 0.16 ${t.hue})">${t.title}
+            <span class="repo">${t.repo}</span>
+            <span class="abadge${t.status === 'wip' ? ' wip' : ''}">${t.status === 'wip' ? 'in build' : 'live'}</span>
+          </div>
+          <div class="meta">${t.stat}</div>
+          <button class="agroup-toggle" type="button" data-i18n-aria="toggle team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
         </div>
-        <div class="agroup-body"><div class="agroup-list-wrap"><div class="agroup-list"></div></div></div>
+        <div class="agroup-body"><div class="agroup-list-wrap">
+          <p class="agroup-blurb">${t.blurb}</p>
+          <button class="agroup-try" type="button">▶ test this team</button>
+          <div class="agroup-list"></div>
+        </div></div>
       `;
-      // toggle behavior — only one open at a time
       const header = wrap.querySelector('.agroup-h');
-      header.addEventListener('click', ()=>{
+      header.addEventListener('click', () => {
         const wasOpen = wrap.classList.contains('open');
-        groupsEl.querySelectorAll('.agroup.open').forEach(o=>o.classList.remove('open'));
-        if(!wasOpen) wrap.classList.add('open');
+        groupsEl.querySelectorAll('.agroup.open').forEach(o => o.classList.remove('open'));
+        if (!wasOpen) wrap.classList.add('open');
       });
-      // open by default if matches a search, or first group on initial render
-      if(q || g.id === 'research'){
-        wrap.classList.add('open');
-      }
+      if (q || t.id === 'hermes') wrap.classList.add('open');
+
       const list = wrap.querySelector('.agroup-list');
-      matches.forEach(a=>{
+      matches.forEach(a => {
         const card = document.createElement('div');
         card.className = 'agent-card';
-        card.style.setProperty('--g-color', `oklch(0.6 0.18 ${h1})`);
-        card.style.setProperty('--g-light', `oklch(0.85 0.13 ${h2})`);
+        card.dataset.slug = slugOf(a);
+        card.style.setProperty('--g-color', `oklch(0.6 0.18 ${t.hue})`);
+        card.style.setProperty('--g-light', `oklch(0.85 0.13 ${t.hue2})`);
         card.innerHTML = `
           <div class="agent-mini"></div>
           <div class="agent-tx">
-            <div class="agent-name">${a.n}</div>
+            <div class="agent-name">${slugOf(a)}</div>
             <div class="agent-role">${a.r}</div>
+            <div class="agent-meta">
+              <span class="agent-chip">${a.m}</span>
+              ${a.wip ? '<span class="agent-chip">in build</span>' : ''}
+            </div>
           </div>
+          <span class="go">▶</span>
         `;
-        card.addEventListener('click', ()=>selectAgent(g, a, card));
+        card.addEventListener('click', () => {
+          selectAgent(t, a, card);
+          inEl.focus({ preventScroll: true });
+        });
         list.appendChild(card);
-        if(!activeAgent && g.id==='research' && a.n==='Atlas'){
-          // initial selection
-          activeAgent = a;
-          card.classList.add('on');
-          const [hh1,hh2] = HUES[g.id];
-          agentHue = hh1; agentHue2 = hh2;
-          orbTags.innerHTML = a.tags.map(t=>`<span class="orb-tag">${t}</span>`).join('');
-        }
       });
+
+      // "test this team" picks the team's lead — the first agent listed
+      wrap.querySelector('.agroup-try').addEventListener('click', () => {
+        const lead = matches[0];
+        const card = list.querySelector(`.agent-card[data-slug="${slugOf(lead)}"]`);
+        selectAgent(t, lead, card);
+        document.querySelector('.orb-stage').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+
       groupsEl.appendChild(wrap);
     });
-    countEl.textContent = q
-      ? `${shown} of ${totalAgents} match "${q}"`
-      : `${totalAgents} agents · ${GROUPS.length} groups`;
+    setCount(q, shown);
+
+    // keep the sandbox pointed at whatever is selected after a re-render
+    if (active) {
+      const card = groupsEl.querySelector(`.agent-card[data-slug="${slugOf(active.agent)}"]`);
+      if (card) card.classList.add('on');
+    }
   }
+
+  formEl.addEventListener('submit', e => {
+    e.preventDefault();
+    run(inEl.value.trim().slice(0, 400));
+  });
 
   // search
   const qInput = document.getElementById('agents-q');
-  qInput.addEventListener('input', e=>render(e.target.value));
-  document.addEventListener('keydown', e=>{
-    if(e.key==='/' && document.activeElement.tagName!=='INPUT'){
+  qInput.addEventListener('input', e => render(e.target.value));
+  document.addEventListener('keydown', e => {
+    if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
       e.preventDefault(); qInput.focus();
     }
   });
+  // counts, prompts and blurbs are language-dependent — rebuild on switch
+  window.addEventListener('i18n:changed', () => {
+    render(qInput.value);
+    if (active) {
+      const t = active.team, a = active.agent;
+      const card = groupsEl.querySelector(`.agent-card[data-slug="${slugOf(a)}"]`);
+      selectAgent(t, a, card);
+    }
+  });
+
+  // This block runs while parsing, before i18n.js has been evaluated, so the
+  // one interpolated string here doesn't yet know the language. Everything else
+  // is translated from the TEXT map as it lands in the DOM.
+  document.addEventListener('DOMContentLoaded', () => setCount('', 0));
 
   render('');
+  // open on the orchestrator — it is the way into everything else
+  const hermes = TEAMS[TEAMS.length - 1];
+  selectAgent(hermes, hermes.agents[0], groupsEl.querySelector('.agent-card[data-slug="hermes"]'));
 })();
 </script>
 

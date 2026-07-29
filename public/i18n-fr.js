@@ -93,17 +93,21 @@ window.I18N_FR = {
     "nm.submit":          "épingler sur le tableau ↗",
     "close":              "fermer",
 
-    "agents.idx":         "agents IA",
-    "agents.h2":          "Un casting d'",
-    "agents.kick":        "50+ agents dédiés, groupés par rôle. Choisissez-en un — son orbe s'éveille, écoute, réfléchit, génère.",
-    "orb.session":        "session",
-    "orb.start":          "▶ démarrer",
-    "orb.stop":           "stop",
+    "agents.idx":         "système d'agents",
+    "agents.h2":          "Un orchestrateur, <em>cinq équipes</em>. Allez-y, testez-les.",
+    "agents.kick":        "C'est le système que je fais tourner chaque jour : ai-agents-config — cinq profils Claude Code pilotés par Hermes, mon orchestrateur, sur mon propre VPS. Choisissez une équipe, confiez-lui une vraie tâche, lisez la réponse ici même. Sans inscription, sans rendez-vous commercial.",
+    "flow.1":             "un message — Telegram ou terminal",
+    "flow.2":             "lit la tâche, choisit l'équipe et le modèle",
+    "flow.3":             "une équipe s'éveille — dev, seo, marketing, sécurité, design",
+    "flow.4":             "plan → build → passation par un scratchpad partagé",
+    "flow.5":             "un relecteur note, un vérificateur démarre l'app — sinon on reboucle",
+    "flow.6":             "un logiciel qui marche, preuves à l'appui",
+    "orb.session":        "bac à sable live",
     "orb.idle":           "au repos",
     "orb.listening":      "écoute",
     "orb.thinking":       "réfléchit",
     "orb.generating":     "génère",
-    "orb.speaking":       "parle",
+    "sbx.foot":           "Vrai modèle, aucun outil — il explique ce qu'il ferait. Mes vrais agents tournent sur mon VPS, avec accès fichiers, shell et base.",
 
     "contact.idx":        "me contacter",
     "contact.h2":         "Besoin d'un",
@@ -114,6 +118,158 @@ window.I18N_FR = {
 
   /* ──────────────── source-text lookups (for-employers.html etc.) ──────────────── */
   TEXT: {
+    /* ── agent system (/06): teams, agents and the sandbox ──
+       The roster is rendered from JS, so every line lands here as source text.
+       Entries identical in both languages are simply omitted. */
+    "give this agent a real task…":   "confiez une vraie tâche à cet agent…",
+    "search agents — name, role, tag…": "chercher un agent — nom, rôle, tag…",
+    "run the agent":                 "lancer l'agent",
+    "toggle team":                   "ouvrir / fermer l'équipe",
+    "▶ test this team":              "▶ tester cette équipe",
+    "live":                          "actif",
+    "in build":                      "en cours",
+
+    /* team blurbs + stats */
+    "The whole delivery chain, in order: architect writes the spec, design sets the system, front/back/db build it, platform ships it, SRE keeps it up. Then an adversarial reviewer scores the work against evidence and a runtime verifier boots the real stack. Nothing is \"done\" because I said so.":
+      "Toute la chaîne de livraison, dans l'ordre : l'architecte écrit la spec, le design pose le système, front/back/db construisent, la plateforme déploie, le SRE garde l'app debout. Ensuite un relecteur adverse note le travail preuves en main, et un vérificateur démarre la vraie stack. Rien n'est « terminé » parce que je l'affirme.",
+    "11 plugins · 20 agents · 8 skills": "11 plugins · 20 agents · 8 skills",
+    "An audit in layers, prioritised by ICE, then executed: crawl and indexation, Core Web Vitals, intent and clusters, internal linking, white-hat authority, and measurement in GSC and GA4. Every claim is tied to data — nobody here says \"trust me, it will rank\".":
+      "Un audit par couches, priorisé en ICE, puis exécuté : crawl et indexation, Core Web Vitals, intention et clusters, maillage interne, autorité white-hat, mesure dans GSC et GA4. Chaque affirmation s'appuie sur une donnée — ici personne ne dit « croyez-moi, ça va ranker ».",
+    "5 plugins · 5 agents · 5 skills": "5 plugins · 5 agents · 5 skills",
+    "Positioning and go-to-market, an editorial calendar that actually gets filled, paid media with budget caps and an approval gate before a euro moves, lifecycle email — and an analyst who checks the unit economics before anyone says \"let's scale\".":
+      "Positionnement et go-to-market, un calendrier éditorial réellement tenu, de l'acquisition payante plafonnée et validée avant qu'un euro ne bouge, de l'email de cycle de vie — et un analyste qui vérifie l'unit economics avant que quelqu'un dise « on scale ».",
+    "5 plugins · 5 agents · 9 skills": "5 plugins · 5 agents · 9 skills",
+    "The gate before production. Auth and permissions, RLS, secrets, dependency risk, OWASP classes — Trail-of-Bits style, exploitability first: reachable, user-controlled, a real sink. Otherwise it is noise, and noise gets skipped. This team hires no new bodies: it borrows the auditor from the shared base and adds triage. Every outside skill is vetted before it is allowed to run.":
+      "Le dernier verrou avant la prod. Auth et permissions, RLS, secrets, risque des dépendances, classes OWASP — méthode Trail of Bits, exploitabilité d'abord : atteignable, contrôlé par l'utilisateur, un vrai sink. Sinon c'est du bruit, et le bruit est écarté. Cette équipe n'embauche personne de neuf : elle emprunte l'auditeur à la base commune et ajoute le tri. Chaque skill externe est passée au crible avant d'avoir le droit de tourner.",
+    "1 plugin · 2 agents · vetted adoptions": "1 plugin · 2 agents · adoptions vérifiées",
+    "Half shipped, half on the bench. Direction, tokens and design review work today. Next: motion as a first-class layer — Rive state machines for anything that has to respond to a cursor, a scroll or a state change, and Lottie/dotLottie for the light vector stuff. Sites that move on purpose, at 60fps, in a few dozen kilobytes instead of a 3 MB video.":
+      "Moitié livrée, moitié sur le banc. Direction, tokens et revue de design fonctionnent déjà. Ensuite : le motion comme couche à part entière — des machines à états Rive pour tout ce qui doit réagir au curseur, au scroll ou à un changement d'état, et Lottie/dotLottie pour le vectoriel léger. Des sites qui bougent à dessein, à 60 fps, en quelques dizaines de kilo-octets plutôt qu'une vidéo de 3 Mo.",
+    "1 live · 2 in build · rive + lottie": "1 actif · 2 en cours · rive + lottie",
+    "The wire between me and everything above. One entry point — a message in Telegram or a shell — and Hermes reads the task, wakes the right profile, picks the model per job, keeps the handoff between agents in a shared scratchpad, queues the long work in Postgres, and refuses to call anything finished without evidence. Ask it something below: it answers with the team it would wake and the order it would run them in.":
+      "Le fil entre moi et tout ce qui précède. Une seule porte d'entrée — un message sur Telegram ou un shell — et Hermes lit la tâche, réveille le bon profil, choisit le modèle selon le travail, garde la passation entre agents dans un scratchpad partagé, met les longs chantiers en file dans Postgres, et refuse de déclarer quoi que ce soit terminé sans preuve. Posez-lui une question ci-dessous : il répond avec l'équipe qu'il réveillerait et dans quel ordre.",
+    "1 orchestrator · telegram + cli · systemd on my vps": "1 orchestrateur · telegram + cli · systemd sur mon vps",
+
+    /* suggested tasks */
+    "Plan a Next.js app that ingests 50k invoices a day.": "Planifie une app Next.js qui ingère 50 000 factures par jour.",
+    "Our LCP is 4s on mobile. Where do you look first?": "Notre LCP est à 4 s sur mobile. Où regardez-vous d'abord ?",
+    "Review this idea: RLS policies as the only authorization layer.": "Votre avis : les policies RLS comme seule couche d'autorisation.",
+    "Traffic dropped 30% after our migration. Diagnose it.": "Trafic en baisse de 30 % après notre migration. Diagnostiquez.",
+    "Where do you start on a 5,000-page catalogue?": "Par où commencez-vous sur un catalogue de 5 000 pages ?",
+    "Build the cluster for \"facture électronique\" in France.": "Construis le cluster « facture électronique » pour la France.",
+    "€5k a month, B2B SaaS in France. Where does it go?": "5 000 € par mois, SaaS B2B en France. Où part le budget ?",
+    "Draft a 30-day launch calendar for an invoicing add-in.": "Propose un calendrier de lancement sur 30 jours pour un add-in de facturation.",
+    "Our CAC doubled in six weeks. What do you check first?": "Notre CAC a doublé en six semaines. Que vérifiez-vous en premier ?",
+    "We keep client documents in Supabase. What breaks first?": "Nous stockons des documents clients dans Supabase. Qu'est-ce qui casse en premier ?",
+    "Review a JWT flow where the refresh token lives in localStorage.": "Auditez un flux JWT où le refresh token vit dans localStorage.",
+    "Is a catch that returns `true` on error a vulnerability?": "Un catch qui renvoie `true` en cas d'erreur, c'est une faille ?",
+    "Rive or Lottie for a 12-state onboarding sequence?": "Rive ou Lottie pour un onboarding à 12 états ?",
+    "Design the motion for a hero that reacts to the cursor.": "Conçois le motion d'un hero qui réagit au curseur.",
+    "Set the tokens for a warm, editorial brand.": "Pose les tokens d'une marque chaude, éditoriale.",
+    "Our checkout is slow and invisible on Google. Who do you wake up?": "Notre tunnel d'achat est lent et invisible sur Google. Qui réveillez-vous ?",
+    "Land a landing page with serious motion by Friday.": "Livrez une landing avec du vrai motion d'ici vendredi.",
+    "Audit our security — and prove the fixes actually hold.": "Auditez notre sécurité — et prouvez que les correctifs tiennent.",
+
+    /* agent beats */
+    "spec · adr · decomposition":     "spec · adr · découpage",
+    "api · logic · integrations":     "api · logique · intégrations",
+    "deploy · ci · dns":              "déploiement · ci · dns",
+    "adversarial review · 0–100":     "relecture adverse · 0–100",
+    "boots the real stack":           "démarre la vraie stack",
+    "hooks · renders · boundaries":   "hooks · renders · frontières",
+    "bottlenecks · bundles":          "goulots · bundles",
+    "swallowed errors":               "erreurs avalées",
+    "dead code · advisory":           "code mort · consultatif",
+    "ecosystem scan":                 "veille écosystème",
+    "adopt · trial · skip":           "adopter · tester · écarter",
+    "audit direction · ice plan":     "cadrage audit · plan ice",
+    "intent · clusters · briefs":     "intention · clusters · briefs",
+    "links · digital pr":             "liens · digital pr",
+    "gsc · ga4 · forecast":           "gsc · ga4 · prévision",
+    "positioning · gtm · ice":        "positionnement · gtm · ice",
+    "calendar · copy · organic":      "calendrier · copy · organique",
+    "email · crm · retention":        "email · crm · rétention",
+    "trail-of-bits method":           "méthode trail-of-bits",
+    "fail-open hunting":              "chasse au fail-open",
+    "direction · tokens · review":    "direction · tokens · revue",
+    "rive state machines":            "machines à états rive",
+    "router · orchestrator":          "routeur · orchestrateur",
+
+    /* what each agent owns */
+    "Writes the spec before anyone writes code: architecture decisions, task breakdown, NFR/SLO targets, the risk list.":
+      "Écrit la spec avant que quiconque écrive du code : décisions d'architecture, découpage des tâches, cibles NFR/SLO, liste des risques.",
+    "Owns the visual system — tokens, type, layout, motion — and reviews the UI that comes back against it.":
+      "Possède le système visuel — tokens, typo, mise en page, motion — et relit l'UI livrée à l'aune de celui-ci.",
+    "Builds the interface: components, client state, accessibility, and the performance budget that keeps it quick.":
+      "Construit l'interface : composants, état client, accessibilité, et le budget de performance qui la garde rapide.",
+    "Routes and business logic, validation, webhooks, queues, background jobs, third-party integrations.":
+      "Routes et logique métier, validation, webhooks, files, jobs de fond, intégrations tierces.",
+    "Schema design, migrations, RLS policies, indexes — and the query plan behind whatever feels slow.":
+      "Modélisation, migrations, policies RLS, index — et le plan de requête derrière ce qui rame.",
+    "Hosting, Docker, DNS and CDN, GitHub Actions, release flow — the unglamorous part that must never break.":
+      "Hébergement, Docker, DNS et CDN, GitHub Actions, flux de release — la partie ingrate qui ne doit jamais casser.",
+    "Error tracking, logs, incident response, caching and rate limits, plus postmortems actually worth reading.":
+      "Suivi d'erreurs, logs, gestion d'incident, cache et rate limits, plus des postmortems qu'on lit vraiment.",
+    "Test strategy, unit and integration coverage, Playwright end-to-end, and hunting the regression before a user does.":
+      "Stratégie de test, couverture unitaire et d'intégration, end-to-end Playwright, et la régression trouvée avant l'utilisateur.",
+    "Audits auth and permissions, RLS, secrets handling, dependency risk and OWASP classes before a release goes out.":
+      "Audite auth et permissions, RLS, gestion des secrets, risque des dépendances et classes OWASP avant chaque mise en production.",
+    "Scores the work, checks every acceptance criterion against real evidence — a test, a line, a command output — then approves, requests changes, or blocks.":
+      "Note le travail, vérifie chaque critère d'acceptation contre une preuve réelle — un test, une ligne, une sortie de commande — puis valide, demande des changements, ou bloque.",
+    "Migrates the database, starts backend and frontend, hits the endpoints, runs the e2e suite. Proof, not promises.":
+      "Migre la base, démarre back et front, tape les endpoints, lance la suite e2e. Des preuves, pas des promesses.",
+    "Reads TS and JS for type safety, async correctness and Node/web security holes.":
+      "Relit le TS et le JS : sûreté des types, justesse de l'async, trous de sécurité Node/web.",
+    "Hook correctness, wasted renders, server/client component boundaries, accessibility.":
+      "Justesse des hooks, renders inutiles, frontières composants serveur/client, accessibilité.",
+    "Reviews SQL and migrations for correctness, query plans and policy gaps.":
+      "Relit le SQL et les migrations : justesse, plans de requête, trous dans les policies.",
+    "Profiles first, then cuts: the real bottleneck, bundle weight, memory leaks, render churn.":
+      "Profile d'abord, coupe ensuite : le vrai goulot, le poids du bundle, les fuites mémoire, les renders en trop.",
+    "Hunts fail-open fallbacks and errors that vanish quietly — the bugs nobody ever reports.":
+      "Traque les replis fail-open et les erreurs qui disparaissent en silence — les bugs que personne ne signale.",
+    "Asks whether the types make bad states unrepresentable, or merely describe them.":
+      "Demande si les types rendent les mauvais états impossibles, ou se contentent de les décrire.",
+    "Finds unused code, exports and duplication, then hands over a risk-ranked removal plan. Deletes nothing on its own.":
+      "Trouve le code, les exports et les doublons inutilisés, puis remet un plan de suppression classé par risque. Ne supprime rien de lui-même.",
+    "Scans the Claude Code ecosystem for new agents, skills and MCP servers and scores them for quality and security.":
+      "Balaie l'écosystème Claude Code — nouveaux agents, skills, serveurs MCP — et les note sur la qualité et la sécurité.",
+    "Studies one candidate tool plus what developers actually say about it, then returns a verdict and how to wire it in.":
+      "Étudie un outil candidat et ce que les développeurs en disent vraiment, puis rend un verdict et le plan de branchement.",
+    "Runs the audit layer by layer, predicts the anti-patterns, prioritises by ICE and owns the plan the others work from.":
+      "Mène l'audit couche par couche, anticipe les anti-patterns, priorise en ICE et détient le plan que les autres suivent.",
+    "Crawlability and indexation, sitemaps, robots, canonicals, hreflang, redirects, JSON-LD, Core Web Vitals.":
+      "Crawlabilité et indexation, sitemaps, robots, canoniques, hreflang, redirections, JSON-LD, Core Web Vitals.",
+    "Keyword and intent research, SERP reading, topic clusters, on-page, internal linking and E-E-A-T.":
+      "Recherche de mots-clés et d'intention, lecture des SERP, clusters thématiques, on-page, maillage interne et E-E-A-T.",
+    "Backlink profile, white-hat link building, digital PR, anchor mix — and a disavow when something toxic shows up.":
+      "Profil de backlinks, netlinking white-hat, digital PR, mix d'ancres — et un disavow quand quelque chose de toxique apparaît.",
+    "Search Console and GA4, rank tracking, baseline → change → effect, forecasts and the report that follows.":
+      "Search Console et GA4, suivi de positions, référence → changement → effet, prévisions et le rapport qui suit.",
+    "Strategy, positioning, go-to-market, ICE prioritisation and the campaign plan everyone else executes.":
+      "Stratégie, positionnement, go-to-market, priorisation ICE et le plan de campagne que les autres exécutent.",
+    "Content strategy and copy, editorial calendar, organic social and distribution — pillars before posts.":
+      "Stratégie de contenu et rédaction, calendrier éditorial, social organique et distribution — les piliers avant les posts.",
+    "Media plan and campaign structure, bidding, honest A/B tests, ROAS — with spend capped and gated on approval.":
+      "Plan média et structure de campagne, enchères, A/B tests honnêtes, ROAS — budget plafonné et validation avant dépense.",
+    "Nurture flows, segmentation, retention, deliverability and opt-in hygiene that keeps you out of the spam folder.":
+      "Séquences de nurture, segmentation, rétention, délivrabilité et hygiène d'opt-in qui vous évite le dossier spam.",
+    "Funnel and cohort analysis, GA4, attribution and incrementality, CAC/LTV/ROAS, forecasting.":
+      "Analyse d'entonnoir et de cohortes, GA4, attribution et incrémentalité, CAC/LTV/ROAS, prévisions.",
+    "The release gate: auth and permissions, RLS policies, input validation, secrets, dependency risk, OWASP top-10 classes.":
+      "Le verrou de mise en production : auth et permissions, policies RLS, validation des entrées, secrets, risque des dépendances, classes du top 10 OWASP.",
+    "Fail-open is a bypass: swallowed errors, permissive fallbacks, error propagation that dies halfway.":
+      "Un fail-open est un contournement : erreurs avalées, replis trop permissifs, propagation d'erreur qui meurt à mi-chemin.",
+    "Visual direction, design system and tokens, typography, layout, motion principles — then reviews what was built against them.":
+      "Direction visuelle, design system et tokens, typographie, mise en page, principes de motion — puis relit ce qui a été construit à l'aune de ceux-ci.",
+    "Interactive motion authored as Rive state machines: hover, scroll and app state drive the animation instead of a looping export.":
+      "Du motion interactif écrit en machines à états Rive : le survol, le scroll et l'état de l'app pilotent l'animation, au lieu d'un export en boucle.",
+    "The After Effects → Lottie/dotLottie pipeline: vector motion at 60fps, a few dozen KB, no video tag and no jank.":
+      "Le pipeline After Effects → Lottie/dotLottie : du vectoriel à 60 fps, quelques dizaines de Ko, sans balise vidéo ni saccade.",
+    "Reads the task, routes it to a team, picks the model, holds the handoff, queues long jobs, and gates the result on evidence.":
+      "Lit la tâche, la route vers une équipe, choisit le modèle, tient la passation, met les longs jobs en file, et conditionne le résultat à une preuve.",
+    "The wire between me and every team. Give it a task — it tells you who it would wake up and why.":
+      "Le fil entre moi et chaque équipe. Confiez-lui une tâche — il vous dit qui il réveillerait et pourquoi.",
+
     /* nav / header */
     "miro":                          "miro",
     "work":                          "réalisations",
