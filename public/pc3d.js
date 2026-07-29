@@ -192,8 +192,8 @@ function boot(container) {
     frame: { w: 7.7, h: 6.5 },
     // the `focused` framing — straight-on POV: camera looks at the screen
     // from eye level so it fills the view, with the keyboard deck below.
-    focusCam: { x: -0.48, y: 3.86, z: 7.59 },
-    focusLook: { x: 0.05, y: 1.21, z: 0.27 },
+    focusCam: { x: 0, y: 2.0, z: 5.2 },
+    focusLook: { x: 0, y: 1.21, z: 0 },
     focusFrame: { w: 5.0, h: 3.8 },
     zoomMs: 650,               // duration of the push-in / pull-out (cubic-eased) — 50 % faster
     zoomSpeed: 0.075,          // per-frame follow lerp on top of it, at 60 fps
