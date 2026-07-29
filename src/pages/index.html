@@ -679,8 +679,16 @@ h1.ht .crossed::before{
 /* ───── outcomes ───── */
 .outcomes{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line-2);border:1px solid var(--line-2);border-radius:18px;overflow:hidden;margin-top:40px}
 @media (max-width:780px){.outcomes{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:500px){.outcomes{grid-template-columns:1fr}}
 .outcome{padding:30px;background:var(--bg)}
+@media (max-width:640px){
+  .why-card h3{font-size:22px}
+  .why-card{padding:24px}
+  .pillar{padding:22px}
+  .outcomes{margin-top:24px}
+}
 .outcome .big{font-family:var(--font-serif);font-size:48px;letter-spacing:-.03em;line-height:1;margin-bottom:10px;font-weight:400}
+@media (max-width:640px){.outcome .big{font-size:36px}}
 .outcome .big em{font-style:italic;color:var(--brick);font-weight:300}
 .outcome .lbl{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
 
@@ -853,7 +861,9 @@ footer a:hover{color:var(--brick)}
 @media (max-width:640px){
   section{padding:80px 20px}
   .hero{padding:24px 20px 40px}
-  .hero-meta{gap:24px}
+  .hero-meta{gap:18px}
+  .hero-meta .hm{width:calc(50% - 12px)}
+  .hm .v{font-size:26px}
   nav.top{padding:14px 16px}
   .hero-r h2{font-size:26px}
   .shead h2{font-size:clamp(28px,7vw,36px)}
