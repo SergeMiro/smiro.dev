@@ -67,17 +67,23 @@ nav.top{
 }
 .logo-face .mask{
   position:absolute;
-  left:-25%;right:-25%;
+  /* left edge sits on the pill's own left edge (its 14px padding), so the
+     radius below can trace the pill's bottom-left corner exactly — otherwise
+     the shoulder paints into the notch the rounded corner leaves behind */
+  left:-14px;right:-8.5px;
   top:-32px;
   bottom:0;
   overflow:hidden;
+  border-bottom-left-radius:12px;   /* same as .logo-mk */
   pointer-events:none;
 }
 .logo-face .mask img{
   position:absolute;
-  left:50%;bottom:0;
-  width:100%;height:auto;
-  transform:translateX(-50%);
+  /* anchored to the slot side, so widening the mask leftward for the clip
+     leaves the face itself exactly where it was: 34px slot + 8.5px of
+     shoulder room on each side */
+  right:0;bottom:0;
+  width:51px;height:auto;
   filter:drop-shadow(0 2px 4px rgba(0,0,0,.45));
   -webkit-user-drag:none;user-select:none;
 }
