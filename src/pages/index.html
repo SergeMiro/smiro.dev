@@ -5219,8 +5219,9 @@ window.toggleFocus = function(){
 window.resetTune = function(){
   const T = window.__pc3d && window.__pc3d.TUNE;
   if (!T) return;
-  T.focusCam.x = -0.62; T.focusCam.y = 3.89; T.focusCam.z = 7.59;
-  T.focusLook.x = 0.02; T.focusLook.y = 1.15; T.focusLook.z = 0.20;
+  // keep in sync with TUNE.focusCam / TUNE.focusLook in public/pc3d.js
+  T.focusCam.x = -0.48; T.focusCam.y = 3.86; T.focusCam.z = 7.59;
+  T.focusLook.x = 0.05; T.focusLook.y = 1.21; T.focusLook.z = 0.27;
   window.__pc3d.placeCamera();
   window.__pc3d.apply();
   ['cx','cy','cz','lx','ly','lz'].forEach(id => {
