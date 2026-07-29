@@ -193,8 +193,8 @@ function boot(container) {
     // the `focused` framing — the POV the Tune panel's sliders start from:
     // slightly left of centre and above the lid, looking down at the screen
     // so it fills the view with the keyboard deck below.
-    focusCam: { x: -0.48, y: 3.86, z: 7.59 },
-    focusLook: { x: 0.05, y: 1.21, z: 0.27 },
+    focusCam: { x: -0.25, y: 2.98, z: 6.83 },
+    focusLook: { x: 0.0, y: 1.02, z: -0.73 },
     focusFrame: { w: 5.0, h: 3.8 },
     zoomMs: 650,               // duration of the push-in / pull-out (cubic-eased) — 50 % faster
     zoomSpeed: 0.075,          // per-frame follow lerp on top of it, at 60 fps
