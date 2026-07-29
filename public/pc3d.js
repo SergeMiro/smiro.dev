@@ -192,8 +192,8 @@ function boot(container) {
     frame: { w: 7.7, h: 6.5 },
     // the `focused` framing — straight-on POV: camera looks at the screen
     // from eye level so it fills the view, with the keyboard deck below.
-    focusCam: { x: 0, y: 2.0, z: 5.2 },
-    focusLook: { x: 0, y: 1.21, z: 0 },
+    focusCam: { x: 0.37, y: 1.8, z: 5.0 },
+    focusLook: { x: 0.0, y: 1.1, z: 0.3 },
     focusFrame: { w: 5.0, h: 3.8 },
     zoomMs: 650,               // duration of the push-in / pull-out (cubic-eased) — 50 % faster
     zoomSpeed: 0.075,          // per-frame follow lerp on top of it, at 60 fps
@@ -216,10 +216,11 @@ function boot(container) {
   // A part drawn as two outlines with nothing between them reads as glass: the
   // far edge shows straight through the near one and the machine looks like a
   // ghost. These panels sit *inside* the lid and the slab in the page beige,
-  // fully opaque — they write depth and hide the back edges and the desk grid
-  // behind the shell.
+  // two-thirds opaque — quiet enough that the orange ink still carries the
+  // drawing, solid enough (they write depth, unlike every line material here)
+  // to hide the back edges and the desk grid behind the shell.
   const matFill = new THREE.MeshBasicMaterial({
-    color: 0xf4f1e8, transparent: false, opacity: 1,
+    color: 0xf4f1e8, transparent: true, opacity: 0.66,
     side: THREE.DoubleSide, toneMapped: false,
   });
 
@@ -713,13 +714,6 @@ function boot(container) {
   screen.name = 'screen';
   lidFx.add(screen);
 
-  // back panel — same size as the screen, sits behind it so the lid reads solid
-  const lidBack = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN_W, SCREEN_H), matFill);
-  lidBack.name = 'lid-back';
-  lidBack.position.z = -0.01;        // one step behind the screen plane
-  lidBack.renderOrder = -1;
-  lidFx.add(lidBack);
-
   // light spilling out of the panel (nothing in the scene is lit any more,
   // so the bloom is drawn, not computed). Sits behind the plane so only the
   // spill past the bezel shows.
@@ -931,19 +925,13 @@ function boot(container) {
   function onMove(e) {
     track(e);
     if (state === 'result') updateHover();
-    if (hasPointer && (state === 'idle' || state === 'typing')) {
-      if (rayHit().intersectObjects(laptopHits, false).length > 0) {
-        if (!window.__hoveringLaptop) { window.__hoveringLaptop = true; }
-      } else {
-        if (window.__hoveringLaptop) { window.__hoveringLaptop = false; }
-      }
-    }
   }
   function onLeave(e) {
     hasPointer = false;
     proximity = 0;
-    // camera stays zoomed in once focused — only a CV click in the
-    // `result` state brings it back out.
+    // NOTE: camera stays zoomed in once focused — only a CV click in the
+    // `result` state brings it back out.  The old pointerleave → exitFocus
+    // path was removed on purpose (user request).
   }
 
   function rayHit() {
@@ -983,8 +971,8 @@ function boot(container) {
       // Tapping anywhere on the machine leans in first. At the resting framing
       // the Enter key is a handful of pixels wide — far too small to ask for.
       if (proximity > 0.1 || rayHit().intersectObjects(laptopHits, false).length) enterFocus();
-    } else if (state === 'focused' && focusZoom > 0.99) {
-      // zoomed in and fully transitioned — the panel and the key are both generous targets
+    } else if (state === 'focused') {
+      // zoomed in, the panel and the key are both generous targets
       if (rayHit().intersectObjects([screen, enterKey, enterRing], false).length) startBuild();
     } else if (state === 'result' && hoverCV) {
       // return to idle, then navigate to the CV page
@@ -1333,9 +1321,8 @@ function boot(container) {
       const radius = Math.max(140, Math.min(w, h) * 0.7);
       proximity = Math.max(0, Math.min(1, 1 - d / radius));
     }
-    // hover on the 3D laptop model triggers the push-in; proximity still works as fallback
-    if ((state === 'idle' || state === 'typing') && (window.__hoveringLaptop || proximity > FOCUS_AT)) enterFocus();
-    // once focused, camera stays zoomed in — only a CV click in result brings it back
+    // reaching the deck leans in on its own — no click needed on desktop
+    if ((state === 'idle' || state === 'typing') && proximity > FOCUS_AT) enterFocus();
 
     if (state === 'idle' || state === 'typing' || state === 'focused') {
       const zoomed = state === 'focused';
