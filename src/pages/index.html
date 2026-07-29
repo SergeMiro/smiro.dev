@@ -2192,6 +2192,34 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
   }
   .pc3d-mount{ position:absolute; inset:0; z-index:2; touch-action:none; }
   .pc3d-mount canvas{ display:block; width:100% !important; height:100% !important; }
+  /* POV tuning panel — floating controls for camera zoom values */
+  .pc3d-tune-btn{
+    position:absolute; bottom:8px; right:8px; z-index:10;
+    background:rgba(0,0,0,.55); color:#ccc; border:1px solid rgba(255,255,255,.15);
+    border-radius:6px; padding:4px 10px; font:11px/1.4 system-ui,sans-serif;
+    cursor:pointer; backdrop-filter:blur(4px); user-select:none;
+  }
+  .pc3d-tune-btn:hover{ background:rgba(0,0,0,.75); color:#fff; }
+  .pc3d-tune-panel{
+    display:none; position:absolute; bottom:36px; right:8px; z-index:10;
+    background:rgba(0,0,0,.78); border:1px solid rgba(255,255,255,.12);
+    border-radius:8px; padding:10px 14px; min-width:240px;
+    backdrop-filter:blur(6px); font:12px/1.5 system-ui,sans-serif; color:#ddd;
+  }
+  .pc3d-tune-panel.open{ display:block; }
+  .pc3d-tune-group{ display:flex; flex-direction:column; gap:3px; margin-bottom:6px; }
+  .pc3d-tune-group label{ font-size:10px; color:#999; text-transform:uppercase; letter-spacing:.05em; }
+  .pc3d-tune-row{ display:flex; align-items:center; gap:6px; }
+  .pc3d-tune-row span{ width:14px; font:10px/1 monospace; color:#888; text-align:right; }
+  .pc3d-tune-row input[type=range]{ flex:1; height:4px; accent-color:#e86830; }
+  .pc3d-tune-row .val{ width:36px; font:10px/1 monospace; color:#e86830; text-align:right; }
+  .pc3d-tune-actions{ display:flex; gap:6px; margin-top:6px; }
+  .pc3d-tune-actions button{
+    flex:1; background:rgba(232,104,48,.25); color:#e86830; border:1px solid rgba(232,104,48,.35);
+    border-radius:4px; padding:4px 0; font:11px/1.4 system-ui,sans-serif; cursor:pointer;
+  }
+  .pc3d-tune-actions button:hover{ background:rgba(232,104,48,.4); }
+  .pc3d-tune-actions .active{ background:rgba(232,104,48,.5); color:#fff; }
   @media (max-width: 900px){ .hero-r.pc-stage{ min-height: 440px; } }
 </style>
 </head>
@@ -2328,6 +2356,25 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
     </div>
     <aside class="hero-r pc-stage" aria-label="Interactive 3D computer — bring your cursor toward the keyboard">
       <div id="pc3d-mount" class="pc3d-mount" data-i18n-skip></div>
+      <button id="pc3d-tune-btn" class="pc3d-tune-btn" onclick="toggleTune()">⚙ Tune POV</button>
+      <div id="pc3d-tune" class="pc3d-tune-panel">
+        <div class="pc3d-tune-group">
+          <label>Camera Position</label>
+          <div class="pc3d-tune-row"><span>X</span><input type="range" id="pc3d-cx" min="-2" max="4" step="0.01"><span class="val" id="pc3d-cx-v">0.00</span></div>
+          <div class="pc3d-tune-row"><span>Y</span><input type="range" id="pc3d-cy" min="0.5" max="5" step="0.01"><span class="val" id="pc3d-cy-v">0.00</span></div>
+          <div class="pc3d-tune-row"><span>Z</span><input type="range" id="pc3d-cz" min="1" max="8" step="0.01"><span class="val" id="pc3d-cz-v">0.00</span></div>
+        </div>
+        <div class="pc3d-tune-group">
+          <label>Look At</label>
+          <div class="pc3d-tune-row"><span>X</span><input type="range" id="pc3d-lx" min="-2" max="2" step="0.01"><span class="val" id="pc3d-lx-v">0.00</span></div>
+          <div class="pc3d-tune-row"><span>Y</span><input type="range" id="pc3d-ly" min="-0.5" max="3" step="0.01"><span class="val" id="pc3d-ly-v">0.00</span></div>
+          <div class="pc3d-tune-row"><span>Z</span><input type="range" id="pc3d-lz" min="-2" max="2" step="0.01"><span class="val" id="pc3d-lz-v">0.00</span></div>
+        </div>
+        <div class="pc3d-tune-actions">
+          <button id="pc3d-tune-focus" onclick="toggleFocus()">🔍 Focus</button>
+          <button onclick="resetTune()">↺ Reset</button>
+        </div>
+      </div>
     </aside>
   </div>
 
@@ -5005,6 +5052,66 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
 <script src="/i18n.js"></script>
 <script src="/settings.js"></script>
 <script type="module" src="/pc3d.js"></script>
+<script>
+// POV tuning panel — lets you dial in the perfect camera framing live
+function initTune(){
+  const p = window.__pc3d;
+  if (!p || !p.TUNE) { setTimeout(initTune, 500); return; }
+  const T = p.TUNE, fields = [
+    {id:'cx', obj:T.focusCam, key:'x', min:-2, max:4, step:.01},
+    {id:'cy', obj:T.focusCam, key:'y', min:.5, max:5, step:.01},
+    {id:'cz', obj:T.focusCam, key:'z', min:1, max:8, step:.01},
+    {id:'lx', obj:T.focusLook, key:'x', min:-2, max:2, step:.01},
+    {id:'ly', obj:T.focusLook, key:'y', min:-.5, max:3, step:.01},
+    {id:'lz', obj:T.focusLook, key:'z', min:-2, max:2, step:.01},
+  ];
+  fields.forEach(f => {
+    const el = document.getElementById('pc3d-'+f.id);
+    const v = document.getElementById('pc3d-'+f.id+'-v');
+    el.value = f.obj[f.key];
+    v.textContent = f.obj[f.key].toFixed(2);
+    el.addEventListener('input', () => {
+      const val = parseFloat(el.value);
+      f.obj[f.key] = val;
+      v.textContent = val.toFixed(2);
+      p.placeCamera();
+      p.apply();
+    });
+  });
+}
+window.toggleTune = function(){
+  document.getElementById('pc3d-tune').classList.toggle('open');
+};
+window.toggleFocus = function(){
+  const btn = document.getElementById('pc3d-tune-focus');
+  if (window.__pc3d.state === 'focused') {
+    window.__pc3d.unfocus();
+    btn.textContent = '🔍 Focus';
+    btn.classList.remove('active');
+  } else {
+    window.__pc3d.focus();
+    btn.textContent = '🔓 Unfocus';
+    btn.classList.add('active');
+  }
+};
+window.resetTune = function(){
+  const T = window.__pc3d && window.__pc3d.TUNE;
+  if (!T) return;
+  T.focusCam.x = -0.62; T.focusCam.y = 3.89; T.focusCam.z = 7.59;
+  T.focusLook.x = 0.02; T.focusLook.y = 1.15; T.focusLook.z = 0.20;
+  window.__pc3d.placeCamera();
+  window.__pc3d.apply();
+  ['cx','cy','cz','lx','ly','lz'].forEach(id => {
+    const el = document.getElementById('pc3d-'+id);
+    const v = document.getElementById('pc3d-'+id+'-v');
+    const src = id[0]==='l' ? T.focusLook : T.focusCam;
+    const key = id[1];
+    el.value = src[key];
+    v.textContent = src[key].toFixed(2);
+  });
+};
+window.addEventListener('load', () => setTimeout(initTune, 1000));
+</script>
 </html>
 
 <style id="__om-edit-overrides">
