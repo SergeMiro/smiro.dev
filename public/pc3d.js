@@ -340,7 +340,13 @@ function boot(container) {
   // wireframe material.  Called once on boot and every time the user picks a
   // new accent in the tweaks panel.  Accepts an explicit hex string (like
   // "#c2622a") or undefined (reads from CSS).
-  const WIRE_MATS = [matEdge, matDetail, matHalo, matDesk];
+  // key legends live on a canvas laid over the deck. The glyphs are drawn
+  // white, so tinting the material is what colours them — that keeps them in
+  // the accent sync below instead of needing the canvas redrawn.
+  const matKeys = new THREE.MeshBasicMaterial({
+    color: LINE, transparent: true, opacity: 0.8, depthWrite: false, toneMapped: false,
+  });
+  const WIRE_MATS = [matEdge, matDetail, matHalo, matDesk, matKeys];
   function setAccent(hex) {
     if (!hex) {
       const css = getComputedStyle(document.documentElement).getPropertyValue('--brick').trim();
@@ -407,6 +413,17 @@ function boot(container) {
   // drawn as its own wide key; its centre becomes TUNE.enter.
   const ENTER_SIZE = { w: 0.2, d: 0.36 };
   const SPACE_ROW = [1.35, 1.1, 1.45, 5.6, 1.45, 1.1, 1.35];
+  // What the keys say. Row 0 is the short function row and stays blank — at
+  // this scale F-key labels are mush. The remaining three carry a real ANSI
+  // layout, so the deck reads as a keyboard rather than a grid of boxes.
+  const KEY_LEGENDS = [
+    null,
+    ['⇥', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '⌫'],
+    ['⇪', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', "'"],
+    ['⇧', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', '⇧'],
+  ];
+  const FRONT_LEGENDS = ['ctrl', '⌥', '⌘', '', '⌘', '⌥', 'ctrl'];
+  const KEY_R = 0.028;          // keycap corner radius — real caps aren't boxes
 
   function buildBase() {
     const B = TUNE.base, K = TUNE.deck, P = TUNE.pad;
@@ -437,21 +454,35 @@ function boot(container) {
     // the well the keys sit in
     pushPath(D, rrPts('xz', kx, kz, iw + 0.14, id + 0.14, 0.06, 3, kTop - 0.001));
 
+    const legends = [];
     for (let r = 0; r < K.rows - 1; r++) {
       const z = kz - id / 2 + cd * (r + 0.5);
       const rowD = r === 0 ? cd * 0.5 : kd;    // short function row at the back
+      const row = KEY_LEGENDS[r];
       for (let c = 0; c < K.cols; c++) {
         if (c === eCol && (r === eRow || r === eRow + 1)) continue;
-        pushRectXZ(D, kx - iw / 2 + cw * (c + 0.5), z, kw, rowD, kTop);
+        const x = kx - iw / 2 + cw * (c + 0.5);
+        pushPath(D, rrPts('xz', x, z, kw, rowD, KEY_R, 2, kTop));
+        const label = row && row[c];
+        // one letter gets the full cap; a word like `ctrl` has to shrink to fit
+        if (label) legends.push({ x, z, text: label, size: label.length > 1 ? 0.05 : 0.086 });
       }
     }
+    // caps-lock tell-tale, tucked to the left of the ⇪ glyph
+    const capsX = kx - iw / 2 + cw * 0.5 - kw * 0.3;
+    const capsZ = kz - id / 2 + cd * (eRow + 0.5);
+    pushPath(D, rrPts('xz', capsX, capsZ, 0.022, 0.022, 0.011, 3, kTop));
     // front row: modifiers + a wide space bar, so the deck reads as a laptop
     const unit = iw / SPACE_ROW.reduce((a, b) => a + b, 0);
     let cx = kx - iw / 2;
     const frontZ = kz - id / 2 + cd * (K.rows - 0.5);
+    let fi = 0;
     for (const u of SPACE_ROW) {
       const cellW = u * unit;
-      pushRectXZ(D, cx + cellW / 2, frontZ, cellW * 0.86, kd, kTop);
+      const fx = cx + cellW / 2;
+      pushPath(D, rrPts('xz', fx, frontZ, cellW * 0.86, kd, KEY_R, 2, kTop));
+      const label = FRONT_LEGENDS[fi++];
+      if (label) legends.push({ x: fx, z: frontZ, text: label, size: 0.05 });
       cx += cellW;
     }
 
@@ -459,7 +490,8 @@ function boot(container) {
     const ex = kx - iw / 2 + cw * (eCol + 0.5);
     const ez = kz - id / 2 + cd * (eRow + 1);
     const ew = kw, ed = cd * 2 * 0.82;
-    pushRectXZ(E, ex, ez, ew, ed, kTop);
+    pushPath(E, rrPts('xz', ex, ez, ew, ed, KEY_R, 2, kTop));
+    legends.push({ x: ex, z: ez, text: '⏎', size: 0.1 });
 
     // touchpad — a rounded rectangle with a faint inner outline
     pushPath(E, rrPts('xz', 0, P.z, P.w, P.d, 0.09, 4, kTop));
@@ -482,12 +514,50 @@ function boot(container) {
 
     g.add(segments(E, matEdge));
     g.add(segments(D, matDetail));
+    g.add(deckLegends(legends, iw, id, kx, kz, kTop));
 
     TUNE.enter.x = ex;
     TUNE.enter.y = kTop + 0.006;
     TUNE.enter.z = ez;
     ENTER_SIZE.w = ew; ENTER_SIZE.d = ed;
     return g;
+  }
+
+  // One plane over the key deck carrying every legend, so the letters cost a
+  // single draw call and stay welded to the caps they belong to: a label's world
+  // (x, z) maps straight to a pixel, because the plane covers exactly the deck.
+  // Rotating -90° about X sends the canvas's top edge to the deck's far edge,
+  // which is why z maps to the canvas y axis untouched.
+  let legendTex = null, legendSig = '';
+  function deckLegends(items, iw, id, kx, kz, kTop) {
+    const sig = `${iw}|${id}|${items.length}`;
+    if (legendSig !== sig) {
+      // Kept close to the on-screen size on purpose. At 4× the pixels the
+      // glyphs sampled from a small mip and the thin strokes averaged away to
+      // nothing — legends that were in the texture but invisible on the deck.
+      const CW = 1024, CH = Math.round(CW * id / iw), scale = CW / iw;
+      const c = document.createElement('canvas');
+      c.width = CW; c.height = CH;
+      const g = c.getContext('2d');
+      g.fillStyle = '#fff';
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      for (const it of items) {
+        g.font = `700 ${Math.round(it.size * scale)}px ui-monospace, monospace`;
+        g.fillText(it.text, (it.x - (kx - iw / 2)) * scale, (it.z - (kz - id / 2)) * scale);
+      }
+      if (legendTex) legendTex.dispose();
+      legendTex = new THREE.CanvasTexture(c);
+      legendTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      matKeys.map = legendTex;
+      matKeys.needsUpdate = true;
+      legendSig = sig;
+    }
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(iw, id), matKeys);
+    m.name = 'key-legends';
+    m.rotation.x = -Math.PI / 2;
+    m.position.set(kx, kTop + 0.0015, kz);
+    return m;
   }
 
   // ─────────────────────────────────────────── laptop lid
@@ -893,6 +963,7 @@ function boot(container) {
   let hoverCV = false;
   let hoverLaptop = false;   // pointer is over the machine itself (ray, not proximity)
   let refocusAt = 0;         // hover may not re-zoom before this — see exitFocus()
+  let buildOnLand = false;   // ⏎ pressed from rest: build as soon as the dolly lands
   let buildStart = 0;
   let enterGlow = 0;
   const ray = new THREE.Raycaster();
@@ -1013,6 +1084,7 @@ function boot(container) {
     // never be seen. Hold the hover off until the pull-out has played.
     refocusAt = performance.now() + TUNE.zoomMs + 150;
     hoverLaptop = false;
+    buildOnLand = false;
   }
   function startBuild() {
     if (state === 'building' || state === 'result') return;
@@ -1025,6 +1097,20 @@ function boot(container) {
   dom.addEventListener('pointermove', onMove);
   dom.addEventListener('pointerleave', onLeave);
   dom.addEventListener('pointerdown', onDown);
+
+  // ⏎ takes the offer the chip on screen is making. From rest it leans in and
+  // remembers the ask, so a single press plays the whole move rather than
+  // needing a second one once the dolly has landed.
+  window.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (!raf) return;                       // scene is off-screen — not our key
+    const t = e.target;
+    // whoever is typing, or working a control, meant Enter for that
+    if (t && t.closest && t.closest('input, textarea, select, button, a, [contenteditable]')) return;
+    if (document.querySelector('#chat-overlay.open, #note-modal.open, #drawer.open')) return;
+    if (state === 'idle' || state === 'typing') { buildOnLand = true; enterFocus(); }
+    else if (state === 'focused' && focusZoom > 0.99) startBuild();
+  });
 
   // ─────────────────────────────────────────── screen drawing
   function rr(c, x, y, bw, bh, r) {
@@ -1136,16 +1222,20 @@ function boot(container) {
 
     // prompt chip bottom-right — pinned on once the camera has leaned in, so
     // the panel asks for the keypress for as long as it fills the frame
+    // 20 % larger than the rest of the chrome, deliberately: it is the one
+    // thing on the panel we are asking them to hit. Sized off CHIP_H so the
+    // padding, corner radius and baseline stay in proportion.
     const ready = state === 'focused' || proximity > 0.45;
     const label = ready ? T.hintReady : T.hint;
-    g2.font = '600 27px ui-monospace, monospace';
-    const tw = g2.measureText(label).width + 52;
-    const bx = SC_W - tw - 40, by = SC_H - 92;
+    const CHIP_H = 70;
+    g2.font = '600 32px ui-monospace, monospace';
+    const tw = g2.measureText(label).width + 62;
+    const bx = SC_W - tw - 40, by = SC_H - 34 - CHIP_H;
     g2.fillStyle = ready ? SCR.brick : '#efe9db';
-    rr(g2, bx, by, tw, 58, 29); g2.fill();
+    rr(g2, bx, by, tw, CHIP_H, CHIP_H / 2); g2.fill();
     if (!ready) { g2.strokeStyle = SCR.line; g2.lineWidth = 2; g2.stroke(); }
     g2.fillStyle = ready ? '#fdfaf3' : SCR.soft;
-    g2.fillText(label, bx + 26, by + 38);
+    g2.fillText(label, bx + 31, by + CHIP_H * 0.655);
 
     paperGrain();
     bezelShade();
@@ -1348,6 +1438,8 @@ function boot(container) {
     // ever landing on a face of the model.
     if ((state === 'idle' || state === 'typing') && now >= refocusAt &&
         (hoverLaptop || proximity > FOCUS_AT)) enterFocus();
+    // a ⏎ pressed from rest cashes in here, once the push-in has finished
+    if (buildOnLand && state === 'focused' && focusZoom > 0.99) { buildOnLand = false; startBuild(); }
 
     if (state === 'idle' || state === 'typing' || state === 'focused') {
       const zoomed = state === 'focused';
