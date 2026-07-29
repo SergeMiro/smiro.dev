@@ -5170,10 +5170,13 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
 })();
 </script>
 
-<script src="/i18n-fr.js"></script>
-<script src="/i18n.js"></script>
-<script src="/settings.js"></script>
-<script type="module" src="/pc3d.js"></script>
+<!-- ?v= busts the year-long immutable cache these files were served with until
+     2026-07-29; browsers that had already been here would otherwise never ask
+     for them again. The headers now revalidate, so this needs no further bumps. -->
+<script src="/i18n-fr.js?v=2"></script>
+<script src="/i18n.js?v=2"></script>
+<script src="/settings.js?v=2"></script>
+<script type="module" src="/pc3d.js?v=2"></script>
 <script>
 // POV tuning panel — lets you dial in the perfect camera framing live
 function initTune(){
