@@ -195,7 +195,15 @@ export default async function handler(req: Request): Promise<Response> {
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: fullSystem }] },
           contents: geminiHistory,
-          generationConfig: { maxOutputTokens: 600, temperature: 0.7, topP: 0.95 },
+          generationConfig: {
+            // Gemini 2.5 counts its thinking against this budget, so 600 with
+            // thinking on ended replies mid-sentence (~100 visible chars).
+            // Thinking off + a real ceiling gives the whole answer.
+            maxOutputTokens: 2048,
+            temperature: 0.7,
+            topP: 0.95,
+            thinkingConfig: { thinkingBudget: 0 },
+          },
         }),
       }
     );
@@ -231,16 +239,25 @@ export default async function handler(req: Request): Promise<Response> {
     );
   }
 
-  // Adapter: parse upstream SSE chunk → text delta
-  const parseChunk = (payload: string): string | null => {
+  // Adapter: parse upstream SSE chunk → text delta + why it stopped
+  const parseChunk = (payload: string): { text: string; finish?: string } | null => {
     try {
       const obj = JSON.parse(payload);
       // OpenAI-compatible
       const oaText = obj?.choices?.[0]?.delta?.content;
-      if (typeof oaText === 'string') return oaText;
-      // Gemini
-      const gText = obj?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (typeof gText === 'string') return gText;
+      if (typeof oaText === 'string') {
+        return { text: oaText, finish: obj?.choices?.[0]?.finish_reason ?? undefined };
+      }
+      // Gemini — a chunk can carry several parts, and reasoning parts are
+      // flagged `thought`; joining every text part avoids dropping content.
+      const parts = obj?.candidates?.[0]?.content?.parts;
+      if (Array.isArray(parts)) {
+        const text = parts
+          .filter((p: { text?: string; thought?: boolean }) => !p.thought && typeof p.text === 'string')
+          .map((p: { text: string }) => p.text)
+          .join('');
+        return { text, finish: obj?.candidates?.[0]?.finishReason ?? undefined };
+      }
     } catch {}
     return null;
   };
@@ -251,6 +268,7 @@ export default async function handler(req: Request): Promise<Response> {
       const decoder = new TextDecoder();
       const enc = new TextEncoder();
       let buf = '';
+      let finish: string | undefined;
       try {
         while (true) {
           const { value, done } = await reader.read();
@@ -263,11 +281,15 @@ export default async function handler(req: Request): Promise<Response> {
             if (!line.startsWith('data:')) continue;
             const payload = line.slice(5).trim();
             if (!payload || payload === '[DONE]') continue;
-            const delta = parseChunk(payload);
-            if (delta) controller.enqueue(enc.encode(`data: ${JSON.stringify({ delta })}\n\n`));
+            const parsed = parseChunk(payload);
+            if (!parsed) continue;
+            if (parsed.finish) finish = parsed.finish;
+            if (parsed.text) controller.enqueue(enc.encode(`data: ${JSON.stringify({ delta: parsed.text })}\n\n`));
           }
         }
-        controller.enqueue(enc.encode(`data: ${JSON.stringify({ done: true, remaining: rate.remaining, model: used.id })}\n\n`));
+        // `finish` travels with the done event: a reply cut by a token ceiling
+        // looks identical to a short one from the client side otherwise.
+        controller.enqueue(enc.encode(`data: ${JSON.stringify({ done: true, remaining: rate.remaining, model: used.id, finish })}\n\n`));
       } catch (e) {
         controller.enqueue(enc.encode(`data: ${JSON.stringify({ error: String(e) })}\n\n`));
       } finally {
