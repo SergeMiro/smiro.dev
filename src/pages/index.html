@@ -1160,19 +1160,18 @@ footer a:hover{color:var(--brick)}
   0%,100%{transform:scale(1) translateY(0)}
   50%   {transform:scale(1.04) translateY(-1px)}
 }
-/* mask wrapper: head pops out top while body stays inside orange disk */
+/* mask wrapper: clip image to circle */
 .avatar-orb .orb-disk .orb-mask{
   position:absolute;inset:0;
-  top:-50%;height:150%;
-  border-radius:50% 50% 50% 50% / 30% 30% 50% 50%;
+  border-radius:50%;
   overflow:hidden;
   pointer-events:none;
 }
 .avatar-orb .orb-disk img{
   position:absolute;
-  width:90%;height:auto;
-  left:50%;bottom:0;
-  transform:translateX(-50%);
+  width:80%;height:auto;
+  left:50%;top:50%;
+  transform:translate(-50%,-50%);
   display:block;
   filter:drop-shadow(0 2px 4px rgba(27,26,24,.25));
 }
@@ -1328,13 +1327,13 @@ footer a:hover{color:var(--brick)}
   margin-bottom:-2px;
 }
 .cv-orb .cv-disk .cv-mask{
-  position:absolute;inset:0;top:-50%;height:150%;
-  border-radius:50% 50% 50% 50% / 30% 30% 50% 50%;
+  position:absolute;inset:0;
+  border-radius:50%;
   overflow:hidden;pointer-events:none;
 }
 .cv-orb .cv-disk img{
-  position:absolute;width:90%;height:auto;
-  left:50%;bottom:0;transform:translateX(-50%);
+  position:absolute;width:80%;height:auto;
+  left:50%;top:50%;transform:translate(-50%,-50%);
   display:block;
   filter:drop-shadow(0 3px 5px rgba(27,26,24,.28));
 }
