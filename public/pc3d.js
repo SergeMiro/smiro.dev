@@ -884,10 +884,15 @@ function boot(container) {
 
   // ─────────────────────────────────────────── state + interaction
   let state = 'idle';
+  // leaned-in states: the camera holds the POV framing and the machine is
+  // parked — no sway, no breathing — until a CV click sends it home.
+  const engaged = () => state === 'focused' || state === 'building' || state === 'result';
   let typed = 0;
   let proximity = 0;
   let mouseX = -1e4, mouseY = -1e4, hasPointer = false;
   let hoverCV = false;
+  let hoverLaptop = false;   // pointer is over the machine itself (ray, not proximity)
+  let refocusAt = 0;         // hover may not re-zoom before this — see exitFocus()
   let buildStart = 0;
   let enterGlow = 0;
   const ray = new THREE.Raycaster();
@@ -926,13 +931,20 @@ function boot(container) {
   function onMove(e) {
     track(e);
     if (state === 'result') updateHover();
+    // hovering the machine is what starts the push-in; the ray is only worth
+    // casting while there is still a push-in to start.
+    if (state === 'idle' || state === 'typing') {
+      hoverLaptop = rayHit().intersectObjects(laptopHits, false).length > 0;
+    }
   }
   function onLeave(e) {
     hasPointer = false;
     proximity = 0;
+    hoverLaptop = false;
     // NOTE: camera stays zoomed in once focused — only a CV click in the
     // `result` state brings it back out.  The old pointerleave → exitFocus
-    // path was removed on purpose (user request).
+    // path was removed on purpose (user request): a push-in that has begun
+    // always runs to the end, even if the pointer walks away mid-flight.
   }
 
   function rayHit() {
@@ -972,8 +984,11 @@ function boot(container) {
       // Tapping anywhere on the machine leans in first. At the resting framing
       // the Enter key is a handful of pixels wide — far too small to ask for.
       if (proximity > 0.1 || rayHit().intersectObjects(laptopHits, false).length) enterFocus();
-    } else if (state === 'focused') {
-      // zoomed in, the panel and the key are both generous targets
+    } else if (state === 'focused' && focusZoom > 0.99) {
+      // zoomed in *and* the dolly has landed — the panel and the key are both
+      // generous targets. Clicks during the push-in are dropped on purpose:
+      // the Enter key is still sliding across the screen, so an early tap
+      // would fire wherever it happened to be.
       if (rayHit().intersectObjects([screen, enterKey, enterRing], false).length) startBuild();
     } else if (state === 'result' && hoverCV) {
       // return to idle, then navigate to the CV page
@@ -989,9 +1004,15 @@ function boot(container) {
     container.style.cursor = 'pointer';
   }
   function exitFocus() {
-    if (state !== 'focused' && state !== 'building' && state !== 'result') return;
+    if (!engaged()) return;
     state = 'typing';
     container.style.cursor = 'default';
+    // The CV card sits on the screen, so the pointer is still over the machine
+    // at the moment we pull out — without this the very next frame would read
+    // that as a fresh hover and zoom straight back in, and the trip home would
+    // never be seen. Hold the hover off until the pull-out has played.
+    refocusAt = performance.now() + TUNE.zoomMs + 150;
+    hoverLaptop = false;
   }
   function startBuild() {
     if (state === 'building' || state === 'result') return;
@@ -1275,7 +1296,7 @@ function boot(container) {
     const elapsed = now - t0;
 
     // the whole desk floats and sways gently — except when the user leans in
-    if (!reduceMotion && state !== 'focused') {
+    if (!reduceMotion && !engaged()) {
       pc.position.y = Math.sin(elapsed * 0.0009) * 0.035;
       pc.rotation.y = TUNE.rotY + Math.sin(elapsed * 0.00045) * TUNE.sway;
       pc.rotation.x = Math.sin(elapsed * 0.00062) * TUNE.sway * 0.18;
@@ -1283,7 +1304,7 @@ function boot(container) {
 
     // the lid breathes open and shut by a fraction of a degree — the wire
     // panel, its halo copy and the screen node all share one angle.
-    const la = lidAngle() + ((reduceMotion || state === 'focused') ? 0 : Math.sin(elapsed * 0.0007) * TUNE.breathe);
+    const la = lidAngle() + ((reduceMotion || engaged()) ? 0 : Math.sin(elapsed * 0.0007) * TUNE.breathe);
     if (lidWire) lidWire.rotation.x = la;
     if (haloLid) haloLid.rotation.x = la;
     lidFx.rotation.x = la;
@@ -1298,7 +1319,7 @@ function boot(container) {
     // always takes TUNE.zoomMs; the camera then *follows* that target with a
     // fast per-frame lerp, which absorbs a resize snap or a reversal without a
     // jump. placeCamera() is deliberately absent — see its comment.
-    setFocus(state === 'focused' || state === 'building' || state === 'result' ? 1 : 0);
+    setFocus(engaged() ? 1 : 0);
     if (reduceMotion) {
       focusZoom = focusTo;
       aimCamera(focusZoom);
@@ -1322,8 +1343,11 @@ function boot(container) {
       const radius = Math.max(140, Math.min(w, h) * 0.7);
       proximity = Math.max(0, Math.min(1, 1 - d / radius));
     }
-    // reaching the deck leans in on its own — no click needed on desktop
-    if ((state === 'idle' || state === 'typing') && proximity > FOCUS_AT) enterFocus();
+    // hovering the machine leans in on its own — no click needed on desktop.
+    // proximity stays as a fallback for pointers that graze the deck without
+    // ever landing on a face of the model.
+    if ((state === 'idle' || state === 'typing') && now >= refocusAt &&
+        (hoverLaptop || proximity > FOCUS_AT)) enterFocus();
 
     if (state === 'idle' || state === 'typing' || state === 'focused') {
       const zoomed = state === 'focused';
