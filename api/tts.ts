@@ -25,6 +25,41 @@ function pickVoice(lang: string | undefined): string {
   return 'aura-asteria-en';
 }
 
+// An English voice reading French is worse than no voice at all — the browser's
+// own French synthesis takes over instead. So for a non-English request we ask
+// Deepgram what it actually speaks rather than guessing a model name: if it has
+// a voice for that language we use it, otherwise we hand the job back with 415
+// and the client falls back to Web Speech.
+let voiceIndex: Record<string, string> | null = null;
+
+async function findVoice(key: string, lang: string): Promise<string | null> {
+  const want = lang.slice(0, 2).toLowerCase();
+  if (!voiceIndex) {
+    try {
+      const res = await fetch('https://api.deepgram.com/v1/models', {
+        headers: { Authorization: `Token ${key}` },
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as {
+        tts?: Array<{ canonical_name?: string; name?: string; languages?: string[] }>;
+      };
+      const index: Record<string, string> = {};
+      for (const m of data.tts ?? []) {
+        const id = m.canonical_name || m.name;
+        if (!id) continue;
+        for (const l of m.languages ?? []) {
+          const two = l.slice(0, 2).toLowerCase();
+          if (!index[two]) index[two] = id;
+        }
+      }
+      voiceIndex = index;
+    } catch {
+      return null;
+    }
+  }
+  return voiceIndex[want] ?? null;
+}
+
 export default async function handler(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
@@ -72,7 +107,22 @@ export default async function handler(req: Request): Promise<Response> {
     });
   }
 
-  const requestedVoice = body.voice && VOICES_EN.includes(body.voice) ? body.voice : pickVoice(body.lang);
+  const lang = (body.lang ?? 'en-US').toLowerCase();
+  let requestedVoice: string;
+  if (body.voice && VOICES_EN.includes(body.voice)) {
+    requestedVoice = body.voice;
+  } else if (lang.startsWith('en')) {
+    requestedVoice = pickVoice(lang);
+  } else {
+    const found = await findVoice(key, lang);
+    if (!found) {
+      return new Response(
+        JSON.stringify({ error: 'no_voice', lang, message: 'No TTS voice for this language — speak it in the browser.' }),
+        { status: 415, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    requestedVoice = found;
+  }
 
   const dgRes = await fetch(`https://api.deepgram.com/v1/speak?model=${requestedVoice}&encoding=mp3`, {
     method: 'POST',

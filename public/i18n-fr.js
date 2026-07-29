@@ -107,6 +107,7 @@ window.I18N_FR = {
     "orb.listening":      "écoute",
     "orb.thinking":       "réfléchit",
     "orb.generating":     "génère",
+    "chat.greet":         "Salut 👋 Je suis l'<em>avatar IA</em> de Sergiy — entraîné sur son CV, ses projets et ses études de cas. Posez-moi vos questions.",
     "sbx.foot":           "Vrai modèle, aucun outil — il explique ce qu'il ferait. Mes vrais agents tournent sur mon VPS, avec accès fichiers, shell et base.",
 
     "contact.idx":        "me contacter",
@@ -283,6 +284,8 @@ window.I18N_FR = {
     "online · ready to talk":        "en ligne · prêt à discuter",
     "Talk by voice":                 "Parler à la voix",
     "or pick a question":            "ou choisissez une question",
+    /* the greeting bubble is keyed as HTML (chat.greet) — French needs the
+       elision "l'avatar", which per-node translation can't produce */
     "Hi 👋 I'm Sergiy's":             "Salut 👋 Je suis l'avatar IA de Sergiy",
     "— trained on his CV, projects and case studies. Ask me anything.":
                                      "— entraîné sur son CV, ses projets et ses études de cas. Posez-moi vos questions.",

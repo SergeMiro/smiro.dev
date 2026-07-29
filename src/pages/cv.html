@@ -508,12 +508,16 @@ a{color:inherit}
           </linearGradient>
           <clipPath id="avClip">
             <circle cx="70" cy="100" r="60"></circle>
-            <rect x="33" y="0" width="70" height="100"></rect>
+            <!-- the head is allowed to rise above the disk; 84 wide clears the
+                 widest part of the hair (63px at this scale) on both sides -->
+            <rect x="28" y="0" width="84" height="100"></rect>
           </clipPath>
         </defs>
         <circle cx="70" cy="100" r="60" fill="url(#avGrad)"></circle>
         <circle cx="70" cy="100" r="57" fill="none" stroke="rgba(251,248,240,0.42)" stroke-width="1.5"></circle>
-        <image href="/assets/avatar-serge.png" x="5" y="0" width="130" height="130"
+        <!-- 152 tall from y=10 fills the disk to its bottom edge: at 130 the
+             portrait stopped mid-torso and left a bare band of gradient -->
+        <image href="/assets/avatar-serge.png" x="-6" y="10" width="152" height="152"
                clip-path="url(#avClip)" preserveAspectRatio="xMidYMin meet"></image>
       </svg>
       <span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Sergiy Mirochnyk</span>

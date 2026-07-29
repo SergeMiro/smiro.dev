@@ -14,7 +14,9 @@ export const config = { runtime: 'edge' };
 // team has to fit inside the window.
 const RATE_LIMIT_MAX = 12;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
-const MAX_SYSTEM_PROMPT_CHARS = 6000;
+// The avatar ships its whole dossier (public/kb/sergiy.md, ~9 KB) in the system
+// prompt, so the cap has to clear that with room for the persona on top.
+const MAX_SYSTEM_PROMPT_CHARS = 20000;
 const MAX_USER_MESSAGE_CHARS = 1500;
 const MAX_HISTORY_MESSAGES = 8;
 

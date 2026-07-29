@@ -1297,7 +1297,9 @@ footer a:hover{color:var(--brick)}
 
 .cv-orb{
   position:relative;
-  width:88px;height:88px;border-radius:50%;
+  /* scales with the panel — the panel itself is calc(100vw - 48px) on phones */
+  width:clamp(68px, 24vw, 88px);height:clamp(68px, 24vw, 88px);
+  aspect-ratio:1;border-radius:50%;
   margin:4px auto 14px;
   display:grid;place-items:end center;
   isolation:isolate;
@@ -1381,6 +1383,10 @@ footer a:hover{color:var(--brick)}
   box-shadow:0 8px 18px -6px rgba(27,26,24,.4);
   transition:all .2s;
 }
+.cv-call-btn.on{
+  background:var(--brick);border-color:var(--brick);color:#fff;
+}
+.cv-call-btn.on .cv-mic{animation:p 1.2s ease-in-out infinite}
 .cv-call-btn:hover{
   background:var(--brick);transform:translateY(-1px);
   box-shadow:0 10px 22px -6px oklch(0.62 0.16 38 / .55);
@@ -1437,7 +1443,7 @@ footer a:hover{color:var(--brick)}
 /* ── chat body (after a question is asked) ── */
 .chat-body{
   padding:14px 16px 4px;display:flex;flex-direction:column;gap:10px;
-  max-height:300px;overflow-y:auto;
+  max-height:min(300px, 42vh);overflow-y:auto;
   display:none;
 }
 .chat-panel.has-conv .chat-body{display:flex}
@@ -2584,7 +2590,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
       </div>
       <!-- text fallback / suggested -->
       <div class="chat-body" id="chat-body">
-        <div class="chat-bubble bot">
+        <div class="chat-bubble bot" data-i18n-html="chat.greet">
           Hi 👋 I'm Sergiy's <em>AI avatar</em> — trained on his CV, projects and case studies. Ask me anything.
         </div>
       </div>
@@ -3274,68 +3280,287 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   const orbSmall = invite.querySelector('.avatar-orb');
   const orbBig = document.querySelector('.cv-orb');
 
-  async function askAvatar(q){
-    addBubble(q, 'user');
-    suggest.style.display = 'none';
-    const typing = addTyping();
-    // activate speaking waves
-    if(orbSmall) orbSmall.classList.add('speaking');
-    if(orbBig) orbBig.classList.add('speaking');
-    try{
-      const sys = "You are the AI avatar of Sergiy Miro (smiro.dev) — AI engineer & full-stack developer, 15 years in IT, 5+ years shipping production code. He builds multi-agent systems (executor/reviewer loops to >=90% quality), RAG pipelines, MCP integrations and n8n automations; vibe-codes daily with Claude Code & Cursor; fine-tunes open-source LLMs (Unsloth, LoRA); stack: React, Next.js, Node, Python, TypeScript, Postgres, SQL Server; provisions and hardens his own VPS infra (Docker, OWASP). Based in Dijon, France — fully remote across EU. Answer briefly (2–4 sentences), in the language of the question (English / French / Russian), in first person, professional and warm. If you don't know the precise answer, suggest emailing serge@smiro.dev.";
-      const reply = await window.claude.complete({
-        messages: [
-          {role:'user', content: sys + "\n\nEmployer's question: " + q}
-        ]
-      });
-      typing.remove();
-      addBubble(reply || "Sorry, I couldn't answer that. Please write to serge@smiro.dev", 'bot');
-    } catch(err){
-      typing.remove();
-      addBubble('AI connection is temporarily unavailable. Please write to Sergiy directly: serge@smiro.dev', 'bot');
-    }
-    // stop speaking waves
-    if(orbSmall) orbSmall.classList.remove('speaking');
-    if(orbBig) orbBig.classList.remove('speaking');
+  // ── language + tiny copy helper (the panel is bilingual) ──────────────
+  const lang = () => (window.I18N && window.I18N.getLang && window.I18N.getLang()) || 'en';
+  const L = (en, fr) => (lang() === 'fr' ? fr : en);
+  const speechLang = () => (lang() === 'fr' ? 'fr-FR' : 'en-US');
+  const tagline = document.querySelector('.cv-tagline');
+  const taglineEN = tagline ? tagline.textContent : '';
+  function say(state) {
+    if (!tagline) return;
+    tagline.textContent = state || (window.I18N && lang() === 'fr'
+      ? 'en ligne · prêt à discuter' : taglineEN);
   }
 
-  document.querySelectorAll('.chat-q').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      askAvatar(btn.dataset.q);
+  // ── knowledge base: the CV and the system notes the avatar answers from ──
+  // One fetch, cached for the session. If it fails the avatar still works, it
+  // just knows less — so the persona repeats the essentials itself.
+  let kbText = null;
+  async function kb() {
+    if (kbText !== null) return kbText;
+    try {
+      const r = await fetch('/kb/sergiy.md');
+      kbText = r.ok ? (await r.text()).slice(0, 14000) : '';
+    } catch (e) { kbText = ''; }
+    return kbText;
+  }
+
+  async function persona() {
+    const facts = await kb();
+    return [
+      "You are the AI avatar of Sergiy Mirochnyk (Sergiy Miro) on smiro.dev — AI engineer and full-stack developer, 15 years around IT, 5+ years shipping production code, based in Dijon, France.",
+      'You speak in the first person, as Sergiy. Professional, warm, a little dry — never salesy, never gushing.',
+      'You are talking to a recruiter or a hiring manager, often out loud, so answer in 2–4 sentences (under 90 words). No bullet lists, no markdown, no headings — this text may be spoken aloud.',
+      'Answer in the language of the question (French, English or Russian). Default to ' + L('English', 'French') + '.',
+      'Ground every answer in the dossier below. If the answer is not in it — salary, notice period, visa, start date, anything you cannot know — say so plainly in one clause and offer serge@smiro.dev. Never invent a client, a number or a date.',
+      '--- DOSSIER ---',
+      facts || 'Dossier unavailable: answer only from what you are certain of and offer serge@smiro.dev for details.',
+    ].join('\n\n');
+  }
+
+  // ── transport: same streaming endpoint the agent sandbox uses ─────────
+  const history = [];
+  let busy = false;
+
+  async function streamReply(question, onDelta) {
+    history.push({ role: 'user', content: question });
+    const res = await fetch('/api/agent-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        agentSlug: 'avatar',
+        agentName: 'Sergiy avatar',
+        systemPrompt: await persona(),
+        messages: history.slice(-6),
+      }),
     });
+    if (!res.ok || !res.body) {
+      let why = '';
+      try { why = (await res.json()).message || ''; } catch (e) {}
+      throw new Error(why || 'status ' + res.status);
+    }
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '', text = '';
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop() || '';
+      for (const raw of lines) {
+        const line = raw.trim();
+        if (!line.startsWith('data:')) continue;
+        let msg;
+        try { msg = JSON.parse(line.slice(5).trim()); } catch (e) { continue; }
+        if (msg.error) throw new Error(msg.error);
+        if (msg.delta) { text += msg.delta; onDelta(text); }
+      }
+    }
+    if (text.trim()) history.push({ role: 'assistant', content: text });
+    return text.trim();
+  }
+
+  // ── voice out: Deepgram through /api/tts, browser speech as the fallback ──
+  let audio = null;
+  function stopSpeaking() {
+    if (audio) { audio.pause(); audio = null; }
+    try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
+    if (orbSmall) orbSmall.classList.remove('speaking');
+    if (orbBig) orbBig.classList.remove('speaking');
+  }
+
+  function browserSpeak(text) {
+    return new Promise((resolve) => {
+      const synth = window.speechSynthesis;
+      if (!synth) return resolve(false);
+      const want = speechLang();
+      const voices = synth.getVoices() || [];
+      const voice = voices.find(v => v.lang === want)
+        || voices.find(v => v.lang && v.lang.slice(0, 2) === want.slice(0, 2));
+      if (!voice && want.startsWith('fr')) return resolve(false); // no French voice: stay silent rather than read French with an English mouth
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = want;
+      if (voice) u.voice = voice;
+      u.rate = 1.02;
+      u.onend = () => resolve(true);
+      u.onerror = () => resolve(false);
+      synth.speak(u);
+    });
+  }
+
+  // /api/tts caps a request at 2000 chars; sentences keep the seams natural.
+  function chunk(text, max = 1200) {
+    const parts = [];
+    let cur = '';
+    for (const piece of text.split(/(?<=[.!?…])\s+/)) {
+      if ((cur + ' ' + piece).trim().length > max) { if (cur) parts.push(cur.trim()); cur = piece; }
+      else cur = (cur ? cur + ' ' : '') + piece;
+    }
+    if (cur.trim()) parts.push(cur.trim());
+    return parts;
+  }
+
+  async function playChunk(text) {
+    const res = await fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, lang: speechLang() }),
+    });
+    if (!res.ok) throw new Error('tts ' + res.status);
+    const url = URL.createObjectURL(await res.blob());
+    await new Promise((resolve, reject) => {
+      audio = new Audio(url);
+      audio.onended = resolve;
+      audio.onerror = reject;
+      // a device that never fires `ended` would strand the call in "speaking";
+      // ~14 chars a second is slow speech, so this only fires when playback died
+      const guard = setTimeout(resolve, 4000 + text.length * 90);
+      const clear = () => clearTimeout(guard);
+      audio.onended = () => { clear(); resolve(); };
+      audio.onerror = () => { clear(); reject(new Error('playback failed')); };
+      audio.play().catch(e => { clear(); reject(e); });
+    });
+    URL.revokeObjectURL(url);
+  }
+
+  async function speak(text) {
+    if (!text) return;
+    if (orbSmall) orbSmall.classList.add('speaking');
+    if (orbBig) orbBig.classList.add('speaking');
+    say(L('speaking…', 'je parle…'));
+    try {
+      for (const part of chunk(text)) await playChunk(part);
+    } catch (e) {
+      await browserSpeak(text);   // no proxy, no key, or an unsupported voice
+    }
+    audio = null;
+    if (orbSmall) orbSmall.classList.remove('speaking');
+    if (orbBig) orbBig.classList.remove('speaking');
+    say(null);
+  }
+
+  // ── voice in: Web Speech recognition, one utterance at a time ─────────
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let rec = null;
+  function listenOnce() {
+    return new Promise((resolve) => {
+      if (!SR) return resolve(null);
+      rec = new SR();
+      rec.lang = speechLang();
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
+      rec.continuous = false;
+      let settled = false;
+      const done = (v) => { if (!settled) { settled = true; rec = null; resolve(v); } };
+      rec.onresult = (ev) => done(ev.results[0][0].transcript);
+      rec.onerror = () => done(null);
+      rec.onend = () => done(null);
+      try { rec.start(); } catch (e) { done(null); }
+    });
+  }
+
+  // ── the conversation itself ───────────────────────────────────────────
+  async function askAvatar(question, opts) {
+    if (busy || !question) return '';
+    busy = true;
+    addBubble(question, 'user');
+    suggest.style.display = 'none';
+    const typing = addTyping();
+    say(L('thinking…', 'je réfléchis…'));
+    let out = null, answer = '';
+    try {
+      answer = await streamReply(question, (text) => {
+        if (!out) { typing.remove(); out = addBubble('', 'bot'); }
+        out.textContent = text;
+        body.scrollTop = body.scrollHeight;
+      });
+      if (!answer) {
+        if (out) out.remove(); else typing.remove();
+        addBubble(L("I didn't catch that one — ask again, or write to serge@smiro.dev.",
+          "Je n'ai rien à répondre à celle-là — reformulez, ou écrivez à serge@smiro.dev."), 'bot');
+      }
+    } catch (err) {
+      if (out) out.remove(); else typing.remove();
+      addBubble(L('My AI connection is down for a moment (' + err.message + '). Write to Sergiy directly: serge@smiro.dev',
+        'Ma connexion IA est coupée un instant (' + err.message + '). Écrivez à Sergiy : serge@smiro.dev'), 'bot');
+    }
+    say(null);
+    busy = false;
+    if (answer && opts && opts.speak) await speak(answer);
+    return answer;
+  }
+
+  document.querySelectorAll('.chat-q').forEach(btn => {
+    btn.addEventListener('click', () => askAvatar(btn.dataset.q));
   });
 
-  form.addEventListener('submit', (e)=>{
+  form.addEventListener('submit', (e) => {
     e.preventDefault();
     const v = input.value.trim();
-    if(!v) return;
+    if (!v) return;
     input.value = '';
     askAvatar(v);
   });
 
-  // Voice — uses Web Speech API where available
-  function startVoice(){
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if(!SR){
-      addBubble('Voice mode is not supported in this browser. Type your question or contact: serge@smiro.dev', 'bot');
+  // Voice mode: listen → answer → speak → listen again, until stopped.
+  let voiceOn = false;
+  const callLabel = callBtn.querySelector('span:last-child');
+  const callLabelEN = callLabel ? callLabel.textContent : '';
+
+  function setCallLabel(text) {
+    if (!callLabel) return;
+    // restoring means putting the English source back and letting i18n.js
+    // translate it again — so the label matches the dictionary, not a copy of it
+    callLabel.textContent = text || callLabelEN;
+    if (!text && window.I18N) window.I18N.apply();
+  }
+
+  function stopVoice() {
+    voiceOn = false;
+    if (rec) { try { rec.abort(); } catch (e) {} rec = null; }
+    stopSpeaking();
+    callBtn.classList.remove('on');
+    setCallLabel(null);
+    say(null);
+  }
+
+  async function voiceLoop() {
+    while (voiceOn) {
+      say(L('listening…', 'je vous écoute…'));
+      const heard = await listenOnce();
+      if (!voiceOn) break;
+      if (!heard) {
+        addBubble(L("I couldn't hear that. Try again, or type your question.",
+          "Je n'ai rien entendu. Réessayez, ou écrivez votre question."), 'bot');
+        break;
+      }
+      await askAvatar(heard, { speak: true });
+      if (!voiceOn) break;
+    }
+    stopVoice();
+  }
+
+  function startVoice() {
+    if (voiceOn) return stopVoice();
+    if (!SR) {
+      addBubble(L('This browser has no speech recognition — Chrome, Edge or Safari do. Type your question instead, or write to serge@smiro.dev.',
+        "Ce navigateur ne reconnaît pas la voix — Chrome, Edge ou Safari le font. Écrivez votre question, ou contactez serge@smiro.dev."), 'bot');
       return;
     }
-    const rec = new SR();
-    rec.lang = 'en-US';
-    rec.interimResults = false;
-    rec.maxAlternatives = 1;
-    addBubble('🎙 Listening…', 'bot');
-    rec.onresult = (ev)=>{
-      const t = ev.results[0][0].transcript;
-      askAvatar(t);
-    };
-    rec.onerror = ()=>{
-      addBubble("Couldn't pick up the voice. Try again, or type your question.", 'bot');
-    };
-    rec.start();
+    voiceOn = true;
+    callBtn.classList.add('on');
+    setCallLabel(L('Stop the call', "Arrêter l'appel"));
+    voiceLoop();
   }
+
   callBtn.addEventListener('click', startVoice);
   micBtn.addEventListener('click', startVoice);
+  // leaving the panel ends the call — nobody wants a mic they forgot about
+  chClose.addEventListener('click', stopVoice);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) stopVoice(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') stopVoice(); });
+  window.addEventListener('i18n:changed', () => { if (!voiceOn) setCallLabel(null); say(null); });
 })();
 
 /* tweaks panel protocol */
