@@ -146,6 +146,9 @@ export default async function handler(req: Request): Promise<Response> {
     headers: {
       'Content-Type': 'audio/mpeg',
       'Cache-Control': 'public, max-age=3600',
+      // which voice answered — the only way to tell a real French voice from an
+      // English one reading French without listening to the bytes
+      'X-TTS-Voice': requestedVoice,
     },
   });
 }
