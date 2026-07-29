@@ -192,8 +192,8 @@ function boot(container) {
     frame: { w: 7.7, h: 6.5 },
     // the `focused` framing — straight-on POV: camera looks at the screen
     // from eye level so it fills the view, with the keyboard deck below.
-    focusCam: { x: -0.62, y: 3.89, z: 7.59 },
-    focusLook: { x: 0.02, y: 1.15, z: 0.20 },
+    focusCam: { x: -0.52, y: 3.86, z: 7.59 },
+    focusLook: { x: 0.05, y: 1.21, z: 0.27 },
     focusFrame: { w: 5.0, h: 3.8 },
     zoomMs: 650,               // duration of the push-in / pull-out (cubic-eased) — 50 % faster
     zoomSpeed: 0.075,          // per-frame follow lerp on top of it, at 60 fps
@@ -931,13 +931,20 @@ function boot(container) {
   function onMove(e) {
     track(e);
     if (state === 'result') updateHover();
+    if (hasPointer && (state === 'idle' || state === 'typing')) {
+      if (rayHit().intersectObjects(laptopHits, false).length > 0) {
+        if (!window.__hoveringLaptop) { window.__hoveringLaptop = true; }
+      } else {
+        if (window.__hoveringLaptop) { window.__hoveringLaptop = false; }
+      }
+    }
   }
   function onLeave(e) {
     hasPointer = false;
+    window.__hoveringLaptop = false;
     proximity = 0;
-    // NOTE: camera stays zoomed in once focused — only a CV click in the
-    // `result` state brings it back out.  The old pointerleave → exitFocus
-    // path was removed on purpose (user request).
+    // camera zooms out when the cursor leaves the laptop or canvas
+    // — hover-on-laptop triggers the push-in, leaving exits it.
   }
 
   function rayHit() {
@@ -1328,7 +1335,9 @@ function boot(container) {
       proximity = Math.max(0, Math.min(1, 1 - d / radius));
     }
     // reaching the deck leans in on its own — no click needed on desktop
-    if ((state === 'idle' || state === 'typing') && proximity > FOCUS_AT) enterFocus();
+    // hover on the 3D laptop model triggers the push-in; proximity still works as fallback
+    if ((state === 'idle' || state === 'typing') && (window.__hoveringLaptop || proximity > FOCUS_AT)) enterFocus();
+    if (state === 'focused' && !window.__hoveringLaptop && proximity < 0.2) exitFocus();
 
     if (state === 'idle' || state === 'typing' || state === 'focused') {
       const zoomed = state === 'focused';
