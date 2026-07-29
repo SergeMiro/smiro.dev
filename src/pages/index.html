@@ -112,79 +112,6 @@ nav.top{
 }
 .nav-cta:hover{background:var(--brick);border-color:var(--brick)}
 
-/* ───── hamburger menu (mobile) ───── */
-.hamburger{
-  display:none; flex-direction:column; justify-content:center; gap:5px;
-  width:30px; height:30px; border:none; background:none; cursor:pointer;
-  padding:0; margin-right:8px;
-}
-.hamburger span{
-  display:block; width:22px; height:2px; border-radius:2px;
-  background:var(--ink); transition:all .25s cubic-bezier(.4,.8,.3,1);
-  transform-origin:center;
-}
-.hamburger.open span:nth-child(1){ transform:translateY(7px) rotate(45deg) }
-.hamburger.open span:nth-child(2){ opacity:0 }
-.hamburger.open span:nth-child(3){ transform:translateY(-7px) rotate(-45deg) }
-
-/* ───── mobile drawer ───── */
-.drawer-overlay{
-  position:fixed; inset:0; z-index:80;
-  background:rgba(27,26,24,.45); backdrop-filter:blur(4px);
-  opacity:0; visibility:hidden;
-  transition:opacity .35s ease, visibility 0s linear .35s;
-}
-.drawer-overlay.open{ opacity:1; visibility:visible; transition:opacity .35s ease; }
-
-.drawer{
-  position:fixed; top:0; left:0; bottom:0; z-index:90;
-  width:min(340px,80vw);
-  background:var(--bg); border-right:1px solid var(--line);
-  transform:translateX(-110%);
-  transition:transform .4s cubic-bezier(.4,.8,.3,1);
-  display:flex; flex-direction:column; overflow-y:auto;
-}
-.drawer.open{ transform:translateX(0) }
-
-.drawer-head{
-  display:flex; align-items:center; gap:2px;
-  padding:20px 24px; border-bottom:1px solid var(--line-2);
-  font-family:var(--font-mono); font-weight:700; font-size:22px;
-}
-.drawer-head .s{ color:var(--brick) }
-.drawer-head .miro{ color:var(--ink) }
-.drawer-close{
-  margin-left:auto; width:32px; height:32px; border-radius:8px;
-  border:1px solid var(--line-2); background:var(--bg); color:var(--ink-2);
-  font-size:16px; cursor:pointer; display:grid; place-items:center;
-}
-
-.drawer-links{
-  display:flex; flex-direction:column; gap:2px;
-  padding:12px 10px; border-bottom:1px solid var(--line-2);
-}
-.drawer-links a{
-  display:flex; align-items:center; padding:14px 14px; border-radius:10px;
-  font-family:var(--font-body); font-size:17px; font-weight:500;
-  text-decoration:none; color:var(--ink);
-  transition:background .15s;
-}
-.drawer-links a:hover{ background:var(--bg-2) }
-.drawer-links a.drawer-cta{
-  margin-top:6px; justify-content:center;
-  background:var(--ink); color:var(--bg) !important; border-radius:12px;
-}
-.drawer-links a.drawer-cta:hover{ background:var(--brick) }
-
-@media (max-width:900px){
-  .hamburger{display:flex}
-  .nav-r a:not(.nav-cta){display:none}
-  .notif-stack{display:none}
-}
-@media (max-width:640px){
-  .nav-r a.nav-cta{display:none}
-}
-
 /* ───── shared ───── */
 section{max-width:var(--maxw);margin:0 auto;padding:120px 32px}
 .eyebrow{
@@ -2321,9 +2248,6 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
 
 <nav class="top">
   <div class="logo">
-    <button class="hamburger" id="hamburger" aria-label="Menu">
-      <span></span><span></span><span></span>
-    </button>
     <a class="logo-mk" href="/">
       <span class="logo-face" aria-label="Serge avatar">
         <span class="mask"><img src="/assets/avatar-serge.png" alt="Serge Miro"></span>
@@ -2349,21 +2273,6 @@ canvas.orb{width:340px;height:340px;display:block;border-radius:50%;}
       <div class="alert-fall-layer" id="alert-fall-layer"></div>
     </div>
     <a href="mailto:serge@smiro.dev" class="nav-cta" style="letter-spacing: 0.2px; border-width: 0px; border-radius: 14px">↗ hire me</a>
-  </div>
-  <!-- mobile drawer overlay + panel -->
-  <div class="drawer-overlay" id="drawer-overlay"></div>
-  <div class="drawer" id="drawer">
-    <div class="drawer-head">
-      <span class="s">s</span><span class="miro">miro</span>
-      <button class="drawer-close" id="drawer-close">✕</button>
-    </div>
-    <nav class="drawer-links">
-      <a href="#repos">work</a>
-      <a href="#repos">repos</a>
-      <a href="#stack">stack</a>
-      <a href="#agents">agents</a>
-      <a href="mailto:serge@smiro.dev" class="drawer-cta">↗ hire me</a>
-    </nav>
   </div>
 </nav>
 
@@ -5223,31 +5132,6 @@ window.resetTune = function(){
   });
 };
 window.addEventListener('load', () => setTimeout(initTune, 1000));
-
-// Mobile drawer
-const hamburger = document.getElementById('hamburger');
-const drawer = document.getElementById('drawer');
-const overlay = document.getElementById('drawer-overlay');
-const drawerClose = document.getElementById('drawer-close');
-function openDrawer(){
-  hamburger.classList.add('open');
-  drawer.classList.add('open');
-  overlay.classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeDrawer(){
-  hamburger.classList.remove('open');
-  drawer.classList.remove('open');
-  overlay.classList.remove('open');
-  document.body.style.overflow = '';
-}
-if (hamburger) hamburger.addEventListener('click', openDrawer);
-if (overlay) overlay.addEventListener('click', closeDrawer);
-if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
-// Close drawer on link click
-if (drawer) drawer.querySelectorAll('.drawer-links a').forEach(a => {
-  a.addEventListener('click', closeDrawer);
-});
 </script>
 </html>
 
