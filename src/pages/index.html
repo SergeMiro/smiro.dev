@@ -3502,8 +3502,8 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   // visitor never sees which one answered.
   let parlantSession = null;
   let parlantCold = 0;                 // when it can't keep up, stop asking for a while
-  const PARLANT_BUDGET_MS = 6500;     // it answers in ~5s when it has quota
-  const PARLANT_COOLDOWN_MS = 3 * 60 * 1000;
+  const PARLANT_BUDGET_MS = 9000;     // measured: ~6.2s per turn while it has quota
+  const PARLANT_COOLDOWN_MS = 2 * 60 * 1000;   // its per-minute windows refill fast
 
   async function parlantReply(question) {
     if (Date.now() < parlantCold) return '';

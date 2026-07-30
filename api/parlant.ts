@@ -22,7 +22,7 @@ export const config = { runtime: 'edge' };
 const BASE = (process.env.PARLANT_URL || 'https://parlant.smiro.dev').replace(/\/+$/, '');
 const KEY = process.env.AVATAR_KEY || '';
 
-const DEADLINE_MS = 5800;   // the client gives up at 6.5s — answer or bow out first
+const DEADLINE_MS = 8200;   // measured: a turn with quota lands at ~6.2s through here
 const POLL_MS = 500;
 const MAX_QUESTION = 600;
 
