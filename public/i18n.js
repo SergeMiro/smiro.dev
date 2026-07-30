@@ -107,6 +107,19 @@
     });
   }
 
+  // [data-i18n-skip] marks a subtree this file must not touch — content that is
+  // already language-correct because its own script rendered it (the article
+  // reader, the 3D mount). Without this the observer would record the French it
+  // finds there as the "English original" and hand it back on the way out.
+  function isInSkipped(node){
+    var cur = node.nodeType === 1 ? node : node.parentNode;
+    while (cur && cur.nodeType === 1) {
+      if (cur.hasAttribute && cur.hasAttribute('data-i18n-skip')) return true;
+      cur = cur.parentNode;
+    }
+    return false;
+  }
+
   function isInKeyedAncestor(node){
     var cur = node.parentNode;
     while (cur && cur.nodeType === 1) {
@@ -117,12 +130,13 @@
   }
 
   function walkAndTranslate(root){
+    if (isInSkipped(root)) return;
     if (root.nodeType === 1) {
       if (root.hasAttribute && (root.hasAttribute('data-i18n') || root.hasAttribute('data-i18n-html'))) {
         applyKeyedEl(root);
       }
       var keyed = root.querySelectorAll ? root.querySelectorAll('[data-i18n], [data-i18n-html]') : [];
-      keyed.forEach(applyKeyedEl);
+      keyed.forEach(function(el){ if (!isInSkipped(el)) applyKeyedEl(el); });
     }
     var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode: function(n){
@@ -130,7 +144,7 @@
         if (!p) return NodeFilter.FILTER_REJECT;
         var t = p.tagName;
         if (t === 'SCRIPT' || t === 'STYLE' || t === 'NOSCRIPT' || t === 'TEXTAREA') return NodeFilter.FILTER_REJECT;
-        if (isInKeyedAncestor(n)) return NodeFilter.FILTER_REJECT;
+        if (isInKeyedAncestor(n) || isInSkipped(n)) return NodeFilter.FILTER_REJECT;
         if (!norm(n.nodeValue)) return NodeFilter.FILTER_REJECT;
         return NodeFilter.FILTER_ACCEPT;
       }

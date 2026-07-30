@@ -16,6 +16,10 @@
 <!-- handwriting fonts for the post-it board (all support French accents — latin-ext) -->
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&amp;family=Patrick+Hand&amp;family=Shadows+Into+Light&amp;family=Kalam:wght@400;700&amp;family=Gloria+Hallelujah&amp;family=Indie+Flower&amp;family=Gochi+Hand&amp;family=Covered+By+Your+Grace&amp;family=Architects+Daughter&amp;family=Reenie+Beanie&amp;display=swap" rel="stylesheet">
 
+<!-- The /04 deck and its article reader. Blocking on purpose: the deck script is
+     inline in the body and builds its cards while the page parses. -->
+<script src="/articles.js?v=1"></script>
+
 <style>
 :root{
   --bg:       #f4f1e8;
@@ -907,6 +911,180 @@ h1.ht .crossed::before{
 .deck-dot{width:8px;height:8px;border-radius:50%;background:var(--line-2);transition:all .4s;cursor:pointer;border:0;padding:0}
 .deck-dot.on{width:26px;border-radius:4px;background:var(--brick)}
 
+/* every card opens an article — the front card is the only clickable one, so it
+   says so out loud instead of hoping the cursor is enough */
+.dcard{cursor:pointer}
+.dcard .dc-read{
+  display:inline-flex;align-items:center;gap:8px;align-self:flex-start;
+  margin-top:16px;padding:8px 13px;border-radius:99px;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  border:1px solid currentColor;opacity:.72;
+  transition:opacity .2s, transform .2s, gap .2s;
+}
+.dcard:hover .dc-read{opacity:1;gap:12px;transform:translateY(-1px)}
+.dcard .dc-read .rt{opacity:.6;border-left:1px solid currentColor;padding-left:8px}
+
+/* ───── article reader — full-screen, one column, site type ───── */
+.art{
+  position:fixed;inset:0;z-index:120;
+  display:none;
+}
+.art.on{display:block}
+.art-back{
+  position:absolute;inset:0;background:rgba(20,18,15,.62);
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  animation:artFade .25s ease both;
+}
+.art-sheet{
+  position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;
+  animation:artUp .34s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes artFade{from{opacity:0}to{opacity:1}}
+@keyframes artUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.art-paper{
+  position:relative;
+  max-width:760px;margin:clamp(24px,6vh,72px) auto clamp(40px,10vh,110px);
+  background:var(--bg);border-radius:18px;
+  padding:clamp(28px,5vw,64px);
+  box-shadow:0 50px 90px -30px rgba(0,0,0,.55);
+}
+.art-x{
+  position:sticky;top:0;float:right;margin:-8px -8px 0 0;
+  width:38px;height:38px;border-radius:50%;flex-shrink:0;
+  border:1px solid var(--line-2);background:var(--bg);color:var(--ink-2);
+  font-size:18px;line-height:1;cursor:pointer;z-index:2;
+  transition:all .2s;
+}
+.art-x:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.art-kick{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:18px;
+}
+.art-kick .sw{width:9px;height:9px;border-radius:2px;background:var(--art-c,var(--brick))}
+.art-kick .sep{opacity:.4}
+.art h1.art-t{
+  font-family:var(--font-serif);font-weight:400;
+  font-size:clamp(32px,5.4vw,58px);line-height:1.02;letter-spacing:-.03em;
+  margin:0 0 14px;color:var(--ink);
+}
+.art .art-lede{
+  font-family:var(--font-serif);font-style:italic;font-size:clamp(17px,2.2vw,21px);
+  line-height:1.45;color:var(--ink-2);margin:0 0 6px;
+}
+.art-src{
+  margin:22px 0 30px;padding:14px 16px;border-radius:12px;
+  background:var(--bg-2);border:1px solid var(--line);
+  font-size:12.5px;line-height:1.55;color:var(--ink-2);
+}
+.art-src .lbl{
+  display:block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:5px;
+}
+.art-src a{color:var(--brick);text-decoration:none;border-bottom:1px solid transparent}
+.art-src a:hover{border-bottom-color:var(--brick)}
+.art-body{font-size:16.5px;line-height:1.72;color:var(--ink-2)}
+.art-body h2{
+  font-family:var(--font-serif);font-weight:500;font-size:clamp(22px,3vw,29px);
+  letter-spacing:-.02em;line-height:1.15;color:var(--ink);
+  margin:38px 0 14px;
+}
+.art-body p{margin:0 0 17px}
+.art-body b{font-weight:600;color:var(--ink)}
+.art-body em{font-style:italic}
+.art-body ul{margin:0 0 20px;padding:0;list-style:none;display:grid;gap:11px}
+.art-body ul li{position:relative;padding-left:22px}
+.art-body ul li::before{
+  content:"";position:absolute;left:4px;top:.62em;
+  width:7px;height:7px;border-radius:2px;background:var(--art-c,var(--brick));opacity:.75;
+}
+.art-q{
+  margin:26px 0;padding:20px 22px;border-radius:14px;
+  background:var(--ink);color:var(--bg);
+}
+.art-q p{
+  font-family:var(--font-serif);font-style:italic;font-size:clamp(18px,2.4vw,23px);
+  line-height:1.35;margin:0;
+}
+.art-q .by{
+  display:block;margin-top:12px;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(244,241,232,.6);font-style:normal;
+}
+.art-stats{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;
+  margin:26px 0 28px;background:var(--line-2);border:1px solid var(--line-2);border-radius:14px;overflow:hidden;
+}
+.art-stats .st{background:var(--bg);padding:16px 15px}
+.art-stats .v{
+  display:block;font-family:var(--font-mono);font-weight:600;
+  font-size:clamp(22px,3.2vw,30px);letter-spacing:-.02em;color:var(--art-c,var(--brick));
+}
+.art-stats .l{
+  display:block;margin-top:6px;font-size:11.5px;line-height:1.45;color:var(--muted);
+}
+.art-note{
+  margin:0 0 20px;padding:11px 14px;border-left:2px solid var(--line-2);
+  font-family:var(--font-mono);font-size:11.5px;line-height:1.6;color:var(--muted);
+}
+.art-sources{margin:34px 0 0;padding:20px 0 0;border-top:1px solid var(--line-2)}
+.art-sources .lbl{
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted);
+}
+.art-sources ol{margin:12px 0 0;padding-left:20px;display:grid;gap:9px;font-size:13px;line-height:1.55}
+.art-sources a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2)}
+.art-sources a:hover{color:var(--brick);border-bottom-color:var(--brick)}
+.art-foot{
+  margin-top:30px;padding-top:22px;border-top:1px solid var(--line-2);
+  display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;
+}
+.art-foot .who{font-size:13px;line-height:1.6;color:var(--muted)}
+.art-foot .who .lbl{
+  display:block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;
+  text-transform:uppercase;margin-bottom:6px;
+}
+.art-foot .who .nm{font-family:var(--font-serif);font-size:19px;color:var(--ink);letter-spacing:-.01em}
+.art-foot .who .cm{
+  display:block;margin-top:7px;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);
+}
+.art-foot .wikis{display:flex;gap:9px;flex-wrap:wrap}
+.art-wiki{
+  display:inline-flex;align-items:center;gap:9px;
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;
+  padding:10px 15px;border-radius:99px;text-decoration:none;
+  border:1px solid var(--line-2);color:var(--ink);background:var(--bg);
+  transition:all .2s;
+}
+.art-wiki:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.art-wiki .w{font-weight:600}
+.art-wiki .iso{
+  font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  padding:2px 5px;border-radius:4px;background:var(--bg-2);border:1px solid var(--line);color:var(--muted);
+}
+.art-wiki:hover .iso{background:rgba(244,241,232,.14);color:rgba(244,241,232,.8);border-color:transparent}
+.art-more{
+  margin-top:26px;padding-top:22px;border-top:1px dashed var(--line-2);
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.art-more .lbl{
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+  width:100%;
+}
+.art-more button{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;
+  padding:8px 13px;border-radius:99px;cursor:pointer;
+  border:1px solid var(--line-2);background:var(--bg);color:var(--ink-2);
+  transition:all .18s;
+}
+.art-more button:hover{border-color:var(--ink);color:var(--ink);transform:translateY(-1px)}
+body.art-open{overflow:hidden}
+@media (max-width:560px){
+  .art-paper{margin:0;border-radius:0;min-height:100%}
+  .art-foot{flex-direction:column;align-items:stretch}
+}
+
 /* ───── cta ───── */
 .endcta{
   background:var(--ink);color:var(--bg);
@@ -1344,9 +1522,12 @@ footer a:hover{color:var(--brick)}
   overflow:hidden;pointer-events:none;
 }
 .cv-orb .cv-disk img{
-  /* same framing as .avatar-orb: 5% back on z, head 7% lower */
-  position:absolute;width:76%;height:auto;
-  left:50%;top:57%;transform:translate(-50%,-50%);
+  /* Tighter crop than the big hero orb, and only here: this disk is 55–70px
+     across, so at 76% the head was 31% of the diameter and the face unreadable.
+     At 155%/69% the head fills 78% of the disk and nothing of it is clipped —
+     measured against the portrait's alpha channel, hair wisp included. */
+  position:absolute;width:155%;height:auto;
+  left:50%;top:69%;transform:translate(-50%,-50%);
   display:block;
   filter:drop-shadow(0 3px 5px rgba(27,26,24,.28));
 }
@@ -2311,7 +2492,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
 .agroup-h .ttl{
   font-family:var(--font-serif);font-weight:500;font-size:18px;letter-spacing:-.01em;
   display:flex;align-items:center;gap:10px;
-  flex:1;min-width:0;
+  flex:1;min-width:0;flex-wrap:wrap;row-gap:7px;
 }
 .agroup-h .ttl::before{
   content:"";width:8px;height:8px;border-radius:2px;
@@ -2412,6 +2593,32 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
 .abadge.wip{
   background:oklch(0.75 0.15 75 / .16);color:oklch(0.48 0.12 70);
   border-color:oklch(0.75 0.15 75 / .4);
+}
+/* the orchestrator: shown as "Manager", badged with what it actually is */
+.abadge.mgr{
+  background:oklch(0.62 0.16 38 / .12);color:var(--brick-2);
+  border-color:oklch(0.62 0.16 38 / .35);letter-spacing:.08em;
+}
+/* which harness each profile is adapted to — the word links to the article */
+.hrow{
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  margin-left:auto;padding-left:10px;
+}
+.hrow .hlink{
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--brick-2);text-decoration:none;border-bottom:1px dashed currentColor;
+  padding-bottom:1px;flex-shrink:0;
+}
+.hrow .hlink:hover{color:var(--ink);border-bottom-style:solid}
+.hrow .hchip{
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.06em;
+  padding:3px 7px;border-radius:5px;white-space:nowrap;
+  background:var(--bg);border:1px solid var(--line-2);color:var(--ink-2);
+}
+.agroup.open .hrow .hchip{background:var(--bg)}
+@media (max-width:900px){
+  .agroup-h .ttl{flex-wrap:wrap}
+  .hrow{margin-left:0;padding-left:0}
 }
 .agroup-blurb{
   margin:0;padding:14px 16px 0;
@@ -2693,64 +2900,6 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   </div>
 </header>
 
-<!-- ===== PRISTINE HERO CLONE — reference copy, do NOT experiment here ===== -->
-<header class="hero">
-  <div class="hero-grid">
-    <div>
-      <div class="eyebrow"><span class="pulse"></span>for <span style="color:var(--brick);font-weight:600">recruiters &amp; hiring managers</span></div>
-      <h1 class="ht" style="font-size: 64px">
-        I don't <span class="crossed">apply</span><br>
-        for jobs.<br>
-        I <em>build a system</em><br>
-        to find them.
-      </h1>
-      <p class="sub">
-        While other candidates refresh job boards and miss windows, my n8n+AI pipeline sees a vacancy 4–8 minutes after it's posted, filters it, drafts the application, and pings me on Telegram. <br><strong style="color:var(--ink)">You're reading this because the system worked.</strong>
-      </p>
-      <div class="hero-meta">
-        <div class="hm"><span class="lbl">avg. detection</span><span class="v"><em>~6</em> min</span></div>
-        <div class="hm"><span class="lbl">platforms</span><span class="v"><em>3</em></span></div>
-        <div class="hm"><span class="lbl">years building</span><span class="v"><em>15</em></span></div>
-        <div class="hm"><span class="lbl">based in</span><span class="v">Dijon</span></div>
-      </div>
-    </div>
-    <aside class="hero-r">
-      <div class="eyebrow">tl;dr — what you get</div>
-      <h2>A senior who <em>ships</em>, not just talks.</h2>
-      <p>AI engineer on a 15-year IT foundation. I build with AI daily — and ship working products in days.</p>
-      <ul>
-        <li>Vibe coding daily · Claude Code · Cursor</li>
-        <li>Multi-agent systems · RAG · MCP</li>
-        <li>Full-stack: React · Node · Python · TypeScript</li>
-        <li>Self-hosted infra: VPS, Docker, n8n, security</li>
-        <li>Production mindset — not prototypes</li>
-      </ul>
-      <a class="hero-cta" href="mailto:serge@smiro.dev">↗ contact serge@smiro.dev</a>
-    </aside>
-  </div>
-
-  <div class="pillars">
-    <div class="pillar">
-      <div class="num">01</div>
-      <h3>Full-stack at <em>AI speed</em></h3>
-      <p>I prototype with Claude Code &amp; Cursor and harden with 15 years of engineering. Frontend, backend, infrastructure — idea to production in days, not sprints.</p>
-      <div class="tags"><span>Claude Code</span><span>Cursor</span><span>TypeScript</span><span>React</span><span>Node</span><span>Python</span></div>
-    </div>
-    <div class="pillar">
-      <div class="num">02</div>
-      <h3>AI <em>agents</em></h3>
-      <p>Agentic systems that do real work — not chatbots. An executor performs, a reviewer scores, the loop runs until ≥90% quality. RAG, MCP, evals, fallbacks.</p>
-      <div class="tags"><span>Claude</span><span>OpenAI</span><span>RAG</span><span>MCP</span><span>Fine-tuning</span></div>
-    </div>
-    <div class="pillar">
-      <div class="num">03</div>
-      <h3>n8n <em>automation</em></h3>
-      <p>Self-hosted n8n on a VPS I provision, deploy and harden myself. Workflows that run 24/7, integrate 50+ services, and replace 90% of manual ops.</p>
-      <div class="tags"><span>n8n</span><span>VPS</span><span>Docker</span><span>OWASP</span><span>Webhooks</span></div>
-    </div>
-  </div>
-</header>
-<!-- ===== /PRISTINE HERO CLONE ===== -->
 
 
 <!-- THE WORKFLOW -->
@@ -3030,7 +3179,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
       <div class="sidx"><span class="n">/04</span><span data-i18n="ideas.idx">ideas &amp; writing</span></div>
       <h2 data-i18n-html="ideas.h2">Things I keep coming <em>back to</em>.</h2>
     </div>
-    <p class="kick" data-i18n="ideas.kick">Groundbreaking papers, essays, and moments in AI, programming &amp; systems. Swipe / drag the stack.</p>
+    <p class="kick" data-i18n="ideas.kick">Groundbreaking papers, essays, and moments in AI, programming &amp; systems — each card opens the whole article. Swipe / drag the stack.</p>
   </div>
 
   <div class="deck-wrap" style="background-color: rgba(27, 26, 24, 0)">
@@ -3049,6 +3198,18 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
     <button class="deck-btn" id="idea-next" aria-label="Next"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg></button>
   </div>
 </section>
+
+<!-- ARTICLE READER · every deck card opens here. Content lives in /articles.js -->
+<div class="art" id="art" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="art-title">
+  <div class="art-back" data-art-close></div>
+  <div class="art-sheet" id="art-sheet" tabindex="-1">
+    <article class="art-paper" id="art-paper" data-i18n-skip>
+      <button class="art-x" type="button" id="art-x" aria-label="close" data-i18n-aria="close">×</button>
+      <!-- filled by the deck script from window.ARTICLES -->
+      <div id="art-content"></div>
+    </article>
+  </div>
+</div>
 
 <!-- THE STACK · POSTIT BOARD (ported from smiro-v2) -->
 <section id="stack">
@@ -3120,13 +3281,13 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
       <div class="sidx"><span class="n">/06</span><span data-i18n="agents.idx">agent system</span></div>
       <h2 data-i18n-html="agents.h2">One orchestrator, <em>five teams</em>. Go ahead — poke them.</h2>
     </div>
-    <p class="kick" data-i18n="agents.kick">This is the system I run every day: ai-agents-config — five Claude Code profiles driven by Hermes, my orchestrator, on my own VPS. Pick a team, hand it a real task, read the answer right here. No sign-up, no sales call.</p>
+    <p class="kick" data-i18n="agents.kick">This is the system I run every day: ai-agents-config — five agent profiles, each adapted to three harnesses (Claude Code, Codex, OpenCode), fronted by Manager — my Hermes Agent AI — on my own VPS. Pick a team, hand it a real task, read the answer right here. No sign-up, no sales call.</p>
   </div>
 
   <!-- how the system is wired: one line, six beats -->
   <ol class="hflow" id="hflow">
     <li><span class="n">01</span><b>you</b><i data-i18n="flow.1">one message — Telegram or CLI</i></li>
-    <li><span class="n">02</span><b>Hermes</b><i data-i18n="flow.2">reads the task, picks the team and the model</i></li>
+    <li><span class="n">02</span><b>Manager</b><i data-i18n="flow.2">reads the task, picks the team, the model and the harness</i></li>
     <li><span class="n">03</span><b>profile</b><i data-i18n="flow.3">one team wakes up — dev, seo, marketing, security, design</i></li>
     <li><span class="n">04</span><b>agents</b><i data-i18n="flow.4">plan → build → hand off through a shared scratchpad</i></li>
     <li><span class="n">05</span><b>gate</b><i data-i18n="flow.5">a reviewer scores it and a verifier boots it — or it loops</i></li>
@@ -4456,40 +4617,63 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   const dots = document.getElementById('idea-dots');
   if(!deck || !dots) return;
 
-  const insights = [
-    {tag:'essay · 2011',     title:"why software is\neating the world", author:'marc andreessen', year:2011, sum:'Every company is a software company now. This was the op-ed that lit the match.', bg:'oklch(0.62 0.16 38)', fg:'#fff8ef', ico:'M3 3h18v18H3z M3 9h18 M9 3v18'},
-    {tag:'manifesto · 2001', title:"the agile\nmanifesto", author:'17 devs, utah', year:2001, sum:'Individuals and interactions over processes and tools. Still misread 25 years on.', bg:'oklch(0.42 0.11 340)', fg:'#fef4ec', ico:'M4 19l16-6-6-16-4 10z'},
-    {tag:'principle',        title:"worse is\nbetter", author:'richard p. gabriel', year:1989, sum:'MIT vs New Jersey school. The essay that explains why Unix won.', bg:'oklch(0.6 0.1 115)', fg:'#1b1a18', ico:'M3 12h18M12 3v18M5 5l14 14'},
-    {tag:'paper · 1998',     title:"the anatomy of\na search engine", author:'brin & page', year:1998, sum:'Google in 20 pages. Reread it — most of it still rhymes with the modern stack.', bg:'#f4eedd', fg:'#1b1a18', ico:'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'},
-    {tag:'talk · 2007',      title:"the last\nprogramming\nlanguage", author:'robert c. martin', year:2007, sum:'A case that Clojure (or its descendants) will be our final abstraction. Controversial, still.', bg:'#1b1a18', fg:'#f4eedd', ico:'M8 3h8l4 4v14H4V7zM8 3v6h8V3'},
-  ];
+  // Card faces and the articles behind them live in /articles.js — bilingual in
+  // the data, because keying whole paragraphs by their English source in the
+  // i18n TEXT map would break the first time a comma moved.
+  const DATA = window.ARTICLES || [];
+  if(!DATA.length) return;
+
+  const lang = () => (window.I18N && window.I18N.getLang && window.I18N.getLang()) || 'en';
+  const T = v => (v && typeof v === 'object' && !Array.isArray(v)) ? (v[lang()] != null ? v[lang()] : v.en) : v;
+  const L = (en, fr) => (lang() === 'fr' ? fr : en);
 
   const ring  = deck;                       // #idea-deck is the rotating ring
   const stage = document.getElementById('idea-stage');
-  const N = insights.length;
+  const N = DATA.length;
   if(!stage) return;
 
   // ---- build cards into the ring (once) ----
-  const cards = insights.map(ins=>{
+  function faceHTML(a){
+    return `
+      <div>
+        <div class="dc-tag">${T(a.tag)}</div>
+        <h3>${T(a.title).replace(/\n/g,'<br>')}</h3>
+        <p class="dc-meta">${T(a.byline)} · ${a.year}</p>
+      </div>
+      <div>
+        <p class="dc-sum">"${T(a.sum)}"</p>
+        <span class="dc-read">${L('read the article', 'lire l’article')} <span class="rt">${T(a.read)}</span></span>
+      </div>
+      <div class="dc-deco"><svg viewBox="0 0 24 24"><path d="${a.ico}"/></svg></div>`;
+  }
+
+  const cards = DATA.map(a=>{
     const wrap = document.createElement('div');
     wrap.className = 'dcard-wrap';
-    wrap.innerHTML = `
-      <div class="dcard" style="--dc:${ins.bg};--dt:${ins.fg}">
-        <div>
-          <div class="dc-tag">${ins.tag}</div>
-          <h3>${ins.title.replace(/\n/g,'<br>')}</h3>
-          <p class="dc-meta">${ins.author} \u00b7 ${ins.year}</p>
-        </div>
-        <p class="dc-sum">"${ins.sum}"</p>
-        <div class="dc-deco"><svg viewBox="0 0 24 24"><path d="${ins.ico}"/></svg></div>
-      </div>`;
+    const face = document.createElement('div');
+    face.className = 'dcard';
+    face.setAttribute('data-i18n-skip','');    // rendered already in the right language
+    face.setAttribute('role','button');
+    // reachable by keyboard even when it isn't the front card (pointer-events
+    // are off there, focus is not) — otherwise the articles need a mouse
+    face.tabIndex = 0;
+    face.addEventListener('keydown', e=>{
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openArticle(a.id); }
+    });
+    face.style.setProperty('--dc', a.bg);
+    face.style.setProperty('--dt', a.fg);
+    face.innerHTML = faceHTML(a);
+    // only the front card gets pointer events (see render()), so a click here is
+    // unambiguous — unless the pointer was busy dragging the deck around
+    face.addEventListener('click', ()=>{ if(!dragged) openArticle(a.id); });
+    wrap.appendChild(face);
     ring.appendChild(wrap);
     return wrap;
   });
 
   // ---- dots ----
   if(dots){
-    insights.forEach((_,i)=>{
+    DATA.forEach((_,i)=>{
       const b = document.createElement('button');
       b.className = 'deck-dot' + (i===0?' on':'');
       b.setAttribute('aria-label','idea '+(i+1));
@@ -4503,6 +4687,8 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   let theta = 0, velocity = 0, target = null;
   let dragging=false, lastX=0, lastT=0, hovering=false;
   let last = performance.now();
+  // a drag that ends on a card must not read as a click on that card
+  let dragged=false, downX=0;
 
   function spread(){ return Math.min(Math.max(window.innerWidth*0.30, 300), 460); }
 
@@ -4569,10 +4755,12 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   stage.addEventListener('pointerdown', e=>{
     dragging=true; target=null; stage.classList.add('dragging');
     lastX=e.clientX; lastT=performance.now(); velocity=0;
+    dragged=false; downX=e.clientX;
     stage.setPointerCapture(e.pointerId);
   });
   stage.addEventListener('pointermove', e=>{
     if(!dragging) return;
+    if(Math.abs(e.clientX - downX) > 5) dragged=true;
     const dx = e.clientX - lastX, now = performance.now();
     const dtheta = -dx*0.006;
     theta += dtheta;
@@ -4597,6 +4785,121 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
 
   window.addEventListener('resize', render);
   requestAnimationFrame(frame);
+
+  /* ───── the article reader ─────
+     One card = one article. The prose is authored in /articles.js (mine, not a
+     visitor's), so the inline <b>/<em>/<a> in it is inserted as HTML on purpose.
+     Every article closes on its author, linked to Wikipedia in the language the
+     page is currently in — English when that author has no French article. */
+  const artEl   = document.getElementById('art');
+  const sheetEl = document.getElementById('art-sheet');
+  const bodyEl  = document.getElementById('art-content');
+  const xBtn    = document.getElementById('art-x');
+  let openId = null, lastFocus = null;
+
+  const byId = id => DATA.find(a => a.id === id);
+
+  function blockHTML(b){
+    if(b.h)     return `<h2>${T(b.h)}</h2>`;
+    if(b.p)     return `<p>${T(b.p)}</p>`;
+    if(b.ul)    return `<ul>${T(b.ul).map(li=>`<li>${li}</li>`).join('')}</ul>`;
+    if(b.note)  return `<p class="art-note">${T(b.note)}</p>`;
+    if(b.quote) return `<blockquote class="art-q"><p>${T(b.quote)}`
+                     + (b.by ? `<span class="by">${T(b.by)}</span>` : '')
+                     + `</p></blockquote>`;
+    if(b.stats) return `<div class="art-stats">` + T(b.stats).map(s=>
+                  `<div class="st"><span class="v">${s.v}</span><span class="l">${s.l}</span></div>`).join('') + `</div>`;
+    if(b.sources) return `<div class="art-sources"><span class="lbl">${L('sources','sources')}</span><ol>`
+                  + T(b.sources).map(s=>`<li><a href="${s.u}" target="_blank" rel="noopener">${s.t} ↗</a></li>`).join('')
+                  + `</ol></div>`;
+    return '';
+  }
+
+  function wikiHTML(who){
+    const l = lang();
+    const href = (who.wiki && who.wiki[l]) || (who.wiki && who.wiki.en);
+    if(!href) return '';
+    // fall back to the English article when there is no French one, and say so
+    const iso = (who.wiki && who.wiki[l]) ? l : 'en';
+    const site = iso === 'fr' ? 'Wikipédia' : 'Wikipedia';
+    return `<a class="art-wiki" href="${href}" target="_blank" rel="noopener"
+              title="${who.name} — ${site}"><span class="w">${who.name}</span>
+              <span>${site}</span><span class="iso">${iso}</span></a>`;
+  }
+
+  function renderArticle(a){
+    const others = DATA.filter(x => x.id !== a.id).slice(0, 4);
+    bodyEl.innerHTML = `
+      <div class="art-kick">
+        <span class="sw"></span>
+        <span>${T(a.tag)}</span>
+        <span class="sep">·</span>
+        <span>${T(a.read)}</span>
+      </div>
+      <h1 class="art-t" id="art-title">${T(a.title).replace(/\n/g,' ')}</h1>
+      <p class="art-lede">${T(a.sum)}</p>
+      <div class="art-src">
+        <span class="lbl">${L('the source', 'la source')}</span>
+        <a href="${a.source.url}" target="_blank" rel="noopener">${a.source.title} ↗</a>
+        — ${T(a.source.where)}
+      </div>
+      <div class="art-body">${T(a.body).map(blockHTML).join('')}</div>
+      <div class="art-foot">
+        <div class="who">
+          <span class="lbl">${a.authors.length > 1 ? L('the authors','les auteurs') : L('the author','l’auteur')}</span>
+          <span class="nm">${a.authors.map(x=>x.name).join(' · ')}</span>
+          <span class="cm">${L('notes on this page: Sergiy Miro', 'notes sur cette page : Sergiy Miro')}</span>
+        </div>
+        <div class="wikis">${a.authors.map(wikiHTML).join('')}</div>
+      </div>
+      <div class="art-more">
+        <span class="lbl">${L('keep reading', 'à lire ensuite')}</span>
+        ${others.map(x=>`<button type="button" data-goto="${x.id}">${T(x.title).replace(/\n/g,' ')} →</button>`).join('')}
+      </div>`;
+    bodyEl.parentElement.style.setProperty('--art-c', a.bg.startsWith('#') ? 'var(--brick)' : a.bg);
+    bodyEl.querySelectorAll('[data-goto]').forEach(b=>
+      b.addEventListener('click', ()=>openArticle(b.dataset.goto)));
+  }
+
+  function openArticle(id){
+    const a = byId(id);
+    if(!a) return;
+    openId = id;
+    renderArticle(a);
+    if(!artEl.classList.contains('on')){
+      lastFocus = document.activeElement;
+      artEl.classList.add('on');
+      artEl.setAttribute('aria-hidden','false');
+      document.body.classList.add('art-open');
+    }
+    sheetEl.scrollTop = 0;
+    sheetEl.focus({preventScroll:true});
+    // keep the deck pointed at whatever is being read
+    const i = DATA.findIndex(x=>x.id===id);
+    if(i >= 0) goTo(i);
+  }
+
+  function closeArticle(){
+    if(!artEl.classList.contains('on')) return;
+    openId = null;
+    artEl.classList.remove('on');
+    artEl.setAttribute('aria-hidden','true');
+    document.body.classList.remove('art-open');
+    if(lastFocus && lastFocus.focus) lastFocus.focus({preventScroll:true});
+  }
+
+  xBtn.addEventListener('click', closeArticle);
+  artEl.querySelectorAll('[data-art-close]').forEach(el=>el.addEventListener('click', closeArticle));
+  document.addEventListener('keydown', e=>{ if(e.key === 'Escape') closeArticle(); });
+
+  // language switch: repaint the faces, and the open article with them
+  window.addEventListener('i18n:changed', ()=>{
+    cards.forEach((wrap,i)=>{ wrap.firstElementChild.innerHTML = faceHTML(DATA[i]); });
+    if(openId) renderArticle(byId(openId));
+  });
+
+  // the agents section links the word "Harness" straight into its article
+  window.IDEAS = { open: openArticle, close: closeArticle };
 })();
 </script>
 
@@ -5164,7 +5467,19 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   // agent's beat, `d` what it owns, `m` the model tier it actually runs on.
   // English source strings are translated at insert time by i18n.js (TEXT map).
   const TEAMS = [
+    {id:'hermes', title:'Manager', badge:'Hermes Agent AI', repo:'hermes_agent', hue:32, hue2:50, status:'live',
+     blurb:'The wire between me and every team below. One entry point — a message in Telegram or a shell — and Hermes reads the task, wakes the right profile, picks the model per job, keeps the handoff between agents in a shared scratchpad, queues the long work in Postgres, and refuses to call anything finished without evidence. Ask it something below: it answers with the team it would wake and the order it would run them in.',
+     stat:'1 orchestrator · telegram + cli · systemd on my vps',
+     qs:['Our checkout is slow and invisible on Google. Who do you wake up?',
+         'Land a landing page with serious motion by Friday.',
+         'Audit our security — and prove the fixes actually hold.'],
+     agents:[
+      {n:'Hermes', r:'router · orchestrator', m:'opus', slug:'hermes',
+       d:'Reads the task, routes it to a team, picks the model, holds the handoff, queues long jobs, and gates the result on evidence.', tags:['routing','gates','telegram']},
+     ]},
+
     {id:'dev', title:'dev', repo:'dev-sm', hue:85, hue2:100, status:'live',
+     harness:['Claude Code','Codex','OpenCode'],
      blurb:'The whole delivery chain, in order: architect writes the spec, design sets the system, front/back/db build it, platform ships it, SRE keeps it up. Then an adversarial reviewer scores the work against evidence and a runtime verifier boots the real stack. Nothing is "done" because I said so.',
      stat:'11 plugins · 20 agents · 8 skills',
      qs:['Plan a Next.js app that ingests 50k invoices a day.',
@@ -5214,6 +5529,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
      ]},
 
     {id:'seo', title:'seo', repo:'seo-sm', hue:62, hue2:80, status:'live',
+     harness:['Claude Code','Codex','OpenCode'],
      blurb:'An audit in layers, prioritised by ICE, then executed: crawl and indexation, Core Web Vitals, intent and clusters, internal linking, white-hat authority, and measurement in GSC and GA4. Every claim is tied to data — nobody here says "trust me, it will rank".',
      stat:'5 plugins · 5 agents · 5 skills',
      qs:['Traffic dropped 30% after our migration. Diagnose it.',
@@ -5233,6 +5549,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
      ]},
 
     {id:'marketing', title:'marketing', repo:'marketing-sm', hue:42, hue2:60, status:'live',
+     harness:['Claude Code','Codex','OpenCode'],
      blurb:'Positioning and go-to-market, an editorial calendar that actually gets filled, paid media with budget caps and an approval gate before a euro moves, lifecycle email — and an analyst who checks the unit economics before anyone says "let\'s scale".',
      stat:'5 plugins · 5 agents · 9 skills',
      qs:['€5k a month, B2B SaaS in France. Where does it go?',
@@ -5277,17 +5594,6 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
        d:'Interactive motion authored as Rive state machines: hover, scroll and app state drive the animation instead of a looping export.', tags:['rive','interactive']},
       {n:'lottie-engineer', r:'lottie · dotlottie', m:'sonnet', wip:true,
        d:'The After Effects → Lottie/dotLottie pipeline: vector motion at 60fps, a few dozen KB, no video tag and no jank.', tags:['lottie','svg']},
-     ]},
-
-    {id:'hermes', title:'Hermes', repo:'hermes_agent', hue:32, hue2:50, status:'live',
-     blurb:'The wire between me and everything above. One entry point — a message in Telegram or a shell — and Hermes reads the task, wakes the right profile, picks the model per job, keeps the handoff between agents in a shared scratchpad, queues the long work in Postgres, and refuses to call anything finished without evidence. Ask it something below: it answers with the team it would wake and the order it would run them in.',
-     stat:'1 orchestrator · telegram + cli · systemd on my vps',
-     qs:['Our checkout is slow and invisible on Google. Who do you wake up?',
-         'Land a landing page with serious motion by Friday.',
-         'Audit our security — and prove the fixes actually hold.'],
-     agents:[
-      {n:'Hermes', r:'router · orchestrator', m:'opus', slug:'hermes',
-       d:'Reads the task, routes it to a team, picks the model, holds the handoff, queues long jobs, and gates the result on evidence.', tags:['routing','gates','telegram']},
      ]},
   ];
 
@@ -5554,7 +5860,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   const ALL = [];
   TEAMS.forEach(t => t.agents.forEach(a => ALL.push({ team: t, agent: a })));
   const rosterLine = TEAMS
-    .map(t => `${t.title} (${t.repo}): ` + t.agents.map(a => slugOf(a)).join(', '))
+    .map(t => `${t.id} (${t.repo}): ` + t.agents.map(a => slugOf(a)).join(', '))
     .join('\n');
 
   // Distinct definitions only: security and design borrow agents from the dev
@@ -5787,11 +6093,20 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
       wrap.className = 'agroup';
       wrap.dataset.gid = t.id;
       wrap.style.setProperty('--g-color', `oklch(0.65 0.16 ${t.hue})`);
+      // Three harnesses, adapted per profile — and the word links to the article
+      // that explains why the harness moves the result more than the model does.
+      const harnessRow = t.harness ? `
+            <span class="hrow">
+              <a class="hlink" href="#ideas" data-harness-link>Harness</a>
+              ${t.harness.map(h => `<span class="hchip">${h}</span>`).join('')}
+            </span>` : '';
       wrap.innerHTML = `
         <div class="agroup-h">
           <div class="ttl" style="--g-color: oklch(0.65 0.16 ${t.hue})">${t.title}
             <span class="repo">${t.repo}</span>
+            ${t.badge ? `<span class="abadge mgr">${t.badge}</span>` : ''}
             <span class="abadge${t.status === 'wip' ? ' wip' : ''}">${t.status === 'wip' ? 'in build' : 'live'}</span>
+            ${harnessRow}
           </div>
           <div class="meta">${t.stat}</div>
           <button class="agroup-toggle" type="button" data-i18n-aria="toggle team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
@@ -5807,6 +6122,15 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
         const wasOpen = wrap.classList.contains('open');
         groupsEl.querySelectorAll('.agroup.open').forEach(o => o.classList.remove('open'));
         if (!wasOpen) wrap.classList.add('open');
+      });
+      // the word "Harness" opens its article instead of toggling the team;
+      // href="#ideas" is the no-JS fallback, which lands on the deck itself
+      const hLink = wrap.querySelector('[data-harness-link]');
+      if (hLink) hLink.addEventListener('click', e => {
+        if (!window.IDEAS) return;              // let the anchor do its job
+        e.preventDefault();
+        e.stopPropagation();
+        window.IDEAS.open('harness');
       });
       if (q || t.id === 'hermes') wrap.classList.add('open');
 
@@ -5884,8 +6208,9 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   document.addEventListener('DOMContentLoaded', () => setCount('', 0));
 
   render('');
-  // open on the orchestrator — it is the way into everything else
-  const hermes = TEAMS[TEAMS.length - 1];
+  // open on the orchestrator — it is the way into everything else, and it now
+  // sits at the top of the roster
+  const hermes = TEAMS[0];
   selectAgent(hermes, hermes.agents[0], groupsEl.querySelector('.agent-card[data-slug="hermes"]'));
 })();
 </script>

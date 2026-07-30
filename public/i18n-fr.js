@@ -64,7 +64,7 @@ window.I18N_FR = {
 
     "ideas.idx":          "idées & écrits",
     "ideas.h2":           "Idées sur lesquelles je reviens",
-    "ideas.kick":         "Papiers fondateurs, essais et moments en IA, programmation & systèmes. Glisser / faire défiler la pile.",
+    "ideas.kick":         "Papiers fondateurs, essais et moments en IA, programmation & systèmes — chaque carte ouvre l'article entier. Glisser / faire défiler la pile.",
     "ideas.hint":         "Rotation automatique — glisser pour prendre la main",
 
     "stack.idx":          "le stack",
@@ -95,9 +95,9 @@ window.I18N_FR = {
 
     "agents.idx":         "système d'agents",
     "agents.h2":          "Un orchestrateur, <em>cinq équipes</em>. Allez-y, testez-les.",
-    "agents.kick":        "C'est le système que je fais tourner chaque jour : ai-agents-config — cinq profils Claude Code pilotés par Hermes, mon orchestrateur, sur mon propre VPS. Choisissez une équipe, confiez-lui une vraie tâche, lisez la réponse ici même. Sans inscription, sans rendez-vous commercial.",
+    "agents.kick":        "C'est le système que je fais tourner chaque jour : ai-agents-config — cinq profils d'agents, chacun adapté à trois harnesses (Claude Code, Codex, OpenCode), pilotés par Manager — mon Hermes Agent AI — sur mon propre VPS. Choisissez une équipe, confiez-lui une vraie tâche, lisez la réponse ici même. Sans inscription, sans rendez-vous commercial.",
     "flow.1":             "un message — Telegram ou terminal",
-    "flow.2":             "lit la tâche, choisit l'équipe et le modèle",
+    "flow.2":             "lit la tâche, choisit l'équipe, le modèle et le harness",
     "flow.3":             "une équipe s'éveille — dev, seo, marketing, sécurité, design",
     "flow.4":             "plan → build → passation par un scratchpad partagé",
     "flow.5":             "un relecteur note, un vérificateur démarre l'app — sinon on reboucle",
@@ -146,8 +146,8 @@ window.I18N_FR = {
     "Half shipped, half on the bench. Direction, tokens and design review work today. Next: motion as a first-class layer — Rive state machines for anything that has to respond to a cursor, a scroll or a state change, and Lottie/dotLottie for the light vector stuff. Sites that move on purpose, at 60fps, in a few dozen kilobytes instead of a 3 MB video.":
       "Moitié livrée, moitié sur le banc. Direction, tokens et revue de design fonctionnent déjà. Ensuite : le motion comme couche à part entière — des machines à états Rive pour tout ce qui doit réagir au curseur, au scroll ou à un changement d'état, et Lottie/dotLottie pour le vectoriel léger. Des sites qui bougent à dessein, à 60 fps, en quelques dizaines de kilo-octets plutôt qu'une vidéo de 3 Mo.",
     "1 live · 2 in build · rive + lottie": "1 actif · 2 en cours · rive + lottie",
-    "The wire between me and everything above. One entry point — a message in Telegram or a shell — and Hermes reads the task, wakes the right profile, picks the model per job, keeps the handoff between agents in a shared scratchpad, queues the long work in Postgres, and refuses to call anything finished without evidence. Ask it something below: it answers with the team it would wake and the order it would run them in.":
-      "Le fil entre moi et tout ce qui précède. Une seule porte d'entrée — un message sur Telegram ou un shell — et Hermes lit la tâche, réveille le bon profil, choisit le modèle selon le travail, garde la passation entre agents dans un scratchpad partagé, met les longs chantiers en file dans Postgres, et refuse de déclarer quoi que ce soit terminé sans preuve. Posez-lui une question ci-dessous : il répond avec l'équipe qu'il réveillerait et dans quel ordre.",
+    "The wire between me and every team below. One entry point — a message in Telegram or a shell — and Hermes reads the task, wakes the right profile, picks the model per job, keeps the handoff between agents in a shared scratchpad, queues the long work in Postgres, and refuses to call anything finished without evidence. Ask it something below: it answers with the team it would wake and the order it would run them in.":
+      "Le fil entre moi et toutes les équipes ci-dessous. Une seule porte d'entrée — un message sur Telegram ou un shell — et Hermes lit la tâche, réveille le bon profil, choisit le modèle selon le travail, garde la passation entre agents dans un scratchpad partagé, met les longs chantiers en file dans Postgres, et refuse de déclarer quoi que ce soit terminé sans preuve. Posez-lui une question ci-dessous : il répond avec l'équipe qu'il réveillerait et dans quel ordre.",
     "1 orchestrator · telegram + cli · systemd on my vps": "1 orchestrateur · telegram + cli · systemd sur mon vps",
 
     /* suggested tasks */
