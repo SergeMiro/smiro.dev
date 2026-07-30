@@ -4618,6 +4618,9 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   const lang = () => (window.I18N && window.I18N.getLang && window.I18N.getLang()) || 'en';
   const T = v => (v && typeof v === 'object' && !Array.isArray(v)) ? (v[lang()] != null ? v[lang()] : v.en) : v;
   const L = (en, fr) => (lang() === 'fr' ? fr : en);
+  // Titles are authored lowercase because the card faces are set in uppercase
+  // by CSS. Prose headings are not: they start with a capital.
+  const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
 
   const ring  = deck;                       // #idea-deck is the rotating ring
   const stage = document.getElementById('idea-stage');
@@ -4845,7 +4848,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
         <span class="sep">·</span>
         <span>${T(a.read)}</span>
       </div>
-      <h1 class="art-t" id="art-title">${T(a.title).replace(/\n/g,' ')}</h1>
+      <h1 class="art-t" id="art-title">${cap(T(a.title).replace(/\n/g,' '))}</h1>
       <p class="art-lede">${T(a.sum)}</p>
       <div class="art-src">
         <span class="lbl">${L('the source', 'la source')}</span>
@@ -4863,7 +4866,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
       </div>
       <div class="art-more">
         <span class="lbl">${L('keep reading', 'à lire ensuite')}</span>
-        ${others.map(x=>`<button type="button" data-goto="${x.id}">${T(x.title).replace(/\n/g,' ')} →</button>`).join('')}
+        ${others.map(x=>`<button type="button" data-goto="${x.id}">${cap(T(x.title).replace(/\n/g,' '))} →</button>`).join('')}
       </div>`;
     bodyEl.parentElement.style.setProperty('--art-c', a.bg.startsWith('#') ? 'var(--brick)' : a.bg);
     bodyEl.querySelectorAll('[data-goto]').forEach(b=>
