@@ -55,6 +55,40 @@ const PROVIDER_ENV: Record<ProviderId, string> = {
   gemini: 'GEMINI_API_KEY',
 };
 
+// ── the avatar's instructions ────────────────────────────────────────────────
+// One file, /kb/sergiy.md, holds everything the avatar is allowed to say and how
+// it must behave — edit that file and the avatar changes, no deploy of this
+// function needed. It is fetched from the site itself and kept for an hour, so a
+// visitor's question costs exactly one model call.
+const INSTRUCTIONS_PATH = '/kb/sergiy.md';
+const INSTRUCTIONS_TTL_MS = 60 * 60 * 1000;
+let instructions: { text: string; at: number } | null = null;
+
+async function loadInstructions(origin: string): Promise<string> {
+  if (instructions && Date.now() - instructions.at < INSTRUCTIONS_TTL_MS) return instructions.text;
+  try {
+    const res = await fetch(origin + INSTRUCTIONS_PATH, { headers: { 'Cache-Control': 'no-cache' } });
+    if (!res.ok) throw new Error(String(res.status));
+    const text = (await res.text()).slice(0, MAX_SYSTEM_PROMPT_CHARS - 800).trim();
+    instructions = { text, at: Date.now() };
+    return text;
+  } catch {
+    // serve a stale copy rather than an unbriefed avatar
+    return instructions?.text || '';
+  }
+}
+
+function avatarPrompt(md: string, lang: string): string {
+  const spoken = lang === 'fr' ? 'French' : 'English';
+  return [
+    'You are the AI avatar of Sergiy Mirochnyk (Sergiy Miro) on smiro.dev. You speak in the first person, as Sergiy, to recruiters and hiring managers.',
+    `Your answers are often read out loud: plain prose, 2–4 sentences, under 90 words, no markdown, no bullet lists, no headings. Answer in the language of the question; default to ${spoken}.`,
+    'Everything you may say about Sergiy is in the instructions below, including what you must refuse. If something is not there, say so in one clause and offer serge@smiro.dev — never invent an employer, a client, a number or a date.',
+    '--- INSTRUCTIONS ---',
+    md || 'The instruction file could not be loaded. Say that you cannot answer in detail right now and give serge@smiro.dev.',
+  ].join('\n\n');
+}
+
 const bucket = new Map<string, number[]>();
 function rateLimit(ip: string) {
   const now = Date.now();
@@ -101,12 +135,18 @@ export default async function handler(req: Request): Promise<Response> {
     agentSlug?: string;
     agentName?: string;
     systemPrompt?: string;
+    persona?: string;
+    lang?: string;
     messages?: ChatMessage[];
     model?: string;
   };
   try { body = await req.json(); } catch { return json({ error: 'invalid json' }, 400); }
 
-  const systemPrompt = (body.systemPrompt ?? '').slice(0, MAX_SYSTEM_PROMPT_CHARS).trim();
+  // The agents sandbox sends its own prompt (one per agent); the avatar asks for
+  // the persona and the server reads it out of /kb/sergiy.md.
+  const systemPrompt = body.persona === 'avatar'
+    ? avatarPrompt(await loadInstructions(new URL(req.url).origin), body.lang === 'fr' ? 'fr' : 'en')
+    : (body.systemPrompt ?? '').slice(0, MAX_SYSTEM_PROMPT_CHARS).trim();
   const messages = Array.isArray(body.messages) ? body.messages : [];
   if (!systemPrompt || messages.length === 0) {
     return json({ error: 'systemPrompt and messages are required' }, 400);

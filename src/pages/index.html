@@ -3453,98 +3453,19 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
       ? 'en ligne · prêt à discuter' : taglineEN);
   }
 
-  // ── knowledge base: the CV and the system notes the avatar answers from ──
-  // One fetch, cached for the session. If it fails the avatar still works, it
-  // just knows less — so the persona repeats the essentials itself.
-  let kbText = null;
-  async function kb() {
-    if (kbText !== null) return kbText;
-    try {
-      const r = await fetch('/kb/sergiy.md');
-      kbText = r.ok ? (await r.text()).slice(0, 14000) : '';
-    } catch (e) { kbText = ''; }
-    return kbText;
-  }
-
-  async function persona() {
-    const facts = await kb();
-    return [
-      "You are the AI avatar of Sergiy Mirochnyk (Sergiy Miro) on smiro.dev — AI engineer and full-stack developer, 15 years around IT, 5+ years shipping production code, based in Dijon, France.",
-      'You speak in the first person, as Sergiy. Professional, warm, a little dry — never salesy, never gushing.',
-      'You are talking to a recruiter or a hiring manager, often out loud, so answer in 2–4 sentences (under 90 words). No bullet lists, no markdown, no headings — this text may be spoken aloud.',
-      'Answer in the language of the question (French, English or Russian). Default to ' + L('English', 'French') + '.',
-      'Ground every answer in the dossier below. If the answer is not in it — salary, notice period, visa, start date, anything you cannot know — say so plainly in one clause and offer serge@smiro.dev. Never invent a client, a number or a date.',
-      '--- DOSSIER ---',
-      facts || 'Dossier unavailable: answer only from what you are certain of and offer serge@smiro.dev for details.',
-    ].join('\n\n');
-  }
-
-  // ── transport: same streaming endpoint the agent sandbox uses ─────────
-  const history = [];
-  let busy = false;
-
-  // Models answer in markdown; these bubbles are plain text (and the avatar's
-  // reply gets read out loud), so the syntax has to go rather than be spoken.
-  const plain = (t) => t
-    .replace(/```[a-z]*\n?/gi, '')
-    .replace(/\*\*(.+?)\*\*/g, '$1')
-    .replace(/(^|\s)[*_](\S[^*_]*?)[*_](?=\s|[.,;:!?)]|$)/g, '$1$2')
-    .replace(/`([^`]+)`/g, '$1')
-    .replace(/^#{1,6}\s+/gm, '')
-    .replace(/^\s*[-*+]\s+/gm, '· ')
-    .replace(/\n{3,}/g, '\n\n');
-
-  // ── the behaviour engine, when it can keep up ──
-  // Parlant (on my VPS, via /api/parlant) is the better answer: guidelines, a
-  // recruiter journey and hard refusals for salary/visa questions, grounded on
-  // the dossier by a retriever. It is also slower and rate-limited, so it gets a
-  // fixed budget and /api/agent-chat finishes the job whenever it misses it. The
-  // visitor never sees which one answered.
-  let parlantSession = null;
-  let parlantCold = 0;                 // when it can't keep up, stop asking for a while
-  const PARLANT_BUDGET_MS = 9000;     // measured: ~6.2s per turn while it has quota
-  const PARLANT_COOLDOWN_MS = 2 * 60 * 1000;   // its per-minute windows refill fast
-
-  async function parlantReply(question) {
-    if (Date.now() < parlantCold) return '';
-    const ctl = new AbortController();
-    const timer = setTimeout(() => ctl.abort(), PARLANT_BUDGET_MS);
-    try {
-      const res = await fetch('/api/parlant', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: question, sessionId: parlantSession }),
-        signal: ctl.signal,
-      });
-      const data = await res.json().catch(() => ({}));
-      if (data.sessionId) parlantSession = data.sessionId;   // keep the thread
-      if (res.ok && data.reply) return data.reply;
-      // 503 not_configured / 502 upstream mean the engine is out; a 504 only
-      // means this turn was slow, and the next one may well be fast
-      // 503 not_configured / 502 upstream mean the engine is out. A 504 only
-      // means this turn was slow — but slow costs the visitor the whole budget
-      // before the fast path starts, so back off for a few minutes either way.
-      // The day the Gemini key moves off the free tier, 504s stop happening and
-      // Parlant becomes the primary engine again with no change here.
-      parlantCold = Date.now() + (res.status === 504 ? PARLANT_COOLDOWN_MS : 10 * 60 * 1000);
-      return '';
-    } catch (e) {
-      parlantCold = Date.now() + PARLANT_COOLDOWN_MS;
-      return '';                        // aborted or offline — fall through
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-
   async function streamReply(question, onDelta) {
     history.push({ role: 'user', content: question });
     const res = await fetch('/api/agent-chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        // one request per answer: the endpoint builds the system prompt from
+        // /kb/sergiy.md, so the instructions live in one file and the browser
+        // doesn't ship them
         agentSlug: 'avatar',
         agentName: 'Sergiy avatar',
-        systemPrompt: await persona(),
+        persona: 'avatar',
+        lang: lang(),
         messages: history.slice(-6),
       }),
     });
@@ -3684,22 +3605,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
     say(L('thinking…', 'je réfléchis…'));
     let out = null, answer = '';
     try {
-      answer = await parlantReply(question);
-      if (answer) {
-        // Parlant returns whole messages; type it in so it still reads as speech
-        history.push({ role: 'user', content: question });
-        history.push({ role: 'assistant', content: answer });
-        typing.remove();
-        out = addBubble('', 'bot');
-        const full = plain(answer);
-        for (let i = 1; i <= full.length; i += 3) {
-          out.textContent = full.slice(0, i);
-          body.scrollTop = body.scrollHeight;
-          await new Promise(r => setTimeout(r, 8));
-        }
-        out.textContent = full;
-      }
-      if (!answer) answer = await streamReply(question, (text) => {
+      answer = await streamReply(question, (text) => {
         if (!out) { typing.remove(); out = addBubble('', 'bot'); }
         out.textContent = plain(text);
         body.scrollTop = body.scrollHeight;
