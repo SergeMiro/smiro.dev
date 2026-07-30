@@ -3453,6 +3453,20 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
       ? 'en ligne · prêt à discuter' : taglineEN);
   }
 
+  const history = [];
+  let busy = false;
+
+  // Models answer in markdown; these bubbles are plain text (and the avatar's
+  // reply gets read out loud), so the syntax has to go rather than be spoken.
+  const plain = (t) => t
+    .replace(/```[a-z]*\n?/gi, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/(^|\s)[*_](\S[^*_]*?)[*_](?=\s|[.,;:!?)]|$)/g, '$1$2')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^\s*[-*+]\s+/gm, '· ')
+    .replace(/\n{3,}/g, '\n\n');
+
   async function streamReply(question, onDelta) {
     history.push({ role: 'user', content: question });
     const res = await fetch('/api/agent-chat', {
