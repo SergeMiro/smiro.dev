@@ -61,14 +61,25 @@ async function call(path: string, init?: RequestInit) {
   return res.json();
 }
 
-/** Parlant sends a short "__preamble__" message first; the answer is the one without it. */
+/**
+ * Parlant sends a short "__preamble__" message first ("Bonjour", "Oui"), then
+ * the answer — and the answer is written as its continuation, so it can start
+ * with a comma. Dropping the preamble outright produced replies like
+ * ", je parle français couramment", so it gets glued back on when the answer
+ * clearly continues it.
+ */
 function realReply(events: any[]): string | null {
+  let preamble = '';
   for (const e of events) {
     if (e?.kind !== 'message' || e?.source !== 'ai_agent') continue;
-    const tags: string[] = e.data?.tags || [];
-    if (tags.includes('__preamble__')) continue;
     const text = (e.data?.message || '').trim();
-    if (text) return text;
+    if (!text) continue;
+    if ((e.data?.tags || []).includes('__preamble__')) {
+      preamble = text;
+      continue;
+    }
+    if (preamble && /^[,;:—-]/.test(text)) return preamble + text;
+    return text;
   }
   return null;
 }
