@@ -857,14 +857,29 @@ h1.ht .crossed::before{
   background:var(--ink);border-radius:18px;overflow:hidden;
   padding:clamp(36px,5vw,64px) 0 clamp(24px,3vw,40px);
   perspective:1500px;perspective-origin:50% 46%;
+  /* the drag surface: it is the one box in here that is NOT part of the
+     preserve-3d context, so it can stay hit-testable without occluding cards */
+  cursor:grab;touch-action:pan-y;user-select:none;-webkit-user-select:none;
 }
+.deck-wrap.dragging{cursor:grabbing}
 .deck-stage{
   position:relative;width:100%;height:clamp(370px,44vw,460px);
-  transform-style:preserve-3d;cursor:grab;
-  touch-action:pan-y;user-select:none;-webkit-user-select:none;
+  transform-style:preserve-3d;
+  /* Cards live at negative Z inside this context, so this box — full-size at
+     z:0 — used to win every hit test and no card was clickable, whatever
+     pointer-events said on the card itself. Neither this nor .deck-ring needs
+     to be hit-testable: .deck-wrap handles the drag, the front card opts in. */
+  pointer-events:none;
 }
-.deck-stage.dragging{cursor:grabbing}
-.deck-ring{position:absolute;inset:0;transform-style:preserve-3d}
+.deck-ring{
+  position:absolute;inset:0;transform-style:preserve-3d;
+  /* The cards sit at negative Z inside this preserve-3d context, so this box —
+     full-size and at z:0 — would win every hit test and no card could ever be
+     clicked. The ring only needs to hold the 3D context; the cards opt back in
+     (render() flips pointer-events on the front one) and anything that misses
+     falls through to .deck-stage, which owns the drag. */
+  pointer-events:none;
+}
 .dcard-wrap{
   position:absolute;top:50%;left:50%;
   width:clamp(248px,30vw,330px);height:clamp(330px,40vw,430px);
@@ -4606,6 +4621,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
 
   const ring  = deck;                       // #idea-deck is the rotating ring
   const stage = document.getElementById('idea-stage');
+  const surface = document.querySelector('.deck-wrap');   // drag lives here
   const N = DATA.length;
   if(!stage) return;
 
@@ -4640,9 +4656,12 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
     face.style.setProperty('--dc', a.bg);
     face.style.setProperty('--dt', a.fg);
     face.innerHTML = faceHTML(a);
-    // only the front card gets pointer events (see render()), so a click here is
-    // unambiguous — unless the pointer was busy dragging the deck around
-    face.addEventListener('click', ()=>{ if(!dragged) openArticle(a.id); });
+    face.dataset.article = a.id;
+    // No click listener here on purpose: the stage calls setPointerCapture() to
+    // drag the deck, which retargets the click event to the stage, so a listener
+    // on the card never fires for a real mouse. The stage's pointerup opens the
+    // article instead — see endDrag().
+    
     wrap.appendChild(face);
     ring.appendChild(wrap);
     return wrap;
@@ -4665,7 +4684,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   let dragging=false, lastX=0, lastT=0, hovering=false;
   let last = performance.now();
   // a drag that ends on a card must not read as a click on that card
-  let dragged=false, downX=0;
+  let dragged=false, downX=0, downCard=null;
 
   function spread(){ return Math.min(Math.max(window.innerWidth*0.30, 300), 460); }
 
@@ -4692,7 +4711,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
         `translate3d(${x.toFixed(2)}px,0,${z.toFixed(2)}px) rotateY(${rot.toFixed(4)}rad) scale(${scale.toFixed(3)})`;
       el.style.opacity = (ax > VISIBLE ? 0 : Math.min(1,(VISIBLE-ax)/0.55)).toFixed(3);
       el.style.zIndex = Math.round(100 - ax*10);
-      el.style.pointerEvents = ax < 0.5 ? 'auto' : 'none';
+      el.style.pointerEvents = ax < 1.6 ? 'auto' : 'none';   // front opens, neighbours rotate in
     });
     if(dots){
       const na = ((Math.round(pos))%N + N) % N;
@@ -4729,13 +4748,15 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   }
 
   // ---- drag / swipe ----
-  stage.addEventListener('pointerdown', e=>{
-    dragging=true; target=null; stage.classList.add('dragging');
+  surface.addEventListener('pointerdown', e=>{
+    dragging=true; target=null; surface.classList.add('dragging');
     lastX=e.clientX; lastT=performance.now(); velocity=0;
     dragged=false; downX=e.clientX;
-    stage.setPointerCapture(e.pointerId);
+    // remembered before the capture, while e.target is still the real card
+    downCard = e.target && e.target.closest ? e.target.closest('.dcard') : null;
+    surface.setPointerCapture(e.pointerId);
   });
-  stage.addEventListener('pointermove', e=>{
+  surface.addEventListener('pointermove', e=>{
     if(!dragging) return;
     if(Math.abs(e.clientX - downX) > 5) dragged=true;
     const dx = e.clientX - lastX, now = performance.now();
@@ -4746,14 +4767,25 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   });
   function endDrag(e){
     if(!dragging) return;
-    dragging=false; stage.classList.remove('dragging');
-    try{ stage.releasePointerCapture(e.pointerId); }catch(_){}
+    dragging=false; surface.classList.remove('dragging');
+    try{ surface.releasePointerCapture(e.pointerId); }catch(_){}
+    // A press that never moved is a click on whatever card it started on: the
+    // front card opens its article, a neighbour just rotates into the front.
+    const card = downCard; downCard = null;
+    if(dragged || !card || e.type !== 'pointerup') return;
+    const i = cards.indexOf(card.parentElement);
+    if(i < 0) return;
+    let off = i - theta / STEP;
+    off = ((off % N) + N) % N;
+    if(off > N/2) off -= N;
+    if(Math.abs(off) < 0.5) openArticle(card.dataset.article);
+    else goTo(i);
   }
-  stage.addEventListener('pointerup', endDrag);
-  stage.addEventListener('pointercancel', endDrag);
-  stage.addEventListener('dragstart', e=>e.preventDefault());
-  stage.addEventListener('pointerenter', ()=>hovering=true);
-  stage.addEventListener('pointerleave', ()=>hovering=false);
+  surface.addEventListener('pointerup', endDrag);
+  surface.addEventListener('pointercancel', endDrag);
+  surface.addEventListener('dragstart', e=>e.preventDefault());
+  surface.addEventListener('pointerenter', ()=>hovering=true);
+  surface.addEventListener('pointerleave', ()=>hovering=false);
 
   const nextBtn = document.getElementById('idea-next');
   const prevBtn = document.getElementById('idea-prev');
