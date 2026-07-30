@@ -3494,6 +3494,41 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
     .replace(/^\s*[-*+]\s+/gm, '· ')
     .replace(/\n{3,}/g, '\n\n');
 
+  // ── the behaviour engine, when it can keep up ──
+  // Parlant (on my VPS, via /api/parlant) is the better answer: guidelines, a
+  // recruiter journey and hard refusals for salary/visa questions, grounded on
+  // the dossier by a retriever. It is also slower and rate-limited, so it gets a
+  // fixed budget and /api/agent-chat finishes the job whenever it misses it. The
+  // visitor never sees which one answered.
+  let parlantSession = null;
+  let parlantCold = 0;                 // when it fails, stop asking for a while
+  const PARLANT_BUDGET_MS = 11000;
+
+  async function parlantReply(question) {
+    if (Date.now() < parlantCold) return '';
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), PARLANT_BUDGET_MS);
+    try {
+      const res = await fetch('/api/parlant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: question, sessionId: parlantSession }),
+        signal: ctl.signal,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.sessionId) parlantSession = data.sessionId;   // keep the thread
+      if (res.ok && data.reply) return data.reply;
+      // 503 not_configured / 502 upstream mean the engine is out; a 504 only
+      // means this turn was slow, and the next one may well be fast
+      if (res.status === 503 || res.status === 502) parlantCold = Date.now() + 10 * 60 * 1000;
+      return '';
+    } catch (e) {
+      return '';                        // aborted or offline — fall through
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   async function streamReply(question, onDelta) {
     history.push({ role: 'user', content: question });
     const res = await fetch('/api/agent-chat', {
@@ -3642,7 +3677,22 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
     say(L('thinking…', 'je réfléchis…'));
     let out = null, answer = '';
     try {
-      answer = await streamReply(question, (text) => {
+      answer = await parlantReply(question);
+      if (answer) {
+        // Parlant returns whole messages; type it in so it still reads as speech
+        history.push({ role: 'user', content: question });
+        history.push({ role: 'assistant', content: answer });
+        typing.remove();
+        out = addBubble('', 'bot');
+        const full = plain(answer);
+        for (let i = 1; i <= full.length; i += 3) {
+          out.textContent = full.slice(0, i);
+          body.scrollTop = body.scrollHeight;
+          await new Promise(r => setTimeout(r, 8));
+        }
+        out.textContent = full;
+      }
+      if (!answer) answer = await streamReply(question, (text) => {
         if (!out) { typing.remove(); out = addBubble('', 'bot'); }
         out.textContent = plain(text);
         body.scrollTop = body.scrollHeight;
