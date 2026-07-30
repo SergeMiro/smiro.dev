@@ -104,15 +104,20 @@ export default async function handler(req: Request): Promise<Response> {
       sessionId = session.id;
     }
 
-    await call(`/sessions/${sessionId}/events`, {
+    const posted = (await call(`/sessions/${sessionId}/events`, {
       method: 'POST',
       body: JSON.stringify({ kind: 'message', source: 'customer', message }),
-    });
+    })) as any;
+
+    // Only events after the question count. The session is reused across turns
+    // to keep the conversation, so scanning from zero would hand back the first
+    // answer of the session to every later question.
+    const after = (typeof posted?.offset === 'number' ? posted.offset : -1) + 1;
 
     // poll until the real reply lands or we run out of the client's patience
     while (Date.now() - started < DEADLINE_MS) {
       await new Promise((r) => setTimeout(r, POLL_MS));
-      const events = (await call(`/sessions/${sessionId}/events?min_offset=0`)) as any[];
+      const events = (await call(`/sessions/${sessionId}/events?min_offset=${after}`)) as any[];
       const reply = realReply(events);
       if (reply) {
         return json({ reply, sessionId, source: 'parlant', ms: Date.now() - started });
