@@ -22,8 +22,8 @@ export const config = { runtime: 'edge' };
 const BASE = (process.env.PARLANT_URL || 'https://parlant.smiro.dev').replace(/\/+$/, '');
 const KEY = process.env.AVATAR_KEY || '';
 
-const DEADLINE_MS = 9000;   // Vercel edge caps the invocation; stay well inside it
-const POLL_MS = 700;
+const DEADLINE_MS = 5800;   // the client gives up at 6.5s — answer or bow out first
+const POLL_MS = 500;
 const MAX_QUESTION = 600;
 
 // same shape as the sandbox's limiter: a portfolio page, not an API product

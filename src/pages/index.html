@@ -3501,8 +3501,9 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   // fixed budget and /api/agent-chat finishes the job whenever it misses it. The
   // visitor never sees which one answered.
   let parlantSession = null;
-  let parlantCold = 0;                 // when it fails, stop asking for a while
-  const PARLANT_BUDGET_MS = 11000;
+  let parlantCold = 0;                 // when it can't keep up, stop asking for a while
+  const PARLANT_BUDGET_MS = 6500;     // it answers in ~5s when it has quota
+  const PARLANT_COOLDOWN_MS = 3 * 60 * 1000;
 
   async function parlantReply(question) {
     if (Date.now() < parlantCold) return '';
@@ -3520,9 +3521,15 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
       if (res.ok && data.reply) return data.reply;
       // 503 not_configured / 502 upstream mean the engine is out; a 504 only
       // means this turn was slow, and the next one may well be fast
-      if (res.status === 503 || res.status === 502) parlantCold = Date.now() + 10 * 60 * 1000;
+      // 503 not_configured / 502 upstream mean the engine is out. A 504 only
+      // means this turn was slow — but slow costs the visitor the whole budget
+      // before the fast path starts, so back off for a few minutes either way.
+      // The day the Gemini key moves off the free tier, 504s stop happening and
+      // Parlant becomes the primary engine again with no change here.
+      parlantCold = Date.now() + (res.status === 504 ? PARLANT_COOLDOWN_MS : 10 * 60 * 1000);
       return '';
     } catch (e) {
+      parlantCold = Date.now() + PARLANT_COOLDOWN_MS;
       return '';                        // aborted or offline — fall through
     } finally {
       clearTimeout(timer);
