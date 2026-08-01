@@ -23,7 +23,7 @@
       ]
     },
     {
-      "source": "/(pc3d|settings|i18n|i18n-fr|articles).js",
+      "source": "/(pc3d|settings|i18n|i18n-fr|articles|works).js",
       "headers": [
         {
           "key": "Cache-Control",

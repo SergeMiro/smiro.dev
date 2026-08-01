@@ -119,6 +119,28 @@ window.I18N_FR = {
 
   /* ──────────────── source-text lookups (for-employers.html etc.) ──────────────── */
   TEXT: {
+    /* /02 “Dépôts GitHub” — the six repository cards carry raw English text,
+       so they are translated here by source string. Each card opens its own
+       project page, and those pages are bilingual in /works.js. */
+    "client site · back-office":     "site client · back-office",
+    "Site and back-office of a façade contractor — local SEO up front, four role portals behind the login: office, client, sub-contractor, crew.":
+      "Site et back-office d’un façadier — référencement local devant, quatre portails derrière la connexion : bureau, client, sous-traitant, compagnons.",
+    "telephony · internal platform": "téléphonie · plateforme interne",
+    "Internal telephony platform at Fimainfo — DID numbers and orders, IVR strategies, campaigns, SMS/WhatsApp, BI and an AI assistant. Five services.":
+      "Plateforme téléphonie interne chez Fimainfo — numéros DID et commandes, stratégies SVI, campagnes, SMS/WhatsApp, BI et un assistant IA. Cinq services.",
+    "e-commerce · AI try-on":        "e-commerce · essayage IA",
+    "Fashion store where one photo of you becomes the fitting room — Vertex AI try-on, Stripe, returns, GDPR, load tests and runbooks.":
+      "Boutique de mode où une photo de vous devient la cabine d’essayage — essayage Vertex AI, Stripe, retours, RGPD, tests de charge et runbooks.",
+    "web app · automotive":          "application web · automobile",
+    "Used-car dealer, front and back — 360° interiors, an AI matchmaker for buyers, and a CRM that turns an enquiry into a signed quote.":
+      "Concessionnaire de véhicules d’occasion, front et back — intérieurs à 360°, un assistant IA pour les acheteurs, et un CRM qui transforme une demande en devis signé.",
+    "AI · compliance · EU back-office": "IA · conformité · back-office UE",
+    "AI solutions for EU business — LLM-powered workflows that automate multilingual compliance and back-office paperwork.":
+      "Solutions IA pour les entreprises européennes — des workflows à base de LLM qui automatisent la conformité multilingue et la paperasse de back-office.",
+    "portfolio · AI avatar":         "portfolio · avatar IA",
+    "This site — a static Astro build with no framework on the page, a 3D laptop, and an avatar that answers from one editable Markdown brief.":
+      "Ce site — un build Astro statique sans framework sur la page, un portable en 3D, et un avatar qui répond depuis un seul brief Markdown modifiable.",
+
     /* ── agent system (/06): teams, agents and the sandbox ──
        The roster is rendered from JS, so every line lands here as source text.
        Entries identical in both languages are simply omitted. */
