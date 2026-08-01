@@ -4904,6 +4904,16 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   artEl.querySelectorAll('[data-art-close]').forEach(el=>el.addEventListener('click', closeArticle));
   document.addEventListener('keydown', e=>{ if(e.key === 'Escape') closeArticle(); });
 
+  /* Click outside the paper closes it, like any pop-up. The .art-back layer
+     alone cannot carry this: .art-sheet is the scroll container and covers it
+     edge to edge, so every click in the dark gutter lands on the sheet, not on
+     the backdrop. So the sheet itself is the outside — but only when the press
+     both started and ended on it, otherwise releasing a text selection that
+     drifted out of the paper would close the article mid-sentence. */
+  let outFrom = false;
+  sheetEl.addEventListener('pointerdown', e=>{ outFrom = e.target === sheetEl; });
+  sheetEl.addEventListener('click', e=>{ if(outFrom && e.target === sheetEl) closeArticle(); });
+
   // language switch: repaint the faces, and the open article with them
   window.addEventListener('i18n:changed', ()=>{
     cards.forEach((wrap,i)=>{ wrap.firstElementChild.innerHTML = faceHTML(DATA[i]); });
