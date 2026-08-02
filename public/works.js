@@ -120,7 +120,7 @@
       card: 'SDA',
       name: 'Extranet Fimainfo',
       logo: '/logos/fimainfo.svg',
-      tone: 'oklch(0.62 0.16 38)', ink: '#fff',
+      tone: 'var(--accent)', ink: '#fff',
       kind: T('internal platform · telephony', 'plateforme interne · téléphonie'),
       years: '2026',
       status: T('production · preprod on GitLab CI', 'production · preprod sur GitLab CI'),

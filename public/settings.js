@@ -1,58 +1,24 @@
 /* ═══════════════════════════════════════════════════════════════
    settings.js — shared site-wide settings panel
-   - Floating gear icon (top-left)
+   - Floating gear icon (bottom-right)
    - Panel lets user pick accent color + background color
-   - Persists to localStorage, applies on every page that imports it
+   - This file is the *UI only*. The accent list, the persistence and the
+     application to :root all live in theme.js (window.SmiroTheme), which
+     loads blocking in <head> so the first paint is already correct.
    ═══════════════════════════════════════════════════════════════ */
 (function(){
   if (window.__smiroSettingsInited) return;
   window.__smiroSettingsInited = true;
 
-  const LS_KEY = 'smiro.theme.v1';
+  const T = window.SmiroTheme;
+  if (!T) { console.warn('[settings] theme.js must load before settings.js'); return; }
 
-  // curated muted accent colors (not too bright, not too light)
-  // chroma kept moderate (.10–.14), lightness ~.55–.62
-  const ACCENTS = [
-    { id: 'terracotta', label: 'Terracotta',  value: 'oklch(0.62 0.16 38)'  },
-    { id: 'rust',       label: 'Rust',        value: 'oklch(0.55 0.13 28)'  },
-    { id: 'olive',      label: 'Olive',       value: 'oklch(0.58 0.11 115)' },
-    { id: 'denim',      label: 'Denim',       value: 'oklch(0.55 0.11 245)' },
-    { id: 'mustard',    label: 'Mustard',     value: 'oklch(0.62 0.12 85)'  },
-  ];
+  const ACCENTS     = T.ACCENTS;
+  const BACKGROUNDS = T.BACKGROUNDS;
 
-  // curated light backgrounds (warm/cool/neutral but always soft + light)
-  const BACKGROUNDS = [
-    { id: 'cream',    label: 'Cream',     value: '#f4f1e8' },
-    { id: 'paper',    label: 'Paper',     value: '#f7f4ec' },
-    { id: 'ivory',    label: 'Ivory',     value: '#fbf7ec' },
-    { id: 'linen',    label: 'Linen',     value: '#efebe1' },
-    { id: 'sand',     label: 'Sand',      value: '#ece4d2' },
-  ];
-
-  const DEFAULTS = { accent: 'terracotta', background: 'cream' };
-
-  function loadState(){
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (raw) return Object.assign({}, DEFAULTS, JSON.parse(raw));
-    } catch(e){}
-    return Object.assign({}, DEFAULTS);
-  }
-  function saveState(s){
-    try { localStorage.setItem(LS_KEY, JSON.stringify(s)); } catch(e){}
-  }
-
-  let state = loadState();
-
-  function applyState(){
-    const accent = ACCENTS.find(a=>a.id===state.accent) || ACCENTS[0];
-    const bg     = BACKGROUNDS.find(b=>b.id===state.background) || BACKGROUNDS[0];
-    document.documentElement.style.setProperty('--brick', accent.value);
-    document.documentElement.style.setProperty('--bg',    bg.value);
-  }
-
-  // apply immediately (even before DOM ready) so paint matches
-  applyState();
+  // swatch preview colour — built from the same l/c/h the accent applies, so a
+  // swatch can never drift from what clicking it actually does
+  const accentSwatch = (a) => `oklch(${a.l} ${a.c} ${a.h})`;
 
   function styles(){
     const css = `
@@ -108,7 +74,7 @@
       }
       .ss-title::before{
         content:"";width:6px;height:6px;border-radius:50%;
-        background: var(--brick, #c66a3a);
+        background: var(--accent);
       }
       .ss-close{
         appearance:none;border:none;background:transparent;cursor:pointer;
@@ -194,15 +160,17 @@
   }
 
   function buildSwatches(items, type){
+    const st = T.state;
     return items.map(it => {
-      const active = state[type === 'accent' ? 'accent' : 'background'] === it.id;
+      const active = (type === 'accent' ? st.accent : st.background) === it.id;
+      const fill = type === 'accent' ? accentSwatch(it) : it.value;
       return `
         <button type="button"
                 class="ss-sw ${active ? 'on':''}"
                 data-type="${type}" data-id="${it.id}"
                 title="${it.label}"
                 aria-label="${it.label}">
-          <span class="ss-fill" style="background:${it.value}"></span>
+          <span class="ss-fill" style="background:${fill}"></span>
         </button>`;
     }).join('');
   }
@@ -255,17 +223,21 @@
     document.body.appendChild(panel);
 
     function syncLabels(){
-      const a = ACCENTS.find(x=>x.id===state.accent) || ACCENTS[0];
-      const b = BACKGROUNDS.find(x=>x.id===state.background) || BACKGROUNDS[0];
+      const st = T.state;
+      const a = ACCENTS.find(x=>x.id===st.accent);
+      const b = BACKGROUNDS.find(x=>x.id===st.background) || BACKGROUNDS[0];
       const aEl = panel.querySelector('#ss-accent-name');
       const bEl = panel.querySelector('#ss-bg-name');
-      if (aEl) aEl.textContent = a.label;
+      // st.accent is 'custom' when edit mode's colour picker set it — there is
+      // no swatch to name, so say so rather than mislabel it as Terracotta.
+      if (aEl) aEl.textContent = a ? a.label : 'custom';
       if (bEl) bEl.textContent = b.label;
     }
     function syncActive(){
+      const st = T.state;
       panel.querySelectorAll('.ss-sw').forEach(sw=>{
         const t = sw.dataset.type, id = sw.dataset.id;
-        const isOn = (t==='accent' ? state.accent : state.background) === id;
+        const isOn = (t==='accent' ? st.accent : st.background) === id;
         sw.classList.toggle('on', isOn);
       });
     }
@@ -307,10 +279,10 @@
     panel.querySelectorAll('.ss-sw').forEach(sw => {
       sw.addEventListener('click', () => {
         const t = sw.dataset.type, id = sw.dataset.id;
-        if (t === 'accent')     state.accent = id;
-        if (t === 'background') state.background = id;
-        applyState();
-        saveState(state);
+        // SmiroTheme owns apply + persist, and fires theme:accent so the canvas
+        // orb and the Three.js laptop recolour along with the CSS.
+        if (t === 'accent')     T.setAccent(id);
+        if (t === 'background') T.setBackground(id);
         syncActive();
         syncLabels();
       });
@@ -318,9 +290,7 @@
 
     // reset
     panel.querySelector('.ss-reset').addEventListener('click', () => {
-      state = Object.assign({}, DEFAULTS);
-      applyState();
-      saveState(state);
+      T.reset();
       syncActive();
       syncLabels();
     });
@@ -333,6 +303,8 @@
       });
     });
     window.addEventListener('i18n:changed', syncLang);
+    // the edit-mode colour picker also goes through SmiroTheme
+    T.onChange(()=>{ syncActive(); syncLabels(); });
   }
 
   if (document.readyState === 'loading') {

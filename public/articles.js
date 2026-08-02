@@ -182,7 +182,7 @@ window.ARTICLES = [
     byline: { en: 'marc andreessen', fr: 'marc andreessen' },
     year: 2011,
     read: { en: '4 min read', fr: '4 min de lecture' },
-    bg: 'oklch(0.62 0.16 38)', fg: '#fff8ef',
+    bg: 'var(--accent)', fg: '#fff8ef',
     ico: 'M3 3h18v18H3z M3 9h18 M9 3v18',
     authors: [
       { name: 'Marc Andreessen',

@@ -165,11 +165,15 @@ function boot(container) {
     ink: '#3a352c',     // primary text
     soft: '#8c8474',    // secondary text
     faint: '#b9b1a0',   // line numbers, disabled text
+    // brick/deep are rewritten from the live accent by setAccent() — the
+    // terracotta below is only what shows if theme.js failed to load
     brick: '#e86830',   // accent
     deep: '#b4502a',    // accent, darker — for text on cream
   };
   // syntax tokens, tuned for dark-on-cream instead of green-on-black
   //   j/n/b are the JSON set: key · literal · brace — see jsonTokens()
+  // t/j/o are accent-derived and get rewritten by setAccent(); the rest are
+  // deliberately their own hues and stay put whatever the accent is.
   const TOK = {
     c: '#a79e8a', t: '#a8542c', a: '#8a6d3b', p: '#a89f8d', s: '#5d7a52',
     x: '#3a352c', k: '#8a5b7d', o: '#e86830',
@@ -197,9 +201,12 @@ function boot(container) {
   container.appendChild(renderer.domElement);
 
   // ─────────────────────────────────────────── live-tuning values
-  let LINE = 0xe86830;   // warm orange — matches brick accent; updated by setAccent()
-  const ACCENT = 0xffd9a8; // warm highlight for the Enter affordance + webcam
-  const SHADE = 0x6d2408;  // burnt-umber contact shadow on the "desk"
+  // Every colour below is a *step of the site accent*, not a fixed orange —
+  // see the accent-sync block further down. The literals here are only the
+  // terracotta fallbacks used if theme.js somehow failed to load.
+  let LINE = 0xe86830;   // the wireframe ink: edges, details, halo, key legends
+  let ACCENT = 0xffd9a8; // pale highlight for the Enter affordance + webcam LED
+  let SHADE = 0x6d2408;  // deep contact shadow pooled under the machine
 
   const TUNE = {
     // world units, desk surface at y = 0, laptop centred on x = 0
@@ -367,10 +374,12 @@ function boot(container) {
   }
 
   // ─────────────────────────────────────────── accent sync
-  // Reads --brick from CSS, parses it to a number and pushes it into every
-  // wireframe material.  Called once on boot and every time the user picks a
-  // new accent in the tweaks panel.  Accepts an explicit hex string (like
-  // "#c2622a") or undefined (reads from CSS).
+  // Everything terracotta in this scene is a step of the site accent, resolved
+  // through window.SmiroTheme (see theme.js). THREE.Color cannot parse the
+  // `oklch()` the CSS ladder is written in, so we ask SmiroTheme for the packed
+  // 0xRRGGBB of each step instead of scraping a CSS custom property — which is
+  // what used to fail silently and leave the laptop stuck on orange.
+  //
   // key legends live on a canvas laid over the deck. The glyphs are drawn
   // white, so tinting the material is what colours them — that keeps them in
   // the accent sync below instead of needing the canvas redrawn.
@@ -378,18 +387,64 @@ function boot(container) {
     color: LINE, transparent: true, opacity: 0.8, depthWrite: false, toneMapped: false,
   });
   const WIRE_MATS = [matEdge, matDetail, matHalo, matDesk, matKeys];
-  function setAccent(hex) {
-    if (!hex) {
-      const css = getComputedStyle(document.documentElement).getPropertyValue('--brick').trim();
-      if (!css) return;
-      hex = css;
+  // Materials built further down register themselves here, so setAccent() can
+  // recolour them without referring to bindings that are still in their TDZ
+  // when it is defined.
+  const HILITE_MATS = [];   // follow ACCENT — the pale highlight
+  const SHADE_MATS = [];    // follow SHADE  — the deep contact shadow
+  let screenTexRef = null;  // set once the screen CanvasTexture exists
+
+  const theme = () => window.SmiroTheme;
+
+  // step name → 0xRRGGBB, with the terracotta literal as a fallback so the
+  // scene still draws if theme.js is missing.
+  function stepInt(name, fallback) {
+    const T = theme();
+    if (!T) return fallback;
+    try { return T.step(name).int; } catch (e) { return fallback; }
+  }
+  function stepHex(name, fallback) {
+    const T = theme();
+    if (!T) return fallback;
+    try { return T.step(name).hex; } catch (e) { return fallback; }
+  }
+
+  /* Recolour the whole machine.
+     `color` is optional: pass any CSS colour (hex / rgb() / oklch()) to force a
+     one-off accent, or omit it to re-read the live theme. A forced colour is
+     pushed through SmiroTheme so the CSS and the 3D scene cannot disagree. */
+  function setAccent(color) {
+    const T = theme();
+    if (color && T && T.setCustomAccent(color)) return;  // setCustomAccent re-enters via theme:accent
+    if (color && !T) {
+      // no theme layer — honour a literal hex directly and stop
+      const num = parseInt(String(color).replace(/^#/, ''), 16);
+      if (!isNaN(num)) { LINE = num; for (const m of WIRE_MATS) m.color.set(num); }
+      return;
     }
-    const num = parseInt(hex.replace(/^#/, ''), 16);
-    if (isNaN(num)) return;
-    LINE = num;
-    for (const m of WIRE_MATS) m.color.set(num);
+
+    LINE   = stepInt('mid', 0xe86830);
+    ACCENT = stepInt('pale', 0xffd9a8);
+    SHADE  = stepInt('darkest', 0x6d2408);
+
+    for (const m of WIRE_MATS) m.color.set(LINE);
+
+    // the screen is a 2D canvas: repaint its accent entries and let the next
+    // draw pass pick them up (all three screens redraw continuously)
+    SCR.brick = stepHex('mid', '#e86830');
+    SCR.deep  = stepHex('deep', '#b4502a');
+    TOK.t = TOK.j = SCR.deep;   // JSON keys / type tokens
+    TOK.o = SCR.brick;          // operators
+
+    for (const m of HILITE_MATS) m.color.set(ACCENT);
+    for (const m of SHADE_MATS) m.color.set(SHADE);
+    if (screenTexRef) screenTexRef.needsUpdate = true;
   }
   function syncAccent() { setAccent(); }
+
+  // live recolour: one listener for the settings panel, the edit-mode colour
+  // picker and anything else that goes through SmiroTheme
+  window.addEventListener('theme:accent', () => setAccent());
 
   // ─────────────────────────────────────────── desk
   // line grid with per-vertex alpha so it dissolves at the edges instead of
@@ -800,6 +855,7 @@ function boot(container) {
   const SX = sc.width / SC_W, SY = sc.height / SC_H;
   const g2 = sc.getContext('2d');
   const screenTex = new THREE.CanvasTexture(sc);
+  screenTexRef = screenTex;          // so setAccent() can force a repaint
   screenTex.minFilter = THREE.LinearFilter;
   screenTex.magFilter = THREE.LinearFilter;
   screenTex.colorSpace = THREE.SRGBColorSpace;
@@ -820,9 +876,13 @@ function boot(container) {
   // so the bloom is drawn, not computed). Sits behind the plane so only the
   // spill past the bezel shows.
   const bloomMat = new THREE.SpriteMaterial({
-    map: glowTex, color: 0xffe9c8, transparent: true, opacity: 0.18,
+    map: glowTex, color: ACCENT, transparent: true, opacity: 0.18,
     blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
   });
+  // frame() also retints this per state, but register it anyway: the render
+  // loop is paused while the laptop is off-screen, and without this the spill
+  // would keep the old accent until the section scrolls back into view.
+  HILITE_MATS.push(bloomMat);
   const bloom = new THREE.Sprite(bloomMat);
   lidFx.add(bloom);
 
@@ -831,6 +891,7 @@ function boot(container) {
     map: glowTex, color: ACCENT, transparent: true, opacity: 0.9,
     blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
   });
+  HILITE_MATS.push(ledMat);
   const led = new THREE.Sprite(ledMat);
   led.scale.setScalar(0.12);
   lidFx.add(led);
@@ -840,6 +901,7 @@ function boot(container) {
   // composites straight onto the terracotta CSS stage and grounds the laptop
   // instead of leaving it floating over the grid.
   const shadowLaptop = softPlane(6.2, 4.2, SHADE, 0.3, false);
+  SHADE_MATS.push(shadowLaptop.material);
   shadowLaptop.position.y = 0.002;
   pc.add(shadowLaptop);
 
@@ -862,11 +924,13 @@ function boot(container) {
     color: ACCENT, transparent: true, opacity: 0,
     depthWrite: false, blending: THREE.AdditiveBlending,
   });
+  HILITE_MATS.push(matEnterRing);
   const enterRing = new THREE.LineLoop(circleGeom(0.24, 48), matEnterRing);
   enterFx.add(enterRing);
 
   // pool of light under the key
   const enterPool = softPlane(0.85, 0.85, ACCENT, 0, true);
+  HILITE_MATS.push(enterPool.material);
   enterPool.position.y = -0.02;
   enterFx.add(enterPool);
 
@@ -964,7 +1028,7 @@ function boot(container) {
     placeCamera();
   }
   apply();
-  syncAccent();           // read initial --brick from CSS
+  syncAccent();           // pull the live accent out of SmiroTheme
   pc.rotation.y = TUNE.rotY;
 
   // live-tuning handle exposed for console fiddling
@@ -1533,8 +1597,9 @@ function boot(container) {
     }
 
     // screen bloom + webcam dot breathe with the state
-    const warm = state === 'result' ? 0xffe7c4 : 0xffd9a8;
-    bloomMat.color.set(warm);
+    // the panel glows a touch brighter once the CV is on screen; both tints are
+    // accent steps, so the spill matches whatever accent is active
+    bloomMat.color.set(state === 'result' ? stepInt('wash', 0xffe7c4) : ACCENT);
     bloomMat.opacity = (state === 'result' ? 0.24 : 0.17) +
       (reduceMotion ? 0 : Math.sin(elapsed * 0.004) * 0.035);
     ledMat.opacity = 0.4 + (reduceMotion ? 0.2 : Math.sin(elapsed * 0.0022) * 0.22 + 0.22);

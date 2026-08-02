@@ -1,0 +1,68 @@
+/* ═══════════════════════════════════════════════════════════════
+   theme.css — the accent colour system, single source of truth.
+
+   Every accent-coloured pixel on the site resolves back to the three
+   numbers below. Nothing downstream hardcodes a terracotta value, so
+   swapping the accent (settings panel → theme.js) recolours the whole
+   site — CSS, canvas and the Three.js laptop alike.
+
+   The ladder is a lightness/chroma/hue offset table applied to the base.
+   theme.js mirrors it in JS (SmiroTheme.STEPS) for the consumers that
+   cannot read CSS — keep the two in sync.
+
+     step      ΔL      ×C     ΔH     terracotta result
+     darkest  -0.20   1.00    -6     0.42 0.160 32
+     deep     -0.10   1.12    -4     0.52 0.179 34
+     base      0.00   1.00     0     0.62 0.160 38
+     mid      +0.08   1.00    +7     0.70 0.160 45
+     light    +0.16   0.94   +11     0.78 0.150 49
+     glow     +0.21   1.00   +15     0.83 0.160 53
+     pale     +0.31   0.65   +22     0.93 0.104 60
+     wash     +0.33   0.15   +26     0.95 0.024 64
+
+   Each step ships twice: `--accent-x-lch` is the bare `L C H` triplet so
+   call sites can add their own alpha — `oklch(var(--accent-lch) / .25)` —
+   and `--accent-x` is the ready-made opaque colour.
+   ═══════════════════════════════════════════════════════════════ */
+:root{
+  /* ─── the three numbers everything derives from ─── */
+  --accent-l: 0.62;
+  --accent-c: 0.16;
+  --accent-h: 38;
+
+  /* ─── the ladder ─── */
+  --accent-lch:         var(--accent-l) var(--accent-c) var(--accent-h);
+  --accent:             oklch(var(--accent-lch));
+
+  --accent-darkest-lch: calc(var(--accent-l) - .20) calc(var(--accent-c) * 1.00) calc(var(--accent-h) -  6);
+  --accent-darkest:     oklch(var(--accent-darkest-lch));
+
+  --accent-deep-lch:    calc(var(--accent-l) - .10) calc(var(--accent-c) * 1.12) calc(var(--accent-h) -  4);
+  --accent-deep:        oklch(var(--accent-deep-lch));
+
+  --accent-mid-lch:     calc(var(--accent-l) + .08) calc(var(--accent-c) * 1.00) calc(var(--accent-h) +  7);
+  --accent-mid:         oklch(var(--accent-mid-lch));
+
+  --accent-light-lch:   calc(var(--accent-l) + .16) calc(var(--accent-c) *  .94) calc(var(--accent-h) + 11);
+  --accent-light:       oklch(var(--accent-light-lch));
+
+  --accent-glow-lch:    calc(var(--accent-l) + .21) calc(var(--accent-c) * 1.00) calc(var(--accent-h) + 15);
+  --accent-glow:        oklch(var(--accent-glow-lch));
+
+  --accent-pale-lch:    calc(var(--accent-l) + .31) calc(var(--accent-c) *  .65) calc(var(--accent-h) + 22);
+  --accent-pale:        oklch(var(--accent-pale-lch));
+
+  --accent-wash-lch:    calc(var(--accent-l) + .33) calc(var(--accent-c) *  .15) calc(var(--accent-h) + 26);
+  --accent-wash:        oklch(var(--accent-wash-lch));
+
+  /* text that sits on top of an accent fill */
+  --accent-ink: #fff;
+
+  /* sRGB hex of the base accent, written by theme.js. Canvas 2D and WebGL
+     consumers that cannot parse oklch read this instead. */
+  --accent-hex: #c95f30;
+
+  /* ─── legacy aliases, kept so anything still asking for --brick works ─── */
+  --brick:   var(--accent);
+  --brick-2: var(--accent-deep);
+}
