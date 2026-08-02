@@ -61,22 +61,45 @@ function boot(container) {
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // ─────────────────────────────────────────── content (EN / FR)
+  // The editor renders lines as [text, token-class] segments. JSON is regular
+  // enough to tokenise once at boot instead of being hand-annotated, so the
+  // panel copy below stays readable as plain JSON.
+  //   j key · s string · n number/bool/null · b brace/bracket · p punctuation
+  function jsonTokens(line) {
+    const re = /"(?:[^"\\]|\\.)*"|true|false|null|-?\d[\d.]*|[{}[\]]|[:,]|\s+|[^\s"{}[\],:]+/g;
+    const out = [];
+    let m;
+    while ((m = re.exec(line))) {
+      const s = m[0];
+      let cls = 'x';
+      // a string is a key only when the next thing on the line is its colon
+      if (s[0] === '"') cls = /^\s*:/.test(line.slice(m.index + s.length)) ? 'j' : 's';
+      else if (s === 'true' || s === 'false' || s === 'null' || /^-?\d/.test(s)) cls = 'n';
+      else if (/^[{}[\]]$/.test(s)) cls = 'b';
+      else if (s === ':' || s === ',') cls = 'p';
+      out.push([s, cls]);
+    }
+    return out;
+  }
+  function jsonCode(lines) { return lines.map(jsonTokens); }
+
   const C = {
     en: {
-      file: 'hire-sergiy.html',
-      code: [
-        [['<!-- ', 'c'], ['found by my pipeline · written by me', 'c'], [' -->', 'c']],
-        [['<candidate ', 't'], ['id', 'a'], ['=', 'p'], ['"sergiy"', 's'], [' risk', 'a'], ['=', 'p'], ['"0.00"', 's'], [' opportunity', 'a'], ['=', 'p'], ['"1.00"', 's'], ['>', 't']],
-        [['  <skill>', 't'], ['multi-agent systems that ship', 'x'], ['</skill>', 't']],
-        [['  <skill>', 't'], ['15 yrs in IT · 5 yrs in prod', 'x'], ['</skill>', 't']],
-        [['  <skill>', 't'], ['reads the docs, then the source', 'x'], ['</skill>', 't']],
-        [['  <honest>', 't'], ['my agents work nights · i sleep', 'k'], ['</honest>', 't']],
-        [['  <honest>', 't'], ['i still fix my own bugs', 'k'], ['</honest>', 't']],
-        [['  <metric ', 't'], ['ops', 'a'], ['=', 'p'], ['"-90%"', 's'], [' bugs', 'a'], ['=', 'p'], ['"≈0"', 's'], [' coffee', 'a'], ['=', 'p'], ['"+40%"', 's'], ['/>', 't']],
-        [['  <guarantee>', 't'], ['working software, not slideware', 'x'], ['</guarantee>', 't']],
-        [['  <cta ', 't'], ['key', 'a'], ['=', 'p'], ['"Enter"', 's'], ['>', 't'], ['curious? press ⏎', 'o'], ['</cta>', 't']],
-        [['</candidate>', 't']],
-      ],
+      file: 'profile.json',
+      code: jsonCode([
+        '{',
+        '  "profile": {',
+        '    "name": "Sergiy Mirochnyk",',
+        '    "role": "AI Engineer · Full-Stack",',
+        '    "experience": { "it": "15y", "prod": "5y" },',
+        '    "skills": ["Claude Code", "n8n", "RAG", "TypeScript"],',
+        '    "focus": "multi-agent systems that ship",',
+        '    "impact": { "ops": "-90%", "bugs": "≈0" },',
+        '    "available": true,',
+        '    "cta": "curious? press ⏎"',
+        '  }',
+        '}',
+      ]),
       term: [
         '$ npm run build',
         '▲ bundling 15 years into one page…',
@@ -92,24 +115,26 @@ function boot(container) {
       cvRole: 'AI Engineer · Full-Stack',
       cvChips: ['Claude Code', 'n8n', 'RAG', 'TypeScript'],
       cvOpen: 'open CV ↗',
+      thanks: 'Merci d’avoir pris le temps de découvrir mon profil.',
       hint: 'move closer to the keyboard →',
       hintReady: 'press  ⏎  Enter',
     },
     fr: {
-      file: 'recruter-sergiy.html',
-      code: [
-        [['<!-- ', 'c'], ['trouvé par mon pipeline · écrit par moi', 'c'], [' -->', 'c']],
-        [['<candidat ', 't'], ['id', 'a'], ['=', 'p'], ['"sergiy"', 's'], [' risque', 'a'], ['=', 'p'], ['"0,00"', 's'], [' opportunité', 'a'], ['=', 'p'], ['"1,00"', 's'], ['>', 't']],
-        [['  <atout>', 't'], ['systèmes multi-agents qui tournent', 'x'], ['</atout>', 't']],
-        [['  <atout>', 't'], ['15 ans IT · 5 ans en prod', 'x'], ['</atout>', 't']],
-        [['  <atout>', 't'], ['lit la doc, puis le code source', 'x'], ['</atout>', 't']],
-        [['  <aveu>', 't'], ['mes agents veillent · moi je dors', 'k'], ['</aveu>', 't']],
-        [['  <aveu>', 't'], ['je corrige encore mes propres bugs', 'k'], ['</aveu>', 't']],
-        [['  <metrique ', 't'], ['ops', 'a'], ['=', 'p'], ['"-90%"', 's'], [' bugs', 'a'], ['=', 'p'], ['"≈0"', 's'], [' café', 'a'], ['=', 'p'], ['"+40%"', 's'], ['/>', 't']],
-        [['  <garantie>', 't'], ['du logiciel qui tourne, pas des slides', 'x'], ['</garantie>', 't']],
-        [['  <cta ', 't'], ['touche', 'a'], ['=', 'p'], ['"Entrée"', 's'], ['>', 't'], ['curieux ? appuyez ⏎', 'o'], ['</cta>', 't']],
-        [['</candidat>', 't']],
-      ],
+      file: 'profil.json',
+      code: jsonCode([
+        '{',
+        '  "profil": {',
+        '    "nom": "Sergiy Mirochnyk",',
+        '    "role": "Développeur Full-Stack · IA",',
+        '    "experience": { "it": "15 ans", "prod": "5 ans" },',
+        '    "skills": ["Claude Code", "n8n", "RAG", "TypeScript"],',
+        '    "focus": "systèmes multi-agents qui tournent",',
+        '    "impact": { "ops": "-90%", "bugs": "≈0" },',
+        '    "disponible": true,',
+        '    "cta": "curieux ? appuyez ⏎"',
+        '  }',
+        '}',
+      ]),
       term: [
         '$ npm run build',
         '▲ compilation de 15 ans en une page…',
@@ -125,6 +150,7 @@ function boot(container) {
       cvRole: 'Développeur Full-Stack · IA',
       cvChips: ['Claude Code', 'n8n', 'RAG', 'TypeScript'],
       cvOpen: 'ouvrir le CV ↗',
+      thanks: 'Merci d’avoir pris le temps de découvrir mon profil.',
       hint: 'rapprochez-vous du clavier →',
       hintReady: 'appuyez  ⏎  Entrée',
     },
@@ -143,7 +169,12 @@ function boot(container) {
     deep: '#b4502a',    // accent, darker — for text on cream
   };
   // syntax tokens, tuned for dark-on-cream instead of green-on-black
-  const TOK = { c: '#a79e8a', t: '#a8542c', a: '#8a6d3b', p: '#a89f8d', s: '#5d7a52', x: '#3a352c', k: '#8a5b7d', o: '#e86830' };
+  //   j/n/b are the JSON set: key · literal · brace — see jsonTokens()
+  const TOK = {
+    c: '#a79e8a', t: '#a8542c', a: '#8a6d3b', p: '#a89f8d', s: '#5d7a52',
+    x: '#3a352c', k: '#8a5b7d', o: '#e86830',
+    j: '#a8542c', n: '#8a5b7d', b: '#8a7f68',
+  };
   const lang = () => (window.I18N && window.I18N.getLang && (window.I18N.getLang() === 'fr')) ? 'fr' : 'en';
   const txt = () => C[lang()];
 
@@ -1367,6 +1398,30 @@ function boot(container) {
       rr(g2, R.x + 3, R.y + 3, R.w - 6, R.h - 6, 26); g2.stroke();
     }
     g2.restore();
+
+    // a quiet thank-you under the card. It arrives after the card has settled,
+    // so it reads as a closing line to the profile rather than part of the UI.
+    const th = Math.min(1, Math.max(0, (t - 700) / 700));
+    if (th > 0) {
+      g2.save();
+      g2.globalAlpha = th;
+      g2.textAlign = 'center';
+      g2.font = 'italic 400 34px "Fraunces", Georgia, serif';
+      const mid = SC_W / 2, ty = 1006;
+      g2.fillStyle = SCR.deep;
+      g2.fillText(T.thanks, mid, ty);
+      // hairline flourishes, offset off the measured text so they always clear it
+      const half = g2.measureText(T.thanks).width / 2 + 40;
+      g2.strokeStyle = SCR.line;
+      g2.lineWidth = 2;
+      g2.beginPath();
+      g2.moveTo(mid - half - 90, ty - 11); g2.lineTo(mid - half, ty - 11);
+      g2.moveTo(mid + half, ty - 11); g2.lineTo(mid + half + 90, ty - 11);
+      g2.stroke();
+      g2.textAlign = 'left';
+      g2.restore();
+    }
+
     bezelShade();
     glassGlare();
     g2.restore();
