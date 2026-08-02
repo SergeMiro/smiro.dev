@@ -1502,12 +1502,14 @@ footer a:hover{color:var(--brick)}
 }
 .avatar-orb .orb-disk img{
   position:absolute;
-  /* 133% (was 140%) pushes the portrait 5% back on z, and top:57% (was 50%)
-     drops the head 7% of the disk height — together they bring the whole
-     head, hair included, inside the circular mask. At 140%/50% the crown
-     was clipped (5.6% of the head fell outside the circle). */
+  /* 133% (was 140%) pushes the portrait 5% back on z, and top:64% (was 57%,
+     originally 50%) drops the head 14% of the disk height — together they
+     bring the whole head, hair included, inside the circular mask. At
+     140%/50% the crown was clipped (5.6% of the head fell outside the
+     circle); at 57% the hair still grazed the top edge, so the face read as
+     pinned to it rather than sitting in the disk. */
   width:133%;height:auto;
-  left:50%;top:57%;
+  left:50%;top:64%;
   transform:translate(-50%,-50%);
   display:block;
   filter:drop-shadow(0 2px 4px rgba(27,26,24,.25));
