@@ -26,7 +26,7 @@ window.I18N_FR = {
 
     "hero.eyebrow":       "Dijon, FR · full-stack · agents IA · n8n",
     "hero.title":         "Je construis",
-    "hero.sub":           "Sergiy Miro — dev full-stack, 5+ ans à livrer, beaucoup trop à débugger. Je conçois des systèmes multi-agents : un <strong>exécuteur</strong> bosse sur une tâche, un <strong>réviseur</strong> le note — boucle jusqu'à ce que le score atteigne 90 %. Le reste de mes journées : automatiser les corvées d'entreprise avec n8n pour que les humains s'occupent du reste.",
+    "hero.sub":           "Sergiy Miro — dev full-stack, 7 ans en IT à livrer, beaucoup trop à débugger. Je conçois des systèmes multi-agents : un <strong>exécuteur</strong> bosse sur une tâche, un <strong>réviseur</strong> le note — boucle jusqu'à ce que le score atteigne 90 %. Le reste de mes journées : automatiser les corvées d'entreprise avec n8n pour que les humains s'occupent du reste.",
     "hero.cta1":          "projets sélectionnés →",
     "hero.cta2":          "voir le CV / télécharger",
     "hero.years":         "ans de dev",
@@ -312,8 +312,8 @@ window.I18N_FR = {
     "— trained on his CV, projects and case studies. Ask me anything.":
                                      "— entraîné sur son CV, ses projets et ses études de cas. Posez-moi vos questions.",
     "HR":                            "RH",
-    "Key projects from the last 5 years":
-                                     "Projets clés des 5 dernières années",
+    "Key projects from the last 7 years":
+                                     "Projets clés des 7 dernières années",
     "CTO":                           "CTO",
     "How do you work with a team?":  "Comment travaillez-vous en équipe ?",
     "How do you build AI agents?":   "Comment construisez-vous des agents IA ?",
@@ -354,8 +354,8 @@ window.I18N_FR = {
       "Full-stack + IA & automatisation. Des frameworks, pas juste du code.",
     "Full-stack engineer with deep AI & automation experience. I bring frameworks, not just code.":
       "Ingénieur full-stack avec une expérience poussée en IA & automatisation. J'apporte des frameworks, pas juste du code.",
-    "AI engineer on a 15-year IT foundation. I build with AI daily — and ship working products in days.":
-      "Ingénieur IA sur 15 ans de fondations IT. Je construis avec l'IA au quotidien — et je livre des produits qui marchent en quelques jours.",
+    "AI engineer with 7 years in IT. I build with AI daily — and ship working products in days.":
+      "Ingénieur IA avec 7 ans en IT. Je construis avec l'IA au quotidien — et je livre des produits qui marchent en quelques jours.",
     "Vibe coding daily · Claude Code · Cursor": "Vibe coding au quotidien · Claude Code · Cursor",
     "Multi-agent systems · RAG · MCP": "Systèmes multi-agents · RAG · MCP",
     "Full-stack: React · Node · Python · TypeScript": "Full-stack : React · Node · Python · TypeScript",
@@ -369,12 +369,12 @@ window.I18N_FR = {
     "development":                   "dev",
     "Full-stack at":                 "Full-stack à la",
     "AI speed":                      "vitesse de l'IA",
-    "I prototype with Claude Code & Cursor and harden with 15 years of engineering. Frontend, backend, infrastructure — idea to production in days, not sprints.":
-      "Je prototype avec Claude Code & Cursor et je consolide avec 15 ans d'ingénierie. Frontend, backend, infrastructure — de l'idée à la production en jours, pas en sprints.",
-    "Front, back, infra — I own the whole stack. 25 years shipping things that survive production.":
-      "Front, back, infra — toute la stack m'appartient. 25 ans à livrer du code qui tient en production.",
-    "Frontend, backend, infrastructure — I own the whole stack. Twenty-five years of shipping things that actually work in production.":
-      "Frontend, backend, infrastructure — toute la stack m'appartient. Vingt-cinq ans à livrer des choses qui marchent vraiment en production.",
+    "I prototype with Claude Code & Cursor and harden with 7 years in IT. Frontend, backend, infrastructure — idea to production in days, not sprints.":
+      "Je prototype avec Claude Code & Cursor et je consolide avec 7 ans en IT. Frontend, backend, infrastructure — de l'idée à la production en jours, pas en sprints.",
+    "Front, back, infra — I own the whole stack. 7 years in IT shipping things that survive production.":
+      "Front, back, infra — toute la stack m'appartient. 7 ans en IT à livrer du code qui tient en production.",
+    "Frontend, backend, infrastructure — I own the whole stack. 7 years in IT shipping things that actually work in production.":
+      "Frontend, backend, infrastructure — toute la stack m'appartient. 7 ans en IT à livrer des choses qui marchent vraiment en production.",
     "AI":                            "IA",
     "Agentic systems that do real work — not chatbots. Multi-step, tool-use, RAG, eval, fallbacks.":
       "Des systèmes agentiques qui font du vrai travail — pas des chatbots. Multi-étapes, tool-use, RAG, eval, fallbacks.",

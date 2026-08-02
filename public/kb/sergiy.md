@@ -66,7 +66,7 @@ delivery on infrastructure he provisions and secures himself.
 - Full-stack delivery throughout: SQL Server / T-SQL, Node.js REST APIs,
   responsive telephony UIs (Tailwind / JS), Jest tests.
 
-Total: 15 years around IT and programming, 5+ years shipping production code.
+Total: 7 years in IT and programming, shipping production code.
 
 ## Education
 
