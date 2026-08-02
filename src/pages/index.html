@@ -1350,9 +1350,9 @@ footer a:hover{color:var(--brick)}
   width:0;padding:0;overflow:hidden;
 }
 .avatar-invite.compact .avatar-orb{
-  width:64px;height:64px;
+  --orb-size:64px;
 }
-/* in compact mode, rings stay visible on the disk */
+/* in compact mode, the wave stays visible on the disk */
 
 @keyframes greetIn{
   from{opacity:0;transform:translateX(20px) scale(.95)}
@@ -1384,73 +1384,79 @@ footer a:hover{color:var(--brick)}
 }
 
 /* ── ElevenLabs-style animated avatar orb ── */
+@property --orb-size{syntax:"<length>";inherits:true;initial-value:56px}
 .avatar-orb{
+  --orb-size:56px;
   position:relative;flex-shrink:0;
-  width:56px;height:56px;border-radius:50%;
+  width:var(--orb-size);height:var(--orb-size);border-radius:50%;
   display:grid;place-items:end center;
   isolation:isolate;
   overflow:visible;
-  transition:width .45s cubic-bezier(.4,1.4,.5,1), height .45s cubic-bezier(.4,1.4,.5,1);
+  transition:--orb-size .45s cubic-bezier(.4,1.4,.5,1);
 }
-/* wave rings — on .orb-disk so they hug the orange circle only */
-.avatar-orb .orb-disk .orb-ring{
-  position:absolute;inset:-3px;border-radius:50%;
-  border:1.5px solid oklch(0.62 0.16 38 / .2);
+
+/* ══ circular voice wave ══
+   Short radial spikes standing on one true circle, shared by both orbs.
+   Replaces three nested `inset` rings that read as overlapping ovals: every
+   spike here is pinned by its inner end to a radius computed from --orb-size,
+   so the ring is round by construction and cannot pick up the aspect ratio of
+   whatever box it sits in.
+   Geometry per spike: rotate to its angle, push out to the ring radius, then
+   scaleY about its inner end so it only ever grows outward. All three live in
+   one transform, so the whole ring animates on the compositor.
+   --a / --amp / --phase / --durk are written per spike by buildWave(). */
+.orb-wave{
+  position:absolute;inset:0;
   pointer-events:none;z-index:4;
-  animation:orbWave1 4s ease-in-out infinite;
+  --r:calc(var(--orb-size) * .4 + var(--orb-size) * .06); /* disk radius + gap */
+  --len:calc(var(--orb-size) * .15);
+  --w:2px;
+  --wave:0.62 0.16 38;                                    /* terracotta accent */
 }
-.avatar-orb .orb-disk .orb-ring.r2{
-  inset:-6px;
-  border-color:oklch(0.62 0.16 38 / .14);
-  animation:orbWave2 5.2s ease-in-out infinite;
+/* the baseline the spikes stand on — equal width and height, always round */
+.orb-wave::before{
+  content:"";position:absolute;left:50%;top:50%;
+  width:calc(var(--r) * 2);height:calc(var(--r) * 2);
+  margin:calc(var(--r) * -1) 0 0 calc(var(--r) * -1);
+  border-radius:50%;
+  border:1px solid oklch(var(--wave) / .16);
+  transition:border-color .35s ease;
 }
-.avatar-orb .orb-disk .orb-ring.r3{
-  inset:-9px;
-  border-color:oklch(0.62 0.16 38 / .08);
-  animation:orbWave3 6.8s ease-in-out infinite;
+/* --lo/--hi/--dur are resolved on the spike itself: they read --amp and --durk,
+   which only exist here, and a var() that can't resolve where it is declared
+   would poison the property for every spike that inherits it. */
+.orb-wave i{
+  --lo:.12;
+  --hi:calc(.18 + var(--amp) * .16);
+  --dur:calc(3.4s * var(--durk));
+  position:absolute;left:50%;bottom:50%;
+  width:var(--w);height:var(--len);
+  margin-left:calc(var(--w) / -2);
+  border-radius:var(--w);
+  background:linear-gradient(to top, oklch(var(--wave) / .9), oklch(var(--wave) / .3));
+  transform-origin:50% 100%;
+  transform:rotate(var(--a)) translateY(calc(var(--r) * -1)) scaleY(var(--lo));
+  opacity:.5;
+  animation:orbSpike var(--dur) ease-in-out infinite;
+  animation-delay:calc(var(--phase) * var(--dur) * -1);
+  transition:opacity .3s ease;
+  will-change:transform;
 }
-@keyframes orbWave1{
-  0%,100%{transform:scale(1);opacity:.25}
-  25%{transform:scale(1.04);opacity:.4}
-  50%{transform:scale(.98);opacity:.2}
-  75%{transform:scale(1.03);opacity:.35}
+@keyframes orbSpike{
+  0%,100%{transform:rotate(var(--a)) translateY(calc(var(--r) * -1)) scaleY(var(--lo))}
+  50%    {transform:rotate(var(--a)) translateY(calc(var(--r) * -1)) scaleY(var(--hi))}
 }
-@keyframes orbWave2{
-  0%,100%{transform:scale(1);opacity:.2}
-  30%{transform:scale(1.05);opacity:.35}
-  60%{transform:scale(.97);opacity:.15}
-  85%{transform:scale(1.03);opacity:.3}
+/* speaking — same geometry, retuned: taller spikes, 3.4s → 0.95s per cycle.
+   Only the custom properties change, so the ring swells rather than restarts. */
+.speaking .orb-wave::before{border-color:oklch(var(--wave) / .3)}
+.speaking .orb-wave i{
+  --lo:calc(.16 + var(--amp) * .12);
+  --hi:var(--amp);
+  --dur:calc(.95s * var(--durk));
+  opacity:1;
 }
-@keyframes orbWave3{
-  0%,100%{transform:scale(1);opacity:.12}
-  35%{transform:scale(1.06);opacity:.25}
-  65%{transform:scale(.96);opacity:.1}
-  90%{transform:scale(1.04);opacity:.2}
-}
-/* speaking state — waves amplify significantly */
-.avatar-orb.speaking .orb-disk .orb-ring{
-  animation:orbWaveSpeak1 1.2s ease-in-out infinite;
-  border-color:oklch(0.62 0.16 38 / .55);
-}
-.avatar-orb.speaking .orb-disk .orb-ring.r2{
-  animation:orbWaveSpeak2 1.6s ease-in-out infinite;
-  border-color:oklch(0.62 0.16 38 / .4);
-}
-.avatar-orb.speaking .orb-disk .orb-ring.r3{
-  animation:orbWaveSpeak3 2.0s ease-in-out infinite;
-  border-color:oklch(0.62 0.16 38 / .3);
-}
-@keyframes orbWaveSpeak1{
-  0%,100%{transform:scale(1);opacity:.5}
-  50%{transform:scale(1.12);opacity:.85}
-}
-@keyframes orbWaveSpeak2{
-  0%,100%{transform:scale(1);opacity:.4}
-  50%{transform:scale(1.15);opacity:.7}
-}
-@keyframes orbWaveSpeak3{
-  0%,100%{transform:scale(1);opacity:.3}
-  50%{transform:scale(1.18);opacity:.6}
+@media (prefers-reduced-motion: reduce){
+  .orb-wave i{animation:none;transform:rotate(var(--a)) translateY(calc(var(--r) * -1)) scaleY(.3)}
 }
 
 /* soft glow halo behind — very subtle idle, stronger when speaking */
@@ -1625,26 +1631,19 @@ footer a:hover{color:var(--brick)}
 .chat-voice .cv-close:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 
 .cv-orb{
-  position:relative;
   /* scales with the panel — the panel itself is calc(100vw - 48px) on phones */
-  width:clamp(68px, 24vw, 88px);height:clamp(68px, 24vw, 88px);
+  --orb-size:clamp(68px, 24vw, 88px);
+  position:relative;
+  width:var(--orb-size);height:var(--orb-size);
   aspect-ratio:1;border-radius:50%;
   margin:4px auto 14px;
   display:grid;place-items:end center;
   isolation:isolate;
   overflow:visible;
 }
-.cv-orb .cv-ring{
-  position:absolute;inset:-3px;border-radius:50%;
-  border:1.5px solid oklch(0.62 0.16 38 / .2);
-  animation:orbWave1 4s ease-in-out infinite;pointer-events:none;z-index:1;
-}
-.cv-orb .cv-ring.r2{inset:-7px;border-color:oklch(0.62 0.16 38 / .14);animation:orbWave2 5.2s ease-in-out infinite}
-.cv-orb .cv-ring.r3{inset:-11px;border-color:oklch(0.62 0.16 38 / .08);animation:orbWave3 6.8s ease-in-out infinite}
-/* speaking state for chat orb */
-.cv-orb.speaking .cv-ring{animation:orbWaveSpeak1 1.2s ease-in-out infinite;border-color:oklch(0.62 0.16 38 / .55)}
-.cv-orb.speaking .cv-ring.r2{animation:orbWaveSpeak2 1.6s ease-in-out infinite;border-color:oklch(0.62 0.16 38 / .4)}
-.cv-orb.speaking .cv-ring.r3{animation:orbWaveSpeak3 2.0s ease-in-out infinite;border-color:oklch(0.62 0.16 38 / .3)}
+/* the wave ring itself is the shared .orb-wave above — the panel orb only
+   needs a slightly longer spike, since it reads at three times the size */
+.cv-orb .orb-wave{--len:calc(var(--orb-size) * .17);--w:2.5px}
 .cv-orb::before{
   content:"";position:absolute;inset:-5px;border-radius:50%;
   background:radial-gradient(circle, oklch(0.62 0.16 38 / .2), transparent 65%);
@@ -2918,9 +2917,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
     </div>
     <div class="avatar-orb">
       <div class="orb-disk">
-        <span class="orb-ring"></span>
-        <span class="orb-ring r2"></span>
-        <span class="orb-ring r3"></span>
+        <!-- .orb-wave spikes are injected by buildWave() -->
         <div class="orb-mask"><img src="/assets/avatar-serge.png" alt="Sergiy avatar"></div>
       </div>
       <span class="orb-online"></span>
@@ -2933,9 +2930,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
       <div class="chat-voice">
         <button class="cv-close" id="ch-close" aria-label="close chat">×</button>
         <div class="cv-orb">
-          <span class="cv-ring"></span>
-          <span class="cv-ring r2"></span>
-          <span class="cv-ring r3"></span>
+          <!-- .orb-wave spikes are injected by buildWave() -->
           <div class="cv-disk"><div class="cv-mask"><img src="/assets/avatar-serge.png" alt="Sergiy avatar"></div></div>
         </div>
         <div class="cv-name">Sergiy's <em>AI avatar</em></div>
@@ -3603,6 +3598,38 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
 
   const orbSmall = invite.querySelector('.avatar-orb');
   const orbBig = document.querySelector('.cv-orb');
+
+  // ── circular voice wave ────────────────────────────────────────────────
+  // Lay the spikes out once and hand every moving part to CSS: the angle,
+  // peak height, phase and tempo of each spike ride on custom properties, so
+  // idle → speaking is a change of four numbers rather than a new animation.
+  // Two out-of-step harmonics (3× and 5× around the circle) give the ring the
+  // uneven silhouette of a waveform instead of the even teeth of a cog, and
+  // the phase running with the angle makes the crest travel around the edge.
+  const SPIKES = 44;
+  function buildWave(disk) {
+    if (!disk || disk.querySelector('.orb-wave')) return;
+    const wave = document.createElement('span');
+    wave.className = 'orb-wave';
+    wave.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i < SPIKES; i++) {
+      const t = i / SPIKES;
+      const a = t * Math.PI * 2;
+      const amp = 0.42 + 0.58 * Math.abs(Math.sin(a * 3) * 0.62 + Math.sin(a * 5 + 1.1) * 0.38);
+      const spike = document.createElement('i');
+      spike.style.cssText =
+        '--a:' + (t * 360).toFixed(2) + 'deg;' +
+        '--amp:' + amp.toFixed(3) + ';' +
+        '--phase:' + t.toFixed(3) + ';' +
+        '--durk:' + [0.86, 1, 1.14][i % 3];
+      wave.appendChild(spike);
+    }
+    disk.appendChild(wave);
+  }
+  // hosted on the disk, not the orb: the disk is the orange circle, and the
+  // orb box is taller than it (the portrait's head overhangs the top)
+  if (orbSmall) buildWave(orbSmall.querySelector('.orb-disk'));
+  if (orbBig) buildWave(orbBig.querySelector('.cv-disk'));
 
   // ── language + tiny copy helper (the panel is bilingual) ──────────────
   const lang = () => (window.I18N && window.I18N.getLang && window.I18N.getLang()) || 'en';
