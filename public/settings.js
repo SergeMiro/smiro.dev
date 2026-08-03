@@ -23,7 +23,9 @@
   function styles(){
     const css = `
       .ss-fab{
-        position:fixed;bottom:20px;right:20px;z-index:120;
+        /* en haut à droite : le coin d'en bas revient à l'avatar. Les réglages
+           sont un geste rare, ils peuvent vivre près de la navigation. */
+        position:fixed;top:96px;right:24px;z-index:120;
         width:38px;height:38px;border-radius:50%;
         display:grid;place-items:center;cursor:pointer;
         background:var(--bg, #f4f1e8);
@@ -45,8 +47,9 @@
       .ss-fab svg{width:18px;height:18px;display:block}
 
       .ss-panel{
-        position:fixed;bottom:68px;right:20px;z-index:119;
-        transform-origin:bottom right;
+        /* le panneau s'ouvre vers le bas, puisque le bouton est désormais en haut */
+        position:fixed;top:142px;right:24px;z-index:119;
+        transform-origin:top right;
         width:300px;max-width:calc(100vw - 28px);
         background:#fbf8f0;
         color:#1b1a18;
@@ -130,8 +133,8 @@
       .ss-reset:hover{background:#1b1a18;color:#fbf8f0;border-color:#1b1a18}
 
       @media (max-width:560px){
-        .ss-panel{right:8px;bottom:60px;width:calc(100vw - 16px)}
-        .ss-fab{bottom:14px;right:14px}
+        .ss-panel{right:8px;top:118px;bottom:auto;width:calc(100vw - 16px)}
+        .ss-fab{top:72px;right:14px}
       }
 
       .ss-lang{

@@ -1328,12 +1328,14 @@ footer a:hover{color:var(--accent)}
 
 /* ═════════════ AVATAR CHAT (right rail) ═════════════ */
 .avatar-chat{
-  position:fixed;right:24px;top:96px;z-index:60;
+  /* en bas à droite : la place qu'occupait la roue des réglages, qui monte en
+     haut à droite. C'est le coin où l'on cherche une conversation. */
+  position:fixed;right:24px;bottom:24px;z-index:60;
   display:flex;flex-direction:column;align-items:flex-end;gap:14px;
   font-family:var(--font-body);
 }
 @media (max-width:1100px){
-  .avatar-chat{position:relative;right:auto;top:auto;align-items:center;margin:20px auto 0}
+  .avatar-chat{position:relative;right:auto;top:auto;bottom:auto;align-items:center;margin:20px auto 0}
 }
 
 /* — pill invite: text left, animated avatar right — */
@@ -3560,17 +3562,38 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   const inviteClose = document.getElementById('avatar-close');
   const overlay = document.getElementById('chat-overlay');
 
-  /* — scroll-shrink: collapse pill to circle once user scrolls past hero — */
-  let lastCompact = false;
-  function syncCompact(){
-    const should = window.scrollY > 80;
-    if(should !== lastCompact){
-      invite.classList.toggle('compact', should);
-      lastCompact = should;
-    }
+  /* — le sens du défilement décide de la forme —
+     En descendant, la pastille se replie en cercle : on lit, on ne veut pas d'un
+     panneau qui suit. En remontant, elle se redéploie avec son texte, parce que
+     remonter est déjà un geste d'hésitation — c'est le moment d'être là.
+     Le seuil de 6 px absorbe le tremblement d'un pavé tactile ; en haut de page
+     la pastille est toujours ouverte. */
+  let compact = false;
+  let lastY = window.scrollY;
+  let ticking = false;
+
+  function applyCompact(next){
+    if(next === compact) return;
+    compact = next;
+    invite.classList.toggle('compact', compact);
   }
+
+  function syncCompact(){
+    const y = Math.max(0, window.scrollY);
+    const dy = y - lastY;
+    if(Math.abs(dy) < 6 && y > 80) return;
+    lastY = y;
+    if(y <= 80) applyCompact(false);
+    else if(dy > 0) applyCompact(true);
+    else if(dy < 0) applyCompact(false);
+  }
+
   syncCompact();
-  window.addEventListener('scroll', syncCompact, {passive:true});
+  window.addEventListener('scroll', () => {
+    if(ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => { ticking = false; syncCompact(); });
+  }, {passive:true});
   const panel = document.getElementById('chat-panel');
   const chClose = document.getElementById('ch-close');
   const body = document.getElementById('chat-body');
@@ -3736,7 +3759,12 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
 
   // ── voice out: Deepgram through /api/tts, browser speech as the fallback ──
   let audio = null;
+  /* Chaque prise de parole porte un numéro. Raccrocher l'incrémente, et tout ce
+     qui était en vol — un fichier audio encore en téléchargement, une phrase en
+     attente de lecture — se voit périmé sans avoir à annuler quoi que ce soit. */
+  let speechEpoch = 0;
   function stopSpeaking() {
+    speechEpoch += 1;
     if (audio) { audio.pause(); audio = null; }
     try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
     if (orbSmall) orbSmall.classList.remove('speaking');
@@ -3747,7 +3775,11 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   // expose a gender, so the male voices are matched by the names they actually ship
   // under (Google/Apple/Microsoft all differ), with any same-language voice as the
   // last resort rather than staying silent
-  const MALE_VOICE = /\b(male|homme|masculin)\b|\b(thomas|daniel|alex|fred|aaron|rishi|guy|davis|tony|jason|eric|henri|paul|nicolas|remy|rémy|claude|antoine|yuri|dmitri|pavel|maxim)\b/i;
+  const MALE_VOICE = /\b(male|homme|masculin)\b|\b(thomas|daniel|alex|fred|aaron|rishi|guy|davis|tony|jason|eric|henri|paul|nicolas|remy|rémy|claude|antoine|guillaume|mathieu|jacques|sylvain|alain|bernard|yves|didier|olivier|serge|sergio|yuri|dmitri|pavel|maxim)\b/i;
+
+  // Les voix féminines les plus courantes, nommées : sans ça « Amélie » et
+  // « Audrey » passent pour neutres et gagnent le tirage par défaut.
+  const FEMALE_VOICE = /\b(female|femme|féminin)\b|\b(amelie|amélie|audrey|marie|julie|virginie|charlotte|celine|céline|aurelie|aurélie|samantha|victoria|karen|moira|tessa|zira|hazel|susan|catherine|elena|milena|alena)\b/i;
 
   function browserSpeak(text) {
     return new Promise((resolve) => {
@@ -3756,15 +3788,25 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
       const want = speechLang();
       const voices = synth.getVoices() || [];
       const sameLang = voices.filter(v => v.lang && v.lang.slice(0, 2) === want.slice(0, 2));
-      const voice = sameLang.find(v => v.lang === want && MALE_VOICE.test(v.name))
-        || sameLang.find(v => MALE_VOICE.test(v.name))
-        || sameLang.find(v => v.lang === want)
-        || sameLang[0];
-      if (!voice && want.startsWith('fr')) return resolve(false); // no French voice: stay silent rather than read French with an English mouth
+
+      // L'avatar est un homme. On cherche donc, dans l'ordre : un homme dans la
+      // variante exacte, un homme dans la langue, puis une voix dont on ne sait
+      // rien — et seulement en dernier une voix explicitement féminine.
+      const male = sameLang.find(v => v.lang === want && MALE_VOICE.test(v.name))
+        || sameLang.find(v => MALE_VOICE.test(v.name));
+      const neutral = sameLang.find(v => v.lang === want && !FEMALE_VOICE.test(v.name))
+        || sameLang.find(v => !FEMALE_VOICE.test(v.name));
+      const voice = male || neutral || sameLang.find(v => v.lang === want) || sameLang[0];
+
+      if (!voice) return resolve(false); // aucune voix dans cette langue : le silence vaut mieux qu'un accent étranger
+
       const u = new SpeechSynthesisUtterance(text);
       u.lang = want;
-      if (voice) u.voice = voice;
+      u.voice = voice;
       u.rate = 1.02;
+      // Quand le système n'offre aucune voix masculine, on descend le timbre
+      // plutôt que de laisser une voix de femme parler à la place de Sergiy.
+      u.pitch = male ? 0.95 : 0.72;
       u.onend = () => resolve(true);
       u.onerror = () => resolve(false);
       synth.speak(u);
@@ -3847,44 +3889,146 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
     return parts;
   }
 
-  async function playChunk(text) {
+  /* Deux primitives séparées, et c'est tout l'intérêt : fabriquer l'audio d'une
+     phrase est une requête réseau qu'on peut lancer à l'avance, la jouer est un
+     geste qu'on veut synchroniser avec l'affichage du texte. Les garder liées
+     obligeait à attendre la fin de la réponse avant d'entendre le premier mot. */
+  async function fetchTtsUrl(text) {
     const res = await fetch('/api/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text, lang: speechLang() }),
     });
     if (!res.ok) throw new Error('tts ' + res.status);
-    const url = URL.createObjectURL(await res.blob());
-    await new Promise((resolve, reject) => {
+    return URL.createObjectURL(await res.blob());
+  }
+
+  function playUrl(url, textLength) {
+    return new Promise((resolve, reject) => {
       audio = new Audio(url);
-      audio.onended = resolve;
-      audio.onerror = reject;
-      // a device that never fires `ended` would strand the call in "speaking";
-      // ~14 chars a second is slow speech, so this only fires when playback died
-      const guard = setTimeout(resolve, 4000 + text.length * 90);
+      // un appareil qui ne déclenche jamais `ended` laisserait l'appel bloqué sur
+      // « je parle » ; ~14 caractères par seconde est une parole lente, donc ce
+      // garde-fou ne se déclenche que si la lecture est morte
+      const guard = setTimeout(resolve, 4000 + textLength * 90);
       const clear = () => clearTimeout(guard);
       audio.onended = () => { clear(); resolve(); };
       audio.onerror = () => { clear(); reject(new Error('playback failed')); };
-      audio.play().catch(e => { clear(); reject(e); });
+      audio.play().catch((e) => { clear(); reject(e); });
     });
-    URL.revokeObjectURL(url);
+  }
+
+  async function playChunk(text) {
+    const url = await fetchTtsUrl(text);
+    try { await playUrl(url, text.length); }
+    finally { URL.revokeObjectURL(url); }
   }
 
   async function speak(text) {
     if (!text) return;
+    const epoch = speechEpoch;
     if (orbSmall) orbSmall.classList.add('speaking');
     if (orbBig) orbBig.classList.add('speaking');
     say(L('speaking…', 'je parle…'));
     const spoken = spokenForm(text);   // acronyms expanded for the voice only
     try {
-      for (const part of chunk(spoken)) await playChunk(part);
+      for (const part of chunk(spoken)) {
+        if (epoch !== speechEpoch) return;
+        await playChunk(part);
+      }
     } catch (e) {
-      await browserSpeak(spoken);   // no proxy, no key, or an unsupported voice
+      if (epoch === speechEpoch) await browserSpeak(spoken);   // no proxy, no key, or an unsupported voice
     }
+    if (epoch !== speechEpoch) return;
     audio = null;
     if (orbSmall) orbSmall.classList.remove('speaking');
     if (orbBig) orbBig.classList.remove('speaking');
     say(null);
+  }
+
+  /* ── la parole et le texte au même instant ──────────────────────────────
+     Le défaut d'avant : la réponse s'écrivait à l'écran au fil du flux, puis on
+     demandait la synthèse de l'ensemble, puis on jouait. Le visiteur lisait tout,
+     attendait, et entendait enfin une voix qui récitait ce qu'il venait de lire.
+
+     Ici, la réponse est découpée en phrases dès qu'elles sont complètes. L'audio
+     de chaque phrase part immédiatement — en parallèle du reste du flux — et la
+     phrase n'apparaît dans la bulle qu'au moment où son audio commence. Le
+     premier mot se fait donc entendre pendant que le modèle écrit encore la
+     suite, et le texte ne prend jamais d'avance sur la voix. */
+  function speechPipeline(bubble) {
+    const epoch = speechEpoch;
+    const jobs = [];
+    let closed = false;
+    let wake = null;
+    const ping = () => { if (wake) { const w = wake; wake = null; w(); } };
+
+    function push(sentence) {
+      const text = sentence.trim();
+      if (!text || epoch !== speechEpoch) return;
+      const spoken = spokenForm(text);
+      // la requête part maintenant, la lecture viendra quand ce sera son tour
+      jobs.push({ text, spoken, audio: fetchTtsUrl(spoken).catch(() => null) });
+      ping();
+    }
+
+    function close() { closed = true; ping(); }
+
+    const drained = (async () => {
+      let i = 0;
+      for (;;) {
+        if (epoch !== speechEpoch) return;
+        if (i >= jobs.length) {
+          if (closed) return;
+          await new Promise((r) => { wake = r; });
+          continue;
+        }
+        const job = jobs[i++];
+        const url = await job.audio;
+        if (epoch !== speechEpoch) return;
+
+        // le texte arrive avec le son, pas avant
+        bubble.textContent = (bubble.textContent ? bubble.textContent + ' ' : '') + job.text;
+        body.scrollTop = body.scrollHeight;
+
+        if (url) {
+          try { await playUrl(url, job.text.length); }
+          catch (e) { if (epoch === speechEpoch) await browserSpeak(job.spoken); }
+          finally { URL.revokeObjectURL(url); }
+        } else {
+          await browserSpeak(job.spoken);
+        }
+      }
+    })();
+
+    return { push, close, drained };
+  }
+
+  /* Une phrase est prête quand elle se termine par une ponctuation forte ou un
+     saut de ligne. Au-delà de 220 caractères sans ponctuation on coupe quand
+     même : mieux vaut une césure un peu sèche qu'une voix qui attend. */
+  const SENTENCE_END = /[.!?…](?=\s|$)|\n/;
+
+  function cutSentences(pending) {
+    const out = [];
+    let rest = pending;
+    for (;;) {
+      const m = rest.match(SENTENCE_END);
+      if (m) {
+        const end = m.index + m[0].length;
+        out.push(rest.slice(0, end));
+        rest = rest.slice(end);
+        continue;
+      }
+      if (rest.length > 220) {
+        const cut = rest.lastIndexOf(' ', 220);
+        const at = cut > 60 ? cut : 220;
+        out.push(rest.slice(0, at));
+        rest = rest.slice(at);
+        continue;
+      }
+      break;
+    }
+    return { sentences: out, rest };
   }
 
   // ── voice in: Web Speech recognition, one utterance at a time ─────────
@@ -3927,18 +4071,44 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   // ── the conversation itself ───────────────────────────────────────────
   async function askAvatar(question, opts) {
     if (busy || !question) return '';
+    const spoken = Boolean(opts && opts.speak);
     busy = true;
     addBubble(question, 'user');
     suggest.style.display = 'none';
     const typing = addTyping();
     say(L('thinking…', 'je réfléchis…'));
     let out = null, answer = '';
+    let pipeline = null, pending = '', seen = 0;
+
+    if (spoken) {
+      if (orbSmall) orbSmall.classList.add('speaking');
+      if (orbBig) orbBig.classList.add('speaking');
+    }
+
     try {
       answer = await streamReply(question, (text) => {
         if (!out) { typing.remove(); out = addBubble('', 'bot'); }
-        out.textContent = plain(text);
-        body.scrollTop = body.scrollHeight;
+
+        if (!spoken) {
+          // sans voix, le texte n'attend personne
+          out.textContent = plain(text);
+          body.scrollTop = body.scrollHeight;
+          return;
+        }
+
+        // en appel : on retient le texte, on lance la synthèse phrase par phrase,
+        // et c'est la lecture qui décidera du moment de l'affichage
+        if (!pipeline) {
+          pipeline = speechPipeline(out);
+          say(L('speaking…', 'je parle…'));
+        }
+        pending += plain(text.slice(seen));
+        seen = text.length;
+        const cut = cutSentences(pending);
+        pending = cut.rest;
+        for (const sentence of cut.sentences) pipeline.push(sentence);
       });
+
       if (!answer) {
         if (out) out.remove(); else typing.remove();
         addBubble(L("I didn't catch that one — ask again, or write to serge@smiro.dev.",
@@ -3949,9 +4119,25 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
       addBubble(L('My AI connection is down for a moment (' + err.message + '). Write to Sergiy directly: serge@smiro.dev',
         'Ma connexion IA est coupée un instant (' + err.message + '). Écrivez à Sergiy : serge@smiro.dev'), 'bot');
     }
+
+    if (spoken && pipeline) {
+      // la dernière phrase n'a pas de point final : elle part quand même
+      if (pending.trim()) pipeline.push(pending);
+      pending = '';
+      pipeline.close();
+      await pipeline.drained;
+      audio = null;
+      if (orbSmall) orbSmall.classList.remove('speaking');
+      if (orbBig) orbBig.classList.remove('speaking');
+    } else if (spoken) {
+      // rien n'a été streamé : on retombe sur la lecture d'un bloc
+      if (orbSmall) orbSmall.classList.remove('speaking');
+      if (orbBig) orbBig.classList.remove('speaking');
+      if (answer) await speak(plain(answer));
+    }
+
     say(null);
     busy = false;
-    if (answer && opts && opts.speak) await speak(plain(answer));
     return answer;
   }
 
