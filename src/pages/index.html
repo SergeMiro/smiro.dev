@@ -1083,6 +1083,12 @@ h1.ht .crossed::before{
   font-size:clamp(32px,5.4vw,58px);line-height:1.02;letter-spacing:-.03em;
   margin:0 0 14px;color:var(--ink);
 }
+/* Le fragment d'accent des titres de lecteur — même traitement que les <em>
+   des titres de section : italique, couleur d'accent, graisse inchangée. */
+.art h1.art-t .t-ac,
+.pv-n .t-ac{
+  font-style:italic;color:var(--accent);font-weight:400;
+}
 .art .art-lede{
   font-family:var(--font-serif);font-style:italic;font-size:clamp(17px,2.2vw,21px);
   line-height:1.45;color:var(--ink-2);margin:0 0 6px;
@@ -5340,6 +5346,55 @@ function bootWorks(){
   const byId = id => DATA.find(w => w.id === id || (w.alias || []).includes(id));
   const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
+  /* Partout sur le site, un titre porte un mot en italique dans la couleur
+     d'accent — « Le pipeline, c'est le *portfolio* », « Je gère ma propre
+     *infra* ». Les deux lecteurs en plein écran étaient les seuls à afficher
+     leur titre d'un seul bloc d'encre, et ça se voyait.
+
+     Plutôt que d'ajouter un champ à chaque entrée de articles.js et works.js —
+     bilingue, donc à maintenir deux fois — la coupure se déduit du nom :
+       1. un espace       → le dernier mot          (« Parser AI »)
+       2. une capitale    → la fin du mot composé   (« ASCoFaçade », « SimplifyEU »)
+       3. un point        → l'extension             (« smiro.dev »)
+       4. rien de tout ça → pas d'accent, le titre reste d'une seule couleur
+          (« Vistalid », « way2buy ») : mieux vaut sobre que découpé au hasard.
+
+     Renvoie du HTML déjà échappé. */
+  function accentTitle(raw){
+    const name = String(raw == null ? '' : raw).trim();
+    if(!name) return '';
+
+    const safe = t => String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    /* Un accent, c'est un mot ou deux. « AMC Motors 21 : Automobiles-Mobilités-
+       Conseil » donnerait vingt-neuf caractères en italique coloré, soit une
+       demi-ligne criarde : au-delà de vingt, on laisse le titre d'une seule
+       couleur plutôt que d'appliquer la règle bêtement. */
+    const MAX_TAIL = 20;
+    const wrap = (head, tail) =>
+      tail.length > MAX_TAIL
+        ? safe(head + tail)
+        : (head ? safe(head) : '') + '<em class="t-ac">' + safe(tail) + '</em>';
+
+    // 1. plusieurs mots : le dernier passe en accent
+    const space = name.lastIndexOf(' ');
+    if(space > 0) return wrap(name.slice(0, space + 1), name.slice(space + 1));
+
+    // 2. mot composé en casse chameau : « ASCo | Façade »
+    const camel = [...name.matchAll(/[a-zà-ÿ0-9][A-ZÀ-Ý]/g)].pop();
+    if(camel) return wrap(name.slice(0, camel.index + 1), name.slice(camel.index + 1));
+
+    // 3. nom de domaine : « smiro | .dev »
+    const dot = name.lastIndexOf('.');
+    if(dot > 0) return wrap(name.slice(0, dot), name.slice(dot));
+
+    // 4. un seul bloc : on n'invente pas de coupure
+    return safe(name);
+  }
+  // le lecteur d'articles est une autre fermeture : la règle est publiée une
+  // fois plutôt que recopiée des deux côtés
+  window.smAccentTitle = accentTitle;
+
   let openId = null, lastFocus = null;
 
   /* ── bind cards to pages ───────────────────────────────────────────────── */
@@ -5418,7 +5473,7 @@ function bootWorks(){
         `<div class="pv-head" style="--pv-t:${w.tone}">`
       +   `<div class="pv-plate${w.logo ? ' has-logo' : ''}">${plateHTML(w)}</div>`
       +   `<div class="pv-id"><div class="pv-kind">${kind}</div>`
-      +     `<h1 class="pv-n" id="work-title">${esc(w.name)}</h1></div>`
+      +     `<h1 class="pv-n" id="work-title">${accentTitle(w.name)}</h1></div>`
       + `</div>`
       + `<p class="pv-kick">${esc(T(w.kick))}</p>`
       + `<div class="pv-stack">${(w.stack || []).map(s=>`<span>${esc(s)}</span>`).join('')}</div>`
@@ -5657,6 +5712,24 @@ function bootWorks(){
   // by CSS. Prose headings are not: they start with a capital.
   const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
 
+  /* Les titres d'articles portent déjà leur coupure : le saut de ligne qui les
+     casse en deux sur la carte du carrousel. La seconde ligne est donc le
+     fragment à mettre en accent — « the agent *harness* », « pourquoi le
+     logiciel *dévore le monde* ». Sans saut de ligne, on retombe sur la règle
+     générale du site. */
+  const escArt = t => String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  function artTitle(raw){
+    const full = cap(String(raw || '').trim());
+    const nl = full.indexOf('\n');
+    const general = window.smAccentTitle || escArt;
+    if(nl < 0) return general(full);
+    const head = full.slice(0, nl).trim();
+    const tail = full.slice(nl + 1).trim();
+    if(!tail) return general(head);
+    return escArt(head) + ' <em class="t-ac">' + escArt(tail) + '</em>';
+  }
+
   const ring  = deck;                       // #idea-deck is the rotating ring
   const stage = document.getElementById('idea-stage');
   const surface = document.querySelector('.deck-wrap');   // drag lives here
@@ -5883,7 +5956,7 @@ function bootWorks(){
         <span class="sep">·</span>
         <span>${T(a.read)}</span>
       </div>
-      <h1 class="art-t" id="art-title">${cap(T(a.title).replace(/\n/g,' '))}</h1>
+      <h1 class="art-t" id="art-title">${artTitle(T(a.title))}</h1>
       <p class="art-lede">${T(a.sum)}</p>
       <div class="art-src">
         <span class="lbl">${L('the source', 'la source')}</span>
