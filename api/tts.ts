@@ -17,12 +17,19 @@ const VOICES_EN = [
   'aura-zeus-en',
 ];
 
+// The avatar is Sergiy, so it speaks with a man's voice. Every Aura model costs
+// the same, so this is a casting decision, not a billing one: arcas is the
+// conversational male American voice — orion is warmer, zeus heavier, helios
+// British, and any of them can still be requested per call via `voice`.
+const MALE_EN = 'aura-arcas-en';
+
 function pickVoice(lang: string | undefined): string {
   const l = (lang ?? 'en-US').toLowerCase();
-  // Deepgram Aura currently ships English voices; non-English falls back to Asteria
-  // and the client will use Web Speech if this proxy 4xxs.
-  if (l.startsWith('en')) return 'aura-asteria-en';
-  return 'aura-asteria-en';
+  // Aura's own voices are English; a non-English request goes through findVoice(),
+  // which asks Deepgram what it actually speaks, and the client falls back to Web
+  // Speech when the answer is "nothing".
+  if (l.startsWith('en')) return MALE_EN;
+  return MALE_EN;
 }
 
 // An English voice reading French is worse than no voice at all — the browser's
@@ -31,6 +38,17 @@ function pickVoice(lang: string | undefined): string {
 // a voice for that language we use it, otherwise we hand the job back with 415
 // and the client falls back to Web Speech.
 let voiceIndex: Record<string, string> | null = null;
+
+// Deepgram tags each TTS model with the voice's gender. The wording has changed
+// between Aura generations, so match on anything that means "male" rather than on
+// one exact token — and if a language only offers feminine voices, take what there
+// is instead of going silent over a casting preference.
+const MALE_TAG = /\b(masculine|male|man)\b/i;
+
+function isMale(m: { metadata?: { tags?: string[] }; tags?: string[] }): boolean {
+  const tags = [...(m.metadata?.tags ?? []), ...(m.tags ?? [])];
+  return tags.some((t) => MALE_TAG.test(t));
+}
 
 async function findVoice(key: string, lang: string): Promise<string | null> {
   const want = lang.slice(0, 2).toLowerCase();
@@ -41,18 +59,27 @@ async function findVoice(key: string, lang: string): Promise<string | null> {
       });
       if (!res.ok) return null;
       const data = (await res.json()) as {
-        tts?: Array<{ canonical_name?: string; name?: string; languages?: string[] }>;
+        tts?: Array<{
+          canonical_name?: string;
+          name?: string;
+          languages?: string[];
+          tags?: string[];
+          metadata?: { tags?: string[] };
+        }>;
       };
       const index: Record<string, string> = {};
+      const male: Record<string, string> = {};
       for (const m of data.tts ?? []) {
         const id = m.canonical_name || m.name;
         if (!id) continue;
         for (const l of m.languages ?? []) {
           const two = l.slice(0, 2).toLowerCase();
           if (!index[two]) index[two] = id;
+          if (isMale(m) && !male[two]) male[two] = id;
         }
       }
-      voiceIndex = index;
+      // a male voice per language where one exists, otherwise the first voice
+      voiceIndex = { ...index, ...male };
     } catch {
       return null;
     }

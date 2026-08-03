@@ -3740,14 +3740,23 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
     if (orbBig) orbBig.classList.remove('speaking');
   }
 
+  // the avatar is a man, so the fallback voice has to be one too — browsers do not
+  // expose a gender, so the male voices are matched by the names they actually ship
+  // under (Google/Apple/Microsoft all differ), with any same-language voice as the
+  // last resort rather than staying silent
+  const MALE_VOICE = /\b(male|homme|masculin)\b|\b(thomas|daniel|alex|fred|aaron|rishi|guy|davis|tony|jason|eric|henri|paul|nicolas|remy|rémy|claude|antoine|yuri|dmitri|pavel|maxim)\b/i;
+
   function browserSpeak(text) {
     return new Promise((resolve) => {
       const synth = window.speechSynthesis;
       if (!synth) return resolve(false);
       const want = speechLang();
       const voices = synth.getVoices() || [];
-      const voice = voices.find(v => v.lang === want)
-        || voices.find(v => v.lang && v.lang.slice(0, 2) === want.slice(0, 2));
+      const sameLang = voices.filter(v => v.lang && v.lang.slice(0, 2) === want.slice(0, 2));
+      const voice = sameLang.find(v => v.lang === want && MALE_VOICE.test(v.name))
+        || sameLang.find(v => MALE_VOICE.test(v.name))
+        || sameLang.find(v => v.lang === want)
+        || sameLang[0];
       if (!voice && want.startsWith('fr')) return resolve(false); // no French voice: stay silent rather than read French with an English mouth
       const u = new SpeechSynthesisUtterance(text);
       u.lang = want;
@@ -3757,6 +3766,70 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
       u.onerror = () => resolve(false);
       synth.speak(u);
     });
+  }
+
+  /* The model is told to write terms out rather than abbreviate them, but one
+     always slips through — and a speech engine reads "RLS" as three letters, or
+     worse, reads an English acronym with a French mouth. So the copy that goes to
+     the voice is expanded here as a safety net. Only the spoken copy: the text on
+     screen stays exactly as the avatar wrote it.
+     Product names are deliberately absent — "SQL", "HTML" and "Next.js" are read
+     correctly and expanding them would be wrong. */
+  const SPOKEN_EN = [
+    [/\bLLMs\b/g, 'large language models'], [/\bLLM\b/g, 'large language model'],
+    [/\bAI\b/g, 'artificial intelligence'], [/\bML\b/g, 'machine learning'],
+    [/\bAPIs\b/g, 'application programming interfaces'], [/\bAPI\b/g, 'application programming interface'],
+    [/\bUI\/UX\b/g, 'user interface and user experience'],
+    [/\bUX\b/g, 'user experience'], [/\bUI\b/g, 'user interface'],
+    [/\bCI\/CD\b/g, 'continuous integration and delivery'], [/\bCI\b/g, 'continuous integration'],
+    [/\bRLS\b/g, 'row-level security'], [/\bRAG\b/g, 'retrieval-augmented generation'],
+    [/\bSEO\b/g, 'search engine optimisation'], [/\bCRM\b/g, 'customer relationship management system'],
+    [/\bSDK\b/g, 'software development kit'], [/\bSaaS\b/g, 'software as a service'],
+    [/\bDB\b/g, 'database'], [/\bRBAC\b/g, 'role-based access control'],
+    [/\bPWA\b/g, 'progressive web app'], [/\bTTS\b/g, 'text to speech'],
+    [/\bE2E\b/g, 'end to end'], [/\bDR\b/g, 'disaster recovery'],
+    [/\bGDPR\b/g, 'the data protection regulation'], [/\bRGPD\b/g, 'the data protection regulation'],
+    [/\bOSS\b/g, 'open source'], [/\bDID\b/g, 'direct dial number'],
+    [/\bIVR\b/g, 'interactive voice response'], [/\bBI\b/g, 'business intelligence'],
+    [/\bVIN\b/g, 'vehicle identification number'],
+  ];
+  const SPOKEN_FR = [
+    /* French needs the article to agree with the expansion, and a blind swap gives
+       "du intégration" or "un gestion". These article-aware forms run first, so the
+       bare entries below only catch what is left. */
+    [/\bproduits IA\b/g, "produits d'intelligence artificielle"],
+    [/\bproduit IA\b/g, "produit d'intelligence artificielle"],
+    [/\bdu CI\/CD\b/g, "de l'intégration et livraison continues"],
+    [/\bdu CI\b/g, "de l'intégration continue"],
+    [/\bun CRM\b/g, 'une gestion de la relation client'],
+    [/\bun SDK\b/g, 'un kit de développement'],
+    [/\bun RAG\b/g, 'une génération augmentée par la recherche'],
+    [/\bdu SEO\b/g, 'du référencement naturel'],
+    [/\bLLMs?\b/g, 'grands modèles de langage'],
+    [/\bAI\b/g, 'intelligence artificielle'], [/\bIA\b/g, 'intelligence artificielle'],
+    [/\bAPIs?\b/g, 'interface de programmation'],
+    [/\bUI\/UX\b/g, 'interface et expérience utilisateur'],
+    [/\bUX\b/g, 'expérience utilisateur'], [/\bUI\b/g, 'interface utilisateur'],
+    [/\bCI\/CD\b/g, 'intégration et livraison continues'], [/\bCI\b/g, 'intégration continue'],
+    [/\bRLS\b/g, 'sécurité au niveau des lignes'],
+    [/\bRAG\b/g, 'génération augmentée par la recherche'],
+    [/\bSEO\b/g, 'référencement naturel'], [/\bCRM\b/g, 'gestion de la relation client'],
+    [/\bSDK\b/g, 'kit de développement'], [/\bSaaS\b/g, 'logiciel en tant que service'],
+    [/\bDB\b/g, 'base de données'], [/\bRBAC\b/g, 'gestion des droits par rôle'],
+    [/\bPWA\b/g, 'application web installable'], [/\bTTS\b/g, 'synthèse vocale'],
+    [/\bE2E\b/g, 'de bout en bout'], [/\bDR\b/g, 'reprise après sinistre'],
+    [/\bGDPR\b/g, 'le RGPD'], [/\bOSS\b/g, 'open source'],
+    [/\bDID\b/g, 'numéro en sélection directe'],
+    [/\bIVR\b/g, 'serveur vocal interactif'], [/\bSVI\b/g, 'serveur vocal interactif'],
+    [/\bBI\b/g, 'informatique décisionnelle'],
+    [/\bVIN\b/g, 'numéro de châssis'],
+  ];
+
+  function spokenForm(text) {
+    let out = text;
+    for (const [re, full] of (lang() === 'fr' ? SPOKEN_FR : SPOKEN_EN)) out = out.replace(re, full);
+    // a slash between words is read as the word "slash" by some engines
+    return out.replace(/(\w)\/(\w)/g, '$1 $2');
   }
 
   // /api/tts caps a request at 2000 chars; sentences keep the seams natural.
@@ -3799,10 +3872,11 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
     if (orbSmall) orbSmall.classList.add('speaking');
     if (orbBig) orbBig.classList.add('speaking');
     say(L('speaking…', 'je parle…'));
+    const spoken = spokenForm(text);   // acronyms expanded for the voice only
     try {
-      for (const part of chunk(text)) await playChunk(part);
+      for (const part of chunk(spoken)) await playChunk(part);
     } catch (e) {
-      await browserSpeak(text);   // no proxy, no key, or an unsupported voice
+      await browserSpeak(spoken);   // no proxy, no key, or an unsupported voice
     }
     audio = null;
     if (orbSmall) orbSmall.classList.remove('speaking');
