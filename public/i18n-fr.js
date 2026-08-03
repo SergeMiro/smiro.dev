@@ -56,11 +56,11 @@ window.I18N_FR = {
     "status.production2": "production",
     "proj.4.cat":         "IA · documents · n8n",
     "proj.4.d":           "Inbox → JSON structuré. L'exécuteur extrait, le réviseur vérifie, n8n route. Avale les e-mails en désordre.",
-    "proj.5.cat":         "stats · sécurité · monitoring",
-    "proj.5.d":           "Agents stats collectent, agents sécu reniflent, dashboards râlent à ma place. Multi-tenant, SLA-aware, compatible sommeil.",
-    "proj.6.cat":         "devops · crypto",
-    "proj.6.d":           "Bot multi-exchange — signaux, gestion du risque, back-tests. Labo perso. Pas un conseil financier (please).",
-    "status.testing":     "en test",
+    "proj.5.cat":         "restitution · centre d'appels",
+    "proj.5.d":           "Des écrans de supervision sur mesure intégrés dans la plateforme de téléphonie Hermès 360 — activité des appels entrants/sortants et volumes SMS par campagne, lus directement depuis des vues SQL versionnées.",
+    "proj.6.cat":         "multi-agents · marchés",
+    "proj.6.d":           "Bot multi-agents sur les résultats d'entreprises — lit le calendrier des publications et les dépôts SEC, note les candidats avant l'ouverture, puis décide acheter / conserver / passer. Labo perso, pas un conseil financier.",
+    "status.testing":     "labo perso",
 
     "ideas.idx":          "idées & écrits",
     "ideas.h2":           "Idées sur lesquelles je reviens",
@@ -128,9 +128,9 @@ window.I18N_FR = {
     "telephony · internal platform": "téléphonie · plateforme interne",
     "Internal telephony platform at Fimainfo — DID numbers and orders, IVR strategies, campaigns, SMS/WhatsApp, BI and an AI assistant. Five services.":
       "Plateforme téléphonie interne chez Fimainfo — numéros DID et commandes, stratégies SVI, campagnes, SMS/WhatsApp, BI et un assistant IA. Cinq services.",
-    "e-commerce · AI try-on":        "e-commerce · essayage IA",
-    "Fashion store where one photo of you becomes the fitting room — Vertex AI try-on, Stripe, returns, GDPR, load tests and runbooks.":
-      "Boutique de mode où une photo de vous devient la cabine d’essayage — essayage Vertex AI, Stripe, retours, RGPD, tests de charge et runbooks.",
+    "Telegram Mini App · loyalty":   "Mini App Telegram · fidélité",
+    "The buyers' club that sells through Telegram, not a website — cashback wallet, Silver/Gold/Platinum tiers, birthday and holiday discounts that fire themselves, a fitting-room cart, a two-channel feed, margin tracking and an admin office with AI reports. Publishing goes app → channel, the webhook brings channel → app. Zero build step, 19 tables, 81 tests.":
+      "Le club d’achat qui vend par Telegram, pas par un site — portefeuille cashback, niveaux Silver/Gold/Platinum, remises anniversaire et fêtes qui se déclenchent seules, un panier-cabine, un fil à deux canaux, le suivi de marge et un back-office avec rapports IA. La publication va app → canal, le webhook ramène canal → app. Aucune étape de build, 19 tables, 81 tests.",
     "web app · automotive":          "application web · automobile",
     "Used-car dealer, front and back — 360° interiors, an AI matchmaker for buyers, and a CRM that turns an enquiry into a signed quote.":
       "Concessionnaire de véhicules d’occasion, front et back — intérieurs à 360°, un assistant IA pour les acheteurs, et un CRM qui transforme une demande en devis signé.",

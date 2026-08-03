@@ -839,6 +839,14 @@ h1.ht .crossed::before{
 .p-d{font-family:var(--font-body);font-size:14.5px;line-height:1.5;opacity:.82;max-width:440px;margin:0 0 20px}
 .p-st{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
 .p-st span{font-family:var(--font-mono);font-size:10px;padding:4px 9px;border-radius:4px;background:rgba(255,255,255,.14);letter-spacing:.02em}
+/* the full stack is the point of these chips — a card lists every technology it
+   runs on, so nobody reads a platform as a landing page. That makes the rows long,
+   so the chips are tightened rather than trimmed. */
+.p-st{gap:5px;row-gap:5px;line-height:1.5}
+.p-st span{font-size:9.5px;padding:3px 7px}
+/* cards on a light background need the chip tint inverted — one rule instead of
+   an inline style on every chip */
+.p-st.on-light span{background:rgba(27,26,24,.09)}
 .p-bot{display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--font-mono);font-size:11px;opacity:.78;border-top:1px solid rgba(255,255,255,.18);padding-top:14px}
 .p-bot .st{display:flex;align-items:center;gap:7px}
 .p-bot .st .lang-dot{width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;flex-shrink:0}
@@ -1117,7 +1125,10 @@ body.art-open{overflow:hidden}
    footer that points at the repository and the live demo. */
 .pv-head{display:flex;align-items:center;gap:20px;margin:0 0 22px}
 .pv-plate{
-  flex-shrink:0;display:grid;place-items:center;
+  /* flex, not grid: the slot has a fixed height, and only a flex container makes
+     the `max-height:100%` on the logo below resolve against it. In a grid the row
+     grows to the image's natural height instead, and a tall mark gets clipped. */
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
   /* square for a mark, wider for a wordmark — the height is what stays fixed */
   width:auto;min-width:98px;max-width:190px;height:98px;border-radius:16px;
   background:var(--bg-2);border:1px solid var(--line);
@@ -1125,7 +1136,16 @@ body.art-open{overflow:hidden}
   box-shadow:inset 0 0 0 2px var(--pv-t, var(--accent));
   overflow:hidden;padding:12px;
 }
-.pv-plate img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.pv-plate img{width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain;display:block}
+/* a real logo carries its own identity — no frame around it. The plate keeps a
+   fixed height so the header does not reflow, but the border, the inset colour
+   ring, the fill and the padding are dropped so the mark sits clean on the page.
+   A wordmark is much wider than tall, so it gets a wider slot than a mark does —
+   it scales to the full slot instead of being squeezed into a square. */
+.pv-plate.has-logo{
+  background:transparent;border:none;box-shadow:none;border-radius:0;
+  padding:0;min-width:0;max-width:230px;
+}
 .pv-plate svg{
   width:46px;height:46px;fill:none;stroke:var(--pv-t,var(--accent));
   stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;
@@ -1239,6 +1259,8 @@ body.art-open{overflow:hidden}
      three lines next to the plate — and clears the close button */
   .pv-head{flex-direction:column;align-items:flex-start;gap:15px}
   .pv-plate{min-width:74px;max-width:130px;height:74px;border-radius:13px;padding:9px}
+  /* the logo slot shrinks with the header, but stays wide enough for a wordmark */
+  .pv-plate.has-logo{max-width:min(200px,62vw);height:62px}
   .pv-plate svg{width:34px;height:34px}
   .pv-tech li{grid-template-columns:1fr;gap:3px}
 }
@@ -3153,7 +3175,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
         <p class="p-d">Site and back-office of a façade contractor — local SEO up front, four role portals behind the login: office, client, sub-contractor, crew.</p>
       </div>
       <div>
-        <div class="p-st"><span>Next.js</span><span>Supabase</span><span>TypeScript</span></div>
+        <div class="p-st"><span>Next.js 16</span><span>React 19</span><span>TypeScript</span><span>Tailwind 4</span><span>daisyUI</span><span>Framer Motion</span><span>Supabase Auth</span><span>PostgreSQL</span><span>Row-Level Security</span><span>Server Actions</span><span>Zod</span><span>react-hook-form</span><span>pdf-lib</span><span>jsPDF</span><span>Uppy + tus</span><span>exifr</span><span>Pannellum</span><span>Recharts</span><span>Leaflet</span><span>Google Maps</span><span>Google Places</span><span>Resend</span><span>Telegram Bot API</span><span>Mistral</span><span>Gemini</span><span>RAG</span><span>PWA</span><span>Vercel Cron</span><span>Biome</span></div>
         <div class="p-bot"><div class="st"><span class="lang-dot"></span><span class="lang-name">TypeScript</span><span class="stars">★ <span class="star-n">—</span></span></div><div class="p-arrow"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M10 7h7v7"></path></svg></div></div>
       </div>
       <div class="p-deco"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></div>
@@ -3167,21 +3189,21 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
         <p class="p-d">Internal telephony platform at Fimainfo — DID numbers and orders, IVR strategies, campaigns, SMS/WhatsApp, BI and an AI assistant. Five services.</p>
       </div>
       <div>
-        <div class="p-st"><span>Next.js</span><span>Express</span><span>SQL Server</span><span>FastAPI</span></div>
+        <div class="p-st"><span>Next.js 15.5</span><span>React 19</span><span>Tailwind v4</span><span>shadcn/ui</span><span>Radix UI</span><span>Zustand</span><span>Zod</span><span>jose JWT</span><span>RBAC</span><span>Express 4</span><span>Sequelize 6</span><span>SQL Server ×4</span><span>FastAPI</span><span>Python</span><span>Qdrant</span><span>Docling</span><span>RAG + ACL</span><span>Mistral</span><span>Evidence.dev</span><span>Pino</span><span>OpenTelemetry</span><span>SigNoz</span><span>Brevo</span><span>MS Teams</span><span>WebRTC</span><span>Playwright</span><span>Ladle</span><span>Jest</span><span>Bruno</span><span>Docker</span><span>Traefik</span><span>GitLab CI</span></div>
         <div class="p-bot"><div class="st"><span class="lang-dot"></span><span class="lang-name">JavaScript</span><span class="stars">★ <span class="star-n">—</span></span></div><div class="p-arrow" style="color: rgb(238, 222, 211)"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M10 7h7v7"></path></svg></div></div>
       </div>
       <div class="p-deco"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.37 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.33 1.85.57 2.81.7A2 2 0 0122 16.92z"></path></svg></div>
     </a>
 
-    <a class="p" href="https://github.com/SergeMiro/way2buy" target="_blank" rel="noopener" data-repo="way2buy" data-work="way2buy" style="--pb: oklch(0.42 0.11 340); --pc: #fef4ec; width: 388px">
+    <a class="p" href="https://github.com/SergeMiro/way2buy_telegram-app" target="_blank" rel="noopener" data-repo="way2buy_telegram-app" data-work="way2buy" style="--pb: oklch(0.42 0.11 340); --pc: #fef4ec; width: 388px">
       <span class="p-n">03</span>
       <div>
-        <div class="p-cat">e-commerce · AI try-on</div>
+        <div class="p-cat">Telegram Mini App · loyalty</div>
         <h3 class="p-t">way2buy</h3>
-        <p class="p-d">Fashion store where one photo of you becomes the fitting room — Vertex AI try-on, Stripe, returns, GDPR, load tests and runbooks.</p>
+        <p class="p-d">The buyers' club that sells through Telegram, not a website — cashback wallet, Silver/Gold/Platinum tiers, birthday and holiday discounts that fire themselves, a fitting-room cart, a two-channel feed, margin tracking and an admin office with AI reports. Publishing goes app → channel, the webhook brings channel → app. Zero build step, 19 tables, 81 tests.</p>
       </div>
       <div>
-        <div class="p-st"><span>Next.js</span><span>Drizzle</span><span>Stripe</span><span>Vertex AI</span></div>
+        <div class="p-st"><span>Node.js 20</span><span>Express 4</span><span>SQLite</span><span>better-sqlite3</span><span>19 tables · 15 indexes</span><span>Telegram Mini App SDK</span><span>Telegram Bot API</span><span>channel_post webhook</span><span>long-poll fallback</span><span>vanilla JS</span><span>zero build</span><span>CSS design tokens</span><span>cashback engine</span><span>gamification</span><span>rules engine</span><span>idempotent scheduler</span><span>margin tracking</span><span>Gemini 1.5 Flash</span><span>AI propose → apply</span><span>node:test ×81</span><span>Vercel serverless</span></div>
         <div class="p-bot"><div class="st"><span class="lang-dot"></span><span class="lang-name">TypeScript</span><span class="stars">★ <span class="star-n">—</span></span></div><div class="p-arrow"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M10 7h7v7"></path></svg></div></div>
       </div>
       <div class="p-deco"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"></path></svg></div>
@@ -3195,7 +3217,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
         <p class="p-d">Used-car dealer, front and back — 360° interiors, an AI matchmaker for buyers, and a CRM that turns an enquiry into a signed quote.</p>
       </div>
       <div>
-        <div class="p-st" style="--st-c:var(--ink)"><span style="background:rgba(27,26,24,.1)">React</span><span style="background:rgba(27,26,24,.1)">TypeScript</span><span style="background:rgba(27,26,24,.1)">Web app</span></div>
+        <div class="p-st on-light" style="--st-c:var(--ink)"><span>Next.js</span><span>React 19</span><span>TypeScript</span><span>Tailwind</span><span>Radix UI ×21</span><span>TanStack Query</span><span>TanStack Virtual</span><span>Supabase</span><span>PostgreSQL</span><span>Row-Level Security</span><span>Vercel AI SDK</span><span>OpenAI</span><span>VIN decode</span><span>BullMQ</span><span>Redis</span><span>Three.js</span><span>React Three Fiber</span><span>photo-sphere-viewer</span><span>TipTap</span><span>PDFKit</span><span>ECharts</span><span>Recharts</span><span>next-intl ×6</span><span>next-pwa</span><span>@vercel/og</span><span>Cheerio</span><span>Playwright</span><span>Vitest</span><span>Biome</span><span>Docker</span><span>GitHub Actions</span><span>n8n</span></div>
         <div class="p-bot" style="border-color:rgba(27,26,24,.18)"><div class="st"><span class="lang-dot"></span><span class="lang-name">TypeScript</span><span class="stars">★ <span class="star-n">—</span></span></div><div class="p-arrow" style="color: rgb(53, 53, 48)"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M10 7h7v7"></path></svg></div></div>
       </div>
       <div class="p-deco"><svg viewBox="0 0 24 24"><path d="M5 17h14M5 17a2 2 0 01-2-2v-3l2-5a2 2 0 012-1.5h8A2 2 0 0119 8l2 5v3a2 2 0 01-2 2M5 17v2M19 17v2"></path><circle cx="7.5" cy="14.5" r="1"></circle><circle cx="16.5" cy="14.5" r="1"></circle></svg></div>
@@ -3209,7 +3231,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
         <p class="p-d">AI solutions for EU business — LLM-powered workflows that automate multilingual compliance and back-office paperwork.</p>
       </div>
       <div>
-        <div class="p-st" style="--st-c:var(--ink)"><span style="background:rgba(27,26,24,.08)">FastAPI</span><span style="background:rgba(27,26,24,.08)">CrewAI</span><span style="background:rgba(27,26,24,.08)">Celery</span></div>
+        <div class="p-st on-light" style="--st-c:var(--ink)"><span>Next.js 16</span><span>React 19</span><span>TypeScript</span><span>Tailwind 4</span><span>Radix UI</span><span>next-intl ×3</span><span>Stripe</span><span>Turborepo</span><span>pnpm workspaces</span><span>FastAPI ×4</span><span>Python</span><span>Pydantic v2</span><span>CrewAI ×5 agents</span><span>Celery</span><span>Redis</span><span>APScheduler</span><span>pandas</span><span>pdfplumber</span><span>PyPDF2</span><span>pytesseract</span><span>PaddleOCR</span><span>fuzzywuzzy</span><span>reportlab</span><span>openpyxl</span><span>Twilio</span><span>slowapi</span><span>Supabase</span><span>PostgreSQL</span><span>Docker</span><span>Traefik</span><span>Vercel</span><span>GitHub Actions</span></div>
         <div class="p-bot" style="border-color:var(--line-2)"><div class="st" style="color: rgb(71, 101, 95)"><span class="lang-dot"></span><span class="lang-name">Python</span><span class="stars">★ <span class="star-n">—</span></span></div><div class="p-arrow" style="color: rgb(71, 101, 95)"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M10 7h7v7"></path></svg></div></div>
       </div>
       <div class="p-deco" style="color:var(--accent)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 3v18M3 12h18M5 5l14 14M5 19L19 5"></path></svg></div>
@@ -3223,7 +3245,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
         <p class="p-d">This site — a static Astro build with no framework on the page, a 3D laptop, and an avatar that answers from one editable Markdown brief.</p>
       </div>
       <div>
-        <div class="p-st"><span>Astro</span><span>Three.js</span><span>Vercel Edge</span></div>
+        <div class="p-st"><span>Astro 6</span><span>TypeScript</span><span>Tailwind 4</span><span>LightningCSS</span><span>zero hydration</span><span>Three.js</span><span>WebGL</span><span>CSS 3D</span><span>OKLCH theming</span><span>Vercel Edge</span><span>SSE streaming</span><span>OpenRouter</span><span>Groq</span><span>Gemini 2.5</span><span>RAG brief</span><span>Deepgram Aura</span><span>Web Speech</span><span>GitHub API</span><span>hand-rolled i18n</span><span>MutationObserver</span><span>Sharp</span><span>n8n</span></div>
         <div class="p-bot"><div class="st"><span class="lang-dot"></span><span class="lang-name">TypeScript</span><span class="stars">★ <span class="star-n">—</span></span></div><div class="p-arrow"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M10 7h7v7"></path></svg></div></div>
       </div>
       <div class="p-deco"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"></path></svg></div>
@@ -3237,7 +3259,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
         <p class="p-d" data-i18n="proj.1.d">Multi-agent back-office for FR call-centre campaigns. Executor works, reviewer grades, loop runs until score &ge; 90%. 30+ hrs/week saved per team. Yes, including URSSAF.</p>
       </div>
       <div>
-        <div class="p-st"><span>Next.js</span><span>Claude API</span><span>Postgres</span><span>n8n</span><span>Docker</span></div>
+        <div class="p-st"><span>Next.js</span><span>TypeScript</span><span>Claude API</span><span>executor + reviewer loop</span><span>score gate ≥ 90%</span><span>PostgreSQL</span><span>n8n</span><span>Docker</span></div>
         <div class="p-bot"><div class="st" style="color: rgb(244, 238, 221)" data-i18n="status.production">production · v3.2</div><div class="p-arrow"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M10 7h7v7"></path></svg></div></div>
       </div>
       <div class="p-deco"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 3v18M3 12h18M5 5l14 14M5 19L19 5"></path></svg></div>
@@ -3251,7 +3273,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
         <p class="p-d" data-i18n="proj.4.d">Inbox → structured JSON. Executor extracts, reviewer checks, n8n routes. Eats messy emails for breakfast.</p>
       </div>
       <div>
-        <div class="p-st"><span>Python</span><span>OpenAI</span><span>n8n</span></div>
+        <div class="p-st"><span>Node.js</span><span>OpenAI API</span><span>executor + reviewer</span><span>per-field rules</span><span>gpt-3-encoder</span><span>frozen sample set</span><span>parser_config table</span><span>multi-format intake</span><span>n8n</span><span>SQL</span></div>
         <div class="p-bot"><div class="st" style="color:#1b1a18" data-i18n="status.production2">production</div><div class="p-arrow" style="color: rgb(44, 45, 46)"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M10 7h7v7"></path></svg></div></div>
       </div>
       <div class="p-deco"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8"></path></svg></div>
@@ -3260,12 +3282,12 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
     <a class="p" href="#repos" data-work="supervision" style="--pb: #f4eedd; --pc: #1b1a18; box-shadow: inset 0 0 0 1px var(--line-2); width: 770px; background-color: rgba(186, 157, 74, 0.933)">
       <span class="p-n" style="color: rgb(99, 85, 13); opacity: .9">09</span>
       <div>
-        <div class="p-cat" data-i18n="proj.5.cat">stats · security · monitoring</div>
+        <div class="p-cat" data-i18n="proj.5.cat">reporting · call centre</div>
         <h3 class="p-t">Supervision</h3>
-        <p class="p-d" data-i18n="proj.5.d">Stats agents collect, security agents sniff, dashboards complain. Multi-tenant, SLA-aware, sleep-friendly.</p>
+        <p class="p-d" data-i18n="proj.5.d">Custom supervision screens embedded in the Hermès 360 telephony platform — inbound/outbound call activity and SMS volumes per campaign, read straight from versioned SQL views.</p>
       </div>
       <div>
-        <div class="p-st" style="--st-c:var(--ink)"><span style="background:rgba(27,26,24,.08)">Node</span><span style="background:rgba(27,26,24,.08)">Grafana</span><span style="background:rgba(27,26,24,.08)">Prometheus</span></div>
+        <div class="p-st on-light" style="--st-c:var(--ink)"><span>JavaScript</span><span>jQuery</span><span>ECharts</span><span>Tabulator</span><span>T-SQL views</span><span>SQL Server</span><span>hermes_sql bridge</span><span>vendored libraries</span><span>one CSS + one JS file</span><span>Hermès 360 embed</span></div>
         <div class="p-bot" style="border-color:var(--line-2)"><div class="st" data-i18n="status.production2" style="color: rgb(99, 85, 13)">production</div><div class="p-arrow" style="color: rgb(99, 85, 13)"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M10 7h7v7"></path></svg></div></div>
       </div>
       <div class="p-deco" style="color:var(--accent)"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-9 4 18 3-9h4"></path></svg></div>
@@ -3274,13 +3296,13 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
     <a class="p" href="#repos" data-work="trading-bot" style="--pb: #1b1a18; --pc: #f4eedd; width: 388px; background-color: rgba(131, 37, 37, 0.996)">
       <span class="p-n">10</span>
       <div>
-        <div class="p-cat" data-i18n="proj.6.cat">devops · crypto</div>
+        <div class="p-cat" data-i18n="proj.6.cat">multi-agent · markets</div>
         <h3 class="p-t">Trading Bot</h3>
-        <p class="p-d" data-i18n="proj.6.d">Multi-exchange bot — signals, risk-mgmt, back-tests. Personal lab. Not financial advice (please).</p>
+        <p class="p-d" data-i18n="proj.6.d">Multi-agent earnings bot — reads the earnings calendar and SEC filings, scores candidates before the open, then decides buy / hold / skip. Personal lab, not financial advice.</p>
       </div>
       <div>
-        <div class="p-st"><span>Python</span><span>WebSockets</span><span>Postgres</span></div>
-        <div class="p-bot"><div class="st" style="color: rgb(244, 238, 221)" data-i18n="status.testing">testing</div><div class="p-arrow"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M10 7h7v7"></path></svg></div></div>
+        <div class="p-st"><span>Python 3.12</span><span>SQLAlchemy 2</span><span>Alembic</span><span>PostgreSQL</span><span>Supabase</span><span>pydantic-settings</span><span>APScheduler</span><span>6 agents</span><span>IBKR · ib_insync</span><span>SEC EDGAR</span><span>yfinance</span><span>OpenAI-compatible LLM</span><span>tenacity</span><span>structlog</span><span>pytest</span><span>OpenClaw</span><span>Docker</span></div>
+        <div class="p-bot"><div class="st" style="color: rgb(244, 238, 221)" data-i18n="status.testing">personal lab</div><div class="p-arrow"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M10 7h7v7"></path></svg></div></div>
       </div>
       <div class="p-deco"><svg viewBox="0 0 24 24"><polyline points="3,17 9,11 13,15 21,7"></polyline><polyline points="14,7 21,7 21,14"></polyline></svg></div>
     </a>
@@ -4737,7 +4759,7 @@ function bootWorks(){
 
     body.innerHTML =
         `<div class="pv-head" style="--pv-t:${w.tone}">`
-      +   `<div class="pv-plate">${plateHTML(w)}</div>`
+      +   `<div class="pv-plate${w.logo ? ' has-logo' : ''}">${plateHTML(w)}</div>`
       +   `<div class="pv-id"><div class="pv-kind">${kind}</div>`
       +     `<h1 class="pv-n" id="work-title">${esc(w.name)}</h1></div>`
       + `</div>`
