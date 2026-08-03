@@ -130,8 +130,8 @@
         'La plateforme téléphonie interne de Fimainfo : numéros SDA/DID et leurs commandes, stratégies SVI, campagnes, diffusions SMS et WhatsApp, restitution BI et un assistant IA — un monorepo de cinq services, ~786 commits sur dix-sept mois.'),
       repo: { url: 'https://github.com/SergeMiro/SDA', label: 'SergeMiro/SDA', vis: T('public mirror of an internal GitLab', 'miroir public d’un GitLab interne') },
       demo: null,
-      demoNote: T('No public demo: it runs on Fimainfo infrastructure behind the corporate network.',
-                  'Pas de démo publique : la plateforme tourne sur l’infrastructure Fimainfo, derrière le réseau de l’entreprise.'),
+      demoNote: T('The production platform runs on Fimainfo’s internal corporate network — no public access to production.',
+                  'La plateforme de production tourne sur le réseau interne de Fimainfo : pas d’accès public au prod.'),
       sections: [
         {
           t: T('Web interface — INTERFACE/', 'Interface web — INTERFACE/'),
@@ -328,8 +328,8 @@
         'Tout le front et le back-office d’un concessionnaire de véhicules d’occasion : catalogue avec intérieurs à 360°, un assistant IA pour les acheteurs, et un CRM qui transforme une demande en devis signé.'),
       repo: { url: 'https://github.com/SergeMiro/MorganAuto', label: 'SergeMiro/MorganAuto', vis: T('public', 'public') },
       demo: null,
-      demoNote: T('The Vercel deployment is currently down (404) — the repository is the reference.',
-                  'Le déploiement Vercel est actuellement éteint (404) — le dépôt est la référence.'),
+      demoNote: T('The deployment is switched off — no public access to production; the repository is the reference.',
+                  'Le déploiement est éteint : pas d’accès public au prod ; le dépôt est la référence.'),
       sections: [
         {
           t: T('Catalogue and vehicle pages', 'Catalogue et fiches véhicule'),
@@ -574,7 +574,8 @@
       repoNote: T('Internal work — no public repository. What is described here is what the CV claims and nothing beyond it.',
                   'Travail interne — pas de dépôt public. Ce qui est décrit ici est ce que le CV affirme, et rien de plus.'),
       demo: null,
-      demoNote: T('Internal platform, no public demo.', 'Plateforme interne, pas de démo publique.'),
+      demoNote: T('The production platform runs on the client’s internal network — no public access to production.',
+                  'La plateforme de production tourne sur le réseau interne du client : pas d’accès public au prod.'),
       sections: [
         {
           t: T('Executor / reviewer loop', 'Boucle exécuteur / relecteur'),
@@ -631,8 +632,8 @@
       repoNote: T('Private repository — it holds real customer enquiries.',
                   'Dépôt privé — il contient de vraies demandes de clients.'),
       demo: null,
-      demoNote: T('Runs inside the client’s pipeline; no public demo.',
-                  'Tourne dans le pipeline du client ; pas de démo publique.'),
+      demoNote: T('It runs inside the client’s internal pipeline — no public access to production.',
+                  'Il tourne dans le pipeline interne du client : pas d’accès public au prod.'),
       sections: [
         {
           t: T('The extraction prompt', 'Le prompt d’extraction'),
@@ -693,8 +694,8 @@
       repoNote: T('Private repository — it targets a client platform.',
                   'Dépôt privé — il cible une plateforme cliente.'),
       demo: null,
-      demoNote: T('Runs inside the client platform; no public demo.',
-                  'Tourne dans la plateforme cliente ; pas de démo publique.'),
+      demoNote: T('The screens are embedded in the client’s telephony platform, on its internal network — no public access to production.',
+                  'Les écrans sont intégrés à la plateforme téléphonie du client, sur son réseau interne : pas d’accès public au prod.'),
       sections: [
         {
           t: T('SQL as the interface', 'Le SQL comme interface'),
@@ -750,8 +751,8 @@
         'Un bot multi-agents sur les résultats d’entreprises : il lit le calendrier des publications et les dépôts SEC, note les candidats avant l’ouverture, et décide seulement ensuite acheter, conserver ou passer. Un laboratoire personnel, et explicitement pas un conseil financier.'),
       repo: { url: 'https://github.com/SergeMiro/Trading-bot', label: 'SergeMiro/Trading-bot', vis: T('public', 'public') },
       demo: null,
-      demoNote: T('No demo: it places real orders through a broker account.',
-                  'Pas de démo : il passe de vrais ordres via un compte de courtage.'),
+      demoNote: T('No public access to production: it places real orders through a brokerage account.',
+                  'Pas d’accès public au prod : il passe de vrais ordres via un compte de courtage.'),
       sections: [
         {
           t: T('The pipeline', 'Le pipeline'),
