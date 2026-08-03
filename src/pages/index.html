@@ -2150,10 +2150,12 @@ footer a:hover{color:var(--accent)}
 
 .board{
   position:relative;
-  /* deux zones à loger : celle de l'auteur tient deux rangées de post-its,
-     celle des visiteurs doit rester assez haute pour en accueillir une. */
+  /* Deux zones côte à côte. `--split` est l'abscisse de la frontière : à sa
+     droite le stack de l'auteur, à sa gauche la zone des visiteurs. La coupe
+     est à 40 % et non à la moitié, parce que la droite porte douze post-its
+     sur trois colonnes, quand la gauche part vide et n'en demande que deux. */
   height:780px;
-  --split:56%;
+  --split:40%;
   border-radius:14px;
   /* very subtle paper — barely there */
   background:
@@ -2184,29 +2186,29 @@ footer a:hover{color:var(--accent)}
 .board-owner-wash{
   /* teinte à peine perceptible : la zone de l'auteur doit se lire comme un
      territoire, pas comme un bloc coloré qui écrase les post-its */
-  position:absolute;left:0;right:0;top:0;height:var(--split);
+  position:absolute;left:var(--split);right:0;top:0;bottom:0;
   pointer-events:none;
-  background:linear-gradient(180deg, oklch(var(--accent-wash-lch) / .5), oklch(var(--accent-wash-lch) / .16));
+  background:linear-gradient(90deg, oklch(var(--accent-wash-lch) / .5), oklch(var(--accent-wash-lch) / .16));
 }
 
 .board-split{
   /* la ligne que le client a tracée au feutre, en langage du site : un tiret
      dans la couleur d'accent plutôt qu'un trait rouge posé sur la maquette */
-  position:absolute;left:0;right:0;top:var(--split);
-  height:0;pointer-events:none;z-index:5;
-  border-top:2px dashed oklch(var(--accent-lch) / .45);
+  position:absolute;left:var(--split);top:0;bottom:0;
+  width:0;pointer-events:none;z-index:5;
+  border-left:2px dashed oklch(var(--accent-lch) / .45);
 }
 .board-split::after{
   /* un halo doux des deux côtés du trait, pour l'ancrer dans le papier */
-  content:"";position:absolute;left:0;right:0;top:-9px;height:18px;
-  background:linear-gradient(180deg, transparent, oklch(var(--accent-lch) / .07), transparent);
+  content:"";position:absolute;top:0;bottom:0;left:-9px;width:18px;
+  background:linear-gradient(90deg, transparent, oklch(var(--accent-lch) / .07), transparent);
 }
 .board-split.refused{
   animation:splitRefuse .45s ease;
 }
 @keyframes splitRefuse{
-  0%,100%{border-top-color:oklch(var(--accent-lch) / .45)}
-  35%{border-top-color:oklch(var(--accent-lch) / 1)}
+  0%,100%{border-left-color:oklch(var(--accent-lch) / .45)}
+  35%{border-left-color:oklch(var(--accent-lch) / 1)}
 }
 
 .board-zone-label{
@@ -2221,12 +2223,11 @@ footer a:hover{color:var(--accent)}
   background:oklch(var(--accent-lch) / .55);
 }
 .board-zone-label.owner{
-  /* juste au-dessus de la ligne : en haut du tableau, l'étiquette passait
-     derrière le dernier post-it de la première rangée */
-  right:16px;top:calc(var(--split) - 22px);
+  /* en bas de sa colonne : le haut est occupé par la première rangée */
+  right:16px;bottom:12px;
 }
 .board-zone-label.owner::before{ background:oklch(var(--accent-lch) / .8) }
-.board-zone-label.guest{ right:16px;top:calc(var(--split) + 14px) }
+.board-zone-label.guest{ left:16px;top:14px;right:auto }
 .board-zone-label.guest::before{ background:rgba(27,26,24,.28) }
 .board-zone-label .lock{ font-size:10px;opacity:.65 }
 
@@ -3472,7 +3473,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   </div>
   <div class="board-wrap">
     <div class="board-tools">
-      <div class="hint" data-i18n="stack.hint">top zone: my stack, locked · bottom zone: yours — double-click to pin a tool →</div>
+      <div class="hint" data-i18n="stack.hint">right: my stack, locked · left: yours — double-click to pin a tool I'm missing</div>
       <div class="actions">
         <button class="board-btn" id="board-shuffle" data-i18n="stack.shuffle">↻ shuffle</button>
         <button class="board-btn" id="board-tidy" data-i18n="stack.tidy">⊞ tidy</button>
@@ -5731,34 +5732,41 @@ function bootWorks(){
   let notes = [];
 
   /* ── deux zones, une frontière ─────────────────────────────────────────
-     Le tableau est coupé en deux par une ligne horizontale. Au-dessus, la zone
-     de l'auteur : les outils réellement utilisés en production, posés une fois
-     et plus jamais déplacés — ni par un glisser, ni par un mélange, ni par une
-     double-clic. En dessous, la zone des visiteurs : tout ce qu'un recruteur
-     épingle atterrit là et n'en sort pas.
+     Le tableau est coupé en deux par une ligne verticale. À droite, la zone de
+     l'auteur : les outils réellement utilisés en production, posés une fois et
+     plus jamais déplacés — ni par un glisser, ni par un mélange, ni par un
+     double-clic. À gauche, la zone des visiteurs : tout ce qu'un recruteur
+     épingle y naît, s'y modifie et y reste.
 
      La frontière n'est pas qu'un décor : c'est elle qui borne le déplacement.
-     Un post-it de visiteur qui remonte est arrêté net sur la ligne, et la ligne
-     le dit en clignotant — refuser sans expliquer serait pris pour un bug. */
-  const SPLIT = 0.56;   // doit rester égal au --split du CSS
+     Un post-it de visiteur poussé vers la droite est arrêté net sur la ligne,
+     et la ligne le dit en clignotant — refuser sans expliquer serait pris pour
+     un bug. */
+  const SPLIT = 0.40;   // doit rester égal au --split du CSS
 
-  function splitY(){ return Math.round(board.clientHeight * SPLIT); }
+  function splitX(){ return Math.round(board.clientWidth * SPLIT); }
 
-  /** Bornes verticales d'une zone, en pixels du tableau. */
+  /** Bornes horizontales d'une zone, en pixels du tableau. */
   function zoneBox(zone){
-    const s = splitY();
+    const s = splitX();
     return zone === 'owner'
-      ? { top: 0, bottom: s }
-      : { top: s, bottom: board.clientHeight };
+      ? { left: s, right: board.clientWidth }
+      : { left: 0, right: s };
   }
 
-  /** Ordonnée maximale d'un post-it de hauteur `h` dans sa zone. */
-  function clampY(zone, y, h){
+  /** Abscisse admissible pour un post-it de largeur `w` dans sa zone. */
+  function clampX(zone, x, w){
     const box = zoneBox(zone);
-    // l'auteur peut mordre légèrement le haut, personne ne franchit la ligne
-    const min = zone === 'owner' ? -10 : box.top + 10;
-    const max = Math.max(min, box.bottom - h - 10);
-    return Math.max(min, Math.min(max, y));
+    const min = box.left + (zone === 'owner' ? 12 : 10);
+    // un post-it de visiteur ne franchit jamais la ligne, même partiellement
+    const max = Math.max(min, box.right - w - 10);
+    return Math.max(min, Math.min(max, x));
+  }
+
+  /** Ordonnée admissible : les deux zones occupent toute la hauteur. */
+  function clampY(y, h){
+    const max = Math.max(8, board.clientHeight - h - 10);
+    return Math.max(8, Math.min(max, y));
   }
 
   function zoneOf(el){ return el.dataset.zone === 'owner' ? 'owner' : 'guest'; }
@@ -5792,7 +5800,7 @@ function bootWorks(){
 
     const guest = document.createElement('div');
     guest.className = 'board-zone-label guest';
-    guest.innerHTML = '<span data-i18n="stack.zone.guest">your suggestions · drop here</span>';
+    guest.innerHTML = '<span data-i18n="stack.zone.guest">yours · the tool I\'m missing?</span>';
     board.appendChild(guest);
 
     if(window.I18N && window.I18N.apply) window.I18N.apply();
@@ -5962,20 +5970,24 @@ function bootWorks(){
       if(!dragging) return;
       const dx = e.clientX - sx, dy = e.clientY - sy;
       if(Math.abs(dx)+Math.abs(dy) > 3) moved=true;
-      const bw = board.clientWidth;
       const w = el.offsetWidth, h = el.offsetHeight;
-      const nx = Math.max(-20, Math.min(bw - w + 20, ox + dx));
 
       // la frontière est une butée, pas une suggestion
-      const wanted = oy + dy;
-      const ny = clampY(zoneOf(el), wanted, h);
-      if(ny !== wanted && wanted < ny) refuseAtSplit();
+      const wantedX = ox + dx;
+      const nx = clampX(zoneOf(el), wantedX, w);
+      if(nx !== wantedX && wantedX > nx) refuseAtSplit();
 
+      const ny = clampY(oy + dy, h);
       el.style.left = nx+'px'; el.style.top = ny+'px';
     });
     const endDrag = e=>{
       if(!dragging) return;
       dragging=false;
+      // Sans ce relâchement, la capture posée au pointerdown reste active et le
+      // navigateur redirige le `dblclick` suivant vers le post-it entier : le
+      // gestionnaire posé sur `.name` ne voyait jamais rien, et l'édition au
+      // double-clic paraissait morte.
+      try{ if(e && e.pointerId != null) el.releasePointerCapture(e.pointerId); }catch(err){}
       el.classList.remove('dragging');
       // settle with slight random rotation kick
       const newRot = rot() + (moved ? rand(-2,2) : 0);
@@ -6046,8 +6058,22 @@ function bootWorks(){
       node.addEventListener('blur', done);
       node.addEventListener('keydown', key);
     };
-    el.querySelector('.name').addEventListener('dblclick', e=>{ e.stopPropagation(); editable(e.currentTarget); });
-    el.querySelector('.cat').addEventListener('dblclick',  e=>{ e.stopPropagation(); editable(e.currentTarget); });
+    const startEdit = (node)=>{
+      if(!node || node.getAttribute('contenteditable') === 'true') return;
+      editable(node);
+    };
+    el.querySelector('.name').addEventListener('dblclick', e=>{ e.stopPropagation(); startEdit(e.currentTarget); });
+    el.querySelector('.cat').addEventListener('dblclick',  e=>{ e.stopPropagation(); startEdit(e.currentTarget); });
+
+    /* Filet : si le double-clic a été redirigé vers le post-it (capture de
+       pointeur relâchée trop tard, ou clic tombé sur une lettre), on retrouve
+       le champ visé par sa position à l'écran plutôt que de ne rien faire. */
+    el.addEventListener('dblclick', e=>{
+      if(e.target !== el) return;
+      const under = document.elementFromPoint(e.clientX, e.clientY);
+      const field = under && under.closest ? under.closest('.name, .cat') : null;
+      if(field && el.contains(field)){ e.stopPropagation(); startEdit(field); }
+    });
 
     // remove
     el.querySelector('.x').addEventListener('click', e=>{
@@ -6076,11 +6102,10 @@ function bootWorks(){
     el.dataset.fix = fix;
     const rot = rand(-5,5);
     el.dataset.rot = rot;
-    const bw = board.clientWidth;
     const box = zoneBox('guest');
     el.dataset.zone = 'guest';
-    const x = rand(bw*0.20, Math.max(bw*0.20, bw*0.58));
-    const y = clampY('guest', rand(box.top + 16, Math.max(box.top + 18, box.bottom - 200)), 158);
+    const x = clampX('guest', rand(box.left + 14, Math.max(box.left + 16, box.right - 200)), 158);
+    const y = clampY(rand(20, Math.max(24, board.clientHeight - 210)), 158);
     el.style.left = x+'px'; el.style.top = y+'px';
     el.style.transform = `rotate(${rot}deg)`;
     el.style.zIndex = ++zTop;
@@ -6191,27 +6216,27 @@ function bootWorks(){
     setTimeout(()=>el.querySelector('.name').focus(), 130);
   }
 
-  /* Disposition initiale : grille lâche, uniquement dans la zone de l'auteur.
-     Le pas vertical se calcule à partir de la hauteur disponible et du nombre
-     de rangées nécessaires — un tableau plus étroit fait plus de rangées, et
-     elles doivent toutes tenir au-dessus de la ligne. */
+  /* Disposition initiale : grille lâche, uniquement dans la colonne de droite.
+     Le nombre de colonnes se déduit de la largeur de cette colonne, et le pas
+     vertical de la hauteur restante — un tableau plus étroit fait moins de
+     colonnes et plus de rangées, qui doivent toutes tenir dans la zone. */
   function initialLayout(){
     board.innerHTML='';
     notes = [];
     ensureZones();
 
-    const bw = board.clientWidth;
-    const cols = Math.max(3, Math.floor((bw-40) / 175));
-    const cellW = (bw - 40) / cols;
-    const rows = Math.ceil(SEED.length / cols);
     const box = zoneBox('owner');
-    const rowH = Math.max(120, Math.min(168, (box.bottom - 34 - 158) / Math.max(1, rows - 1)));
+    const zoneW = box.right - box.left;
+    const cols = Math.max(1, Math.floor((zoneW - 24) / 172));
+    const cellW = (zoneW - 24) / cols;
+    const rows = Math.ceil(SEED.length / cols);
+    const rowH = Math.max(112, Math.min(168, (board.clientHeight - 40 - 168) / Math.max(1, rows - 1)));
 
     SEED.forEach((d,i)=>{
       const col = i % cols;
       const row = Math.floor(i / cols);
-      const x = 20 + col*cellW + rand(-12,18);
-      const y = clampY('owner', 24 + row*rowH + rand(-8,10), 158);
+      const x = clampX('owner', box.left + 12 + col*cellW + rand(-6,10), 158);
+      const y = clampY(20 + row*rowH + rand(-6,8), 158);
       createNote({...d, zone:'owner'}, {x, y});
     });
   }
@@ -6260,7 +6285,6 @@ function bootWorks(){
 
     const fr = window.I18N && window.I18N.getLang()==='fr';
     const catLabel = fr ? 'souhaité' : 'on the wishlist';
-    const bw = board.clientWidth;
     const box = zoneBox('guest');
     const el = createNote({
       name: tech,
@@ -6269,9 +6293,9 @@ function bootWorks(){
       zone: 'guest',
       color: pick(COLORS), ink: pick(INKS), fix: pick(FIXES)
     }, {
-      x: rand(bw*0.18, Math.max(bw*0.18, bw*0.62)),
-      // sous la ligne, toujours : c'est la zone du visiteur
-      y: clampY('guest', rand(box.top + 16, Math.max(box.top + 18, box.bottom - 190)), 158)
+      // à gauche de la ligne, toujours : c'est la zone du visiteur
+      x: clampX('guest', rand(box.left + 14, Math.max(box.left + 16, box.right - 200)), 158),
+      y: clampY(rand(20, Math.max(24, board.clientHeight - 200)), 158)
     });
 
     syncZoneButtons();
@@ -6309,12 +6333,11 @@ function bootWorks(){
   }
 
   shuffleBtn.addEventListener('click', ()=>{
-    const bw = board.clientWidth;
     const box = zoneBox('guest');
     guestNotes().forEach(el=>{
       const w = el.offsetWidth, h = el.offsetHeight;
-      const nx = rand(10, Math.max(12, bw - w - 10));
-      const ny = clampY('guest', rand(box.top + 12, Math.max(box.top + 14, box.bottom - h - 12)), h);
+      const nx = clampX('guest', rand(box.left + 10, Math.max(box.left + 12, box.right - w - 12)), w);
+      const ny = clampY(rand(12, Math.max(14, board.clientHeight - h - 12)), h);
       const nr = rand(-8, 8);
       el.dataset.rot = nr;
       el.style.transition = 'left .5s cubic-bezier(.2,.8,.3,1), top .5s cubic-bezier(.2,.8,.3,1), transform .5s';
@@ -6325,15 +6348,15 @@ function bootWorks(){
   });
 
   tidyBtn.addEventListener('click', ()=>{
-    const bw = board.clientWidth;
-    const cols = Math.max(3, Math.floor((bw-40) / 175));
-    const cellW = (bw - 40) / cols;
     const box = zoneBox('guest');
+    const zoneW = box.right - box.left;
+    const cols = Math.max(1, Math.floor((zoneW - 24) / 172));
+    const cellW = (zoneW - 24) / cols;
     guestNotes().forEach((el,i)=>{
       const col = i % cols;
       const row = Math.floor(i / cols);
-      const nx = 20 + col*cellW + 6;
-      const ny = clampY('guest', box.top + 18 + row*168, el.offsetHeight);
+      const nx = clampX('guest', box.left + 12 + col*cellW, el.offsetWidth);
+      const ny = clampY(20 + row*168, el.offsetHeight);
       const nr = rand(-4, 4);
       el.dataset.rot = nr;
       el.style.transition = 'left .5s cubic-bezier(.2,.8,.3,1), top .5s cubic-bezier(.2,.8,.3,1), transform .5s';
@@ -6349,8 +6372,8 @@ function bootWorks(){
     if(e.target !== board) return;
     // un double-clic dans la zone de l'auteur n'ouvre rien : la ligne clignote
     // pour dire pourquoi, au lieu de laisser croire à un raté
-    const y = e.clientY - board.getBoundingClientRect().top;
-    if(y < splitY()){ refuseAtSplit(); return; }
+    const x = e.clientX - board.getBoundingClientRect().left;
+    if(x >= splitX()){ refuseAtSplit(); return; }
     createDraftNote();
   });
 
@@ -6358,14 +6381,11 @@ function bootWorks(){
   syncZoneButtons();
 
   window.addEventListener('resize', ()=>{
-    // au redimensionnement, chaque post-it revient dans SA zone
-    const bw = board.clientWidth;
+    // au redimensionnement, chaque post-it revient dans SA colonne
     notes.forEach(el=>{
       const w = el.offsetWidth, h = el.offsetHeight;
-      let x = parseFloat(el.style.left);
-      x = Math.max(-20, Math.min(x, bw - w - 10));
-      el.style.left = x+'px';
-      el.style.top = clampY(zoneOf(el), parseFloat(el.style.top), h) + 'px';
+      el.style.left = clampX(zoneOf(el), parseFloat(el.style.left), w) + 'px';
+      el.style.top  = clampY(parseFloat(el.style.top), h) + 'px';
     });
   });
 })();
