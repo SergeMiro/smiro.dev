@@ -796,20 +796,102 @@ h1.ht .crossed::before{
 .outcome .big em{font-style:italic;color:var(--accent);font-weight:300}
 .outcome .lbl{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
 
-/* ───── why hire me ───── */
+/* ───── why hire me ─────
+   Quatre cartes qui disent la même sorte de chose : un titre, une explication,
+   une phrase qui la résume. La hiérarchie doit se lire d'un coup d'œil, et les
+   quatre citations doivent s'aligner d'une carte à l'autre — sinon la grille
+   ressemble à quatre encadrés posés au hasard.
+
+   Toutes les couleurs passent par l'échelle d'accent de theme.css : changer
+   l'accent dans le panneau de réglages recolore ces cartes avec le reste. */
 .why{
-  display:grid;grid-template-columns:1fr 1fr;gap:18px;
+  display:grid;grid-template-columns:1fr 1fr;gap:20px;
+  align-items:stretch;
 }
-@media (max-width:900px){.why{grid-template-columns:1fr}}
+@media (max-width:900px){.why{grid-template-columns:1fr;gap:16px}}
+
 .why-card{
-  background:var(--bg);border:1px solid var(--line-2);border-radius:14px;padding:32px;
+  /* colonne : c'est ce qui permet de pousser la citation en bas de carte */
+  display:flex;flex-direction:column;
+  position:relative;overflow:hidden;
+  border-radius:18px;padding:34px 34px 30px;
+  /* papier légèrement plus clair en haut qu'en bas : la carte se détache du
+     fond sans avoir besoin d'un cadre marqué */
+  background:
+    linear-gradient(180deg, #fbf9f3 0%, var(--bg) 62%),
+    var(--bg);
+  border:1px solid var(--line);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.7),
+    0 1px 2px rgba(27,26,24,.04),
+    0 14px 32px -22px rgba(27,26,24,.22);
+  transition:transform .3s cubic-bezier(.3,1,.4,1),
+             box-shadow .3s ease,
+             border-color .25s ease;
 }
-.why-card h3{font-family:var(--font-serif);font-weight:500;font-size:26px;letter-spacing:-.01em;margin:0 0 14px;line-height:1.15}
+/* filet d'accent en tête de carte : discret au repos, il s'étire au survol */
+.why-card::before{
+  content:"";position:absolute;left:0;top:0;height:2px;
+  width:46px;border-radius:0 2px 2px 0;
+  background:linear-gradient(90deg, var(--accent), oklch(var(--accent-lch) / 0));
+  transition:width .38s cubic-bezier(.3,1,.4,1), opacity .25s;
+  opacity:.55;
+}
+.why-card:hover{
+  transform:translateY(-3px);
+  border-color:oklch(var(--accent-lch) / .28);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.8),
+    0 2px 4px rgba(27,26,24,.05),
+    0 26px 48px -24px rgba(27,26,24,.32);
+}
+.why-card:hover::before{width:140px;opacity:1}
+
+.why-card h3{
+  font-family:var(--font-serif);font-weight:500;
+  font-size:27px;line-height:1.18;letter-spacing:-.015em;
+  margin:0 0 15px;
+  /* évite le mot orphelin sur la deuxième ligne d'un titre en deux lignes */
+  text-wrap:balance;
+}
 .why-card h3 em{font-style:italic;color:var(--accent);font-weight:400}
-.why-card p{font-size:15px;line-height:1.6;color:var(--ink-2);margin:0 0 16px}
+
+.why-card p{
+  font-size:15px;line-height:1.68;color:var(--ink-2);
+  margin:0 0 22px;
+  max-width:52ch;   /* longueur de ligne confortable, même en carte large */
+}
+
 .why-card .quote{
-  font-family:var(--font-serif);font-style:italic;font-size:18px;line-height:1.5;color:var(--muted);
-  border-left:2px solid var(--accent);padding-left:14px;margin:0;
+  /* `margin-top:auto` colle la citation au bas de la carte : les quatre
+     citations se retrouvent alignées, ce que la grille seule ne donnait pas */
+  margin:auto 0 0;
+  position:relative;
+  font-family:var(--font-serif);font-style:italic;
+  font-size:17.5px;line-height:1.52;color:var(--muted);
+  padding:14px 16px 14px 20px;
+  border-radius:0 12px 12px 0;
+  background:linear-gradient(90deg,
+    oklch(var(--accent-wash-lch) / .55),
+    oklch(var(--accent-wash-lch) / .16) 70%,
+    transparent);
+  max-width:none;
+}
+/* le filet vertical : un dégradé plutôt qu'un trait plein, il s'éteint en bas */
+.why-card .quote::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:2.5px;
+  border-radius:2px;
+  background:linear-gradient(180deg,
+    var(--accent),
+    oklch(var(--accent-lch) / .35));
+}
+/* dans une citation en italique, le mot souligné revient au romain : c'est
+   l'usage typographique, et ça se voit mieux qu'un italique dans l'italique */
+.why-card .quote em{font-style:normal;color:var(--accent);font-weight:500}
+
+@media (prefers-reduced-motion: reduce){
+  .why-card, .why-card::before{transition:none}
+  .why-card:hover{transform:none}
 }
 
 /* ───── pinned repos — magazine cards ───── */
@@ -1320,8 +1402,10 @@ footer a:hover{color:var(--accent)}
   .shead h2{font-size:clamp(28px,6vw,38px)}
   .shead p{font-size:15px}
   .outcome{padding:20px}
-  .why-card h3{font-size:22px}
-  .why-card{padding:24px}
+  .why-card h3{font-size:22px;margin-bottom:12px}
+  .why-card{padding:26px 24px 22px;border-radius:16px}
+  .why-card p{font-size:14.5px;margin-bottom:18px}
+  .why-card .quote{font-size:16px;padding:12px 14px 12px 17px}
   .pillar{padding:22px}
   .outcomes{margin-top:24px}
 }

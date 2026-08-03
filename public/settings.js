@@ -133,8 +133,11 @@
       .ss-reset:hover{background:#1b1a18;color:#fbf8f0;border-color:#1b1a18}
 
       @media (max-width:560px){
-        .ss-panel{right:8px;top:118px;bottom:auto;width:calc(100vw - 16px)}
-        .ss-fab{top:72px;right:14px}
+        /* Sur mobile, la colonne de lecture touche les deux bords : une pastille
+           en haut à droite se pose au milieu d'un paragraphe. Le coin bas est
+           libre — l'invite de l'avatar y repasse en flux à cette largeur. */
+        .ss-panel{right:8px;bottom:60px;top:auto;width:calc(100vw - 16px);transform-origin:bottom right}
+        .ss-fab{bottom:14px;right:14px;top:auto}
       }
 
       .ss-lang{
