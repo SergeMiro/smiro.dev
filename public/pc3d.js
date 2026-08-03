@@ -115,7 +115,7 @@ function boot(container) {
       cvRole: 'AI Engineer · Full-Stack',
       cvChips: ['Claude Code', 'n8n', 'RAG', 'TypeScript'],
       cvOpen: 'open CV ↗',
-      thanks: 'Merci d’avoir pris le temps de découvrir mon profil.',
+      thanks: 'Thank you for taking the time to look at my profile.',
       hint: 'move closer to the keyboard →',
       hintReady: 'press  ⏎  Enter',
     },
@@ -250,6 +250,15 @@ function boot(container) {
   const matDetail = new THREE.LineBasicMaterial({ color: LINE, transparent: true, opacity: TUNE.line.detail, depthWrite: false });
   const matHalo = new THREE.LineBasicMaterial({ color: LINE, transparent: true, opacity: TUNE.line.halo, depthWrite: false, blending: THREE.AdditiveBlending });
   const matDesk = new THREE.LineBasicMaterial({ color: LINE, vertexColors: true, transparent: true, opacity: TUNE.line.desk, depthWrite: false });
+  /* The Enter cap is the one key the visitor has to press, so it is the only key
+     drawn with a material of its own. The animation loop slides that material
+     between the pale accent and the ordinary key colour, and the resulting pulse
+     is the entire affordance — the key says "press me" by breathing in the same
+     ink as the rest of the deck. It is deliberately not in WIRE_MATS: the loop
+     re-reads the live LINE/ACCENT every frame, so setAccent() cannot fight it. */
+  const matEnterCap = new THREE.LineBasicMaterial({ color: LINE, transparent: true, opacity: TUNE.line.edge, depthWrite: false });
+  const capCold = new THREE.Color();   // scratch — no allocation per frame
+  const capWarm = new THREE.Color();
 
   // ─────────────────────────────────────────── shell fills
   // A part drawn as two outlines with nothing between them reads as glass: the
@@ -335,17 +344,6 @@ function boot(container) {
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3));
     return new THREE.LineSegments(g, mat);
-  }
-  // flat ring in the XZ plane — the Enter affordance
-  function circleGeom(radius, segs) {
-    const pts = [];
-    for (let i = 0; i < segs; i++) {
-      const a = (i / segs) * Math.PI * 2;
-      pts.push(Math.cos(a) * radius, 0, Math.sin(a) * radius);
-    }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-    return g;
   }
   function softPlane(gw, gd, color, opacity, additive) {
     const m = new THREE.Mesh(
@@ -572,11 +570,13 @@ function boot(container) {
       cx += cellW;
     }
 
-    // the Enter key itself — brighter ink, spans two rows
+    // the Enter key itself — spans two rows, and gets its own path list so its
+    // outline can be recoloured without touching the other keys
     const ex = kx - iw / 2 + cw * (eCol + 0.5);
     const ez = kz - id / 2 + cd * (eRow + 1);
     const ew = kw, ed = cd * 2 * 0.82;
-    pushPath(E, rrPts('xz', ex, ez, ew, ed, KEY_R, 2, kTop));
+    const EN = [];
+    pushPath(EN, rrPts('xz', ex, ez, ew, ed, KEY_R, 2, kTop));
     legends.push({ x: ex, z: ez, text: '⏎', size: 0.1 });
 
     // touchpad — a rounded rectangle with a faint inner outline
@@ -600,6 +600,7 @@ function boot(container) {
 
     g.add(segments(E, matEdge));
     g.add(segments(D, matDetail));
+    g.add(segments(EN, matEnterCap));
     g.add(deckLegends(legends, iw, id, kx, kz, kTop));
 
     TUNE.enter.x = ex;
@@ -919,20 +920,10 @@ function boot(container) {
   enterKey.name = 'enter';
   enterFx.add(enterKey);
 
-  // glowing ring affordance (line loop, in keeping with the wireframe)
-  const matEnterRing = new THREE.LineBasicMaterial({
-    color: ACCENT, transparent: true, opacity: 0,
-    depthWrite: false, blending: THREE.AdditiveBlending,
-  });
-  HILITE_MATS.push(matEnterRing);
-  const enterRing = new THREE.LineLoop(circleGeom(0.24, 48), matEnterRing);
-  enterFx.add(enterRing);
-
-  // pool of light under the key
-  const enterPool = softPlane(0.85, 0.85, ACCENT, 0, true);
-  HILITE_MATS.push(enterPool.material);
-  enterPool.position.y = -0.02;
-  enterFx.add(enterPool);
+  // Nothing else is drawn here on purpose. A pulsing ring and a pool of light
+  // used to sit over and under this key; both were extra objects competing with
+  // the key they were pointing at. The cap's own colour carries the invitation
+  // now (see matEnterCap), so enterFx is only the raycast target.
 
   // ─────────────────────────────────────────── lighting
   // Every line is an unlit LineBasicMaterial and the screen is unlit too, so
@@ -960,7 +951,6 @@ function boot(container) {
     enterFx.position.set(TUNE.enter.x, TUNE.enter.y, TUNE.enter.z);
     // forgiving click target: a little wider/deeper than the drawn key
     enterKey.scale.set(ENTER_SIZE.w * 2.4, 0.16, ENTER_SIZE.d * 1.5);
-    enterRing.scale.setScalar(1);
   }
 
   function placeShadows() {
@@ -1033,7 +1023,7 @@ function boot(container) {
 
   // live-tuning handle exposed for console fiddling
   window.__pc3d = {
-    scene, renderer, camera, pc, screen, enterKey, enterRing, TUNE,
+    scene, renderer, camera, pc, screen, enterKey, TUNE,
     apply, build, placeScreen, placeEnter, placeShadows, placeCamera,
     get wire() { return wire; },
     get lid() { return lidWire; },
@@ -1061,8 +1051,23 @@ function boot(container) {
   let buildOnLand = false;   // ⏎ pressed from rest: build as soon as the dolly lands
   let buildStart = 0;
   let enterGlow = 0;
+
+  /* Slide the Enter cap between the ordinary key colour and the pale accent.
+     k = 0 → indistinguishable from every other key; k = 1 → light orange.
+     LINE and ACCENT are read live, so an accent change mid-pulse is picked up on
+     the next frame instead of freezing the key on the old hue. Opacity rises with
+     the colour, because pale ink at the deck's normal opacity washes out against
+     the beige background and the pulse would be invisible. */
+  function setEnterCap(k) {
+    const t = Math.max(0, Math.min(1, k));
+    capCold.set(LINE);
+    capWarm.set(ACCENT);
+    matEnterCap.color.copy(capCold).lerp(capWarm, t);
+    matEnterCap.opacity = TUNE.line.edge + (1 - TUNE.line.edge) * t;
+  }
+
   const ray = new THREE.Raycaster();
-  ray.params.Line.threshold = 0.12;   // the Enter ring is a line, not a mesh
+  ray.params.Line.threshold = 0.12;   // the deck outlines are lines, not meshes
   const ndc = new THREE.Vector2();
   const vWorld = new THREE.Vector3();
 
@@ -1155,7 +1160,7 @@ function boot(container) {
       // generous targets. Clicks during the push-in are dropped on purpose:
       // the Enter key is still sliding across the screen, so an early tap
       // would fire wherever it happened to be.
-      if (rayHit().intersectObjects([screen, enterKey, enterRing], false).length) startBuild();
+      if (rayHit().intersectObjects([screen, enterKey], false).length) startBuild();
     } else if (state === 'result' && hoverCV) {
       // return to idle, then navigate to the CV page
       exitFocus();
@@ -1572,27 +1577,23 @@ function boot(container) {
 
       const want = zoomed ? 1 : Math.max(0, Math.min(1, (proximity - 0.24) / 0.52));
       enterGlow += (want - enterGlow) * 0.16;
-      enterFx.position.y = TUNE.enter.y + (Math.sin(elapsed * 0.006) * 0.014 + 0.016) * want;
-      // full glow once focused — the key is the only thing left to do
-      const ringWant = zoomed ? 0.9 + Math.sin(elapsed * 0.006) * 0.1
-        : want > 0.15 ? 0.55 + Math.sin(elapsed * 0.006) * 0.3 : 0;
-      matEnterRing.opacity += (ringWant - matEnterRing.opacity) * 0.18;
-      enterRing.scale.setScalar(1 + want * 0.16);
-      enterPool.material.opacity += (enterGlow * 0.5 - enterPool.material.opacity) * 0.16;
+      // The key breathes between the ordinary key colour and the pale accent —
+      // strongest once focused, absent while the visitor is still far away, so it
+      // reads as an invitation exactly when pressing is the thing left to do.
+      setEnterCap(enterGlow * (reduceMotion ? 0.7 : 0.5 + Math.sin(elapsed * 0.0042) * 0.5));
       drawEditor(elapsed);
     } else if (state === 'building') {
       enterGlow = 1;
-      enterFx.position.y = TUNE.enter.y - 0.02;
-      enterPool.material.opacity += (0.62 - enterPool.material.opacity) * 0.2;
+      setEnterCap(1);   // held warm: it has just been pressed
       const be = now - buildStart;
       drawTerminal(be);
       const total = TERM_PER_LINE * txt().term.length + TERM_HOLD;
       if (be > total) { state = 'result'; buildStart = now; }
     } else if (state === 'result') {
-      enterFx.position.y = TUNE.enter.y;
+      // the offer is on screen: the key has nothing left to ask for, so it cools
+      // back to the same colour as every other key
       enterGlow += (0 - enterGlow) * 0.08;
-      matEnterRing.opacity += (0 - matEnterRing.opacity) * 0.18;
-      enterPool.material.opacity += (0 - enterPool.material.opacity) * 0.12;
+      setEnterCap(enterGlow);
       drawResult(now - buildStart);
     }
 
