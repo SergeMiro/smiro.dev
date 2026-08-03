@@ -2133,9 +2133,14 @@ footer a:hover{color:var(--accent)}
   margin-bottom:14px;flex-wrap:wrap;
   font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;color:var(--muted);
 }
-.board-tools .hint{display:inline-flex;align-items:center;gap:8px}
+.board-tools .hint{
+  display:inline-flex;align-items:center;gap:8px;
+  /* trois éléments partagent maintenant la barre : l'aide cède la place en
+     premier, le champ et les boutons gardent leur taille */
+  flex:1 1 auto;min-width:0;
+}
 .board-tools .hint::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px oklch(var(--accent-lch) / .2)}
-.board-tools .actions{display:flex;gap:8px;flex-wrap:wrap}
+.board-tools .actions{display:flex;gap:8px;flex-wrap:wrap;flex:0 0 auto}
 .board-btn{
   font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;
   padding:7px 12px;border-radius:7px;cursor:pointer;
@@ -2147,6 +2152,55 @@ footer a:hover{color:var(--accent)}
 .board-btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .board-btn.primary:hover{background:var(--accent);border-color:var(--accent);color:#fff}
 .board-btn .plus{font-size:14px;line-height:1}
+
+/* ── filtre en direct ──
+   Il cherche dans les deux colonnes à la fois : ce qu'on veut savoir, c'est
+   « est-ce que cet outil est déjà là », pas « de quel côté du mur est-il ». */
+.board-search{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:5px 10px;border-radius:8px;
+  background:var(--bg);border:1px solid var(--line-2);
+  transition:border-color .18s, box-shadow .18s;
+  flex:0 0 auto;min-width:168px;
+}
+.board-search:focus-within{
+  border-color:var(--ink);
+  box-shadow:0 0 0 3px oklch(var(--accent-lch) / .12);
+}
+.board-search .bs-icon{font-size:14px;color:var(--muted);line-height:1}
+.board-search input{
+  flex:1;min-width:0;
+  border:0;outline:0;background:transparent;
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;color:var(--ink);
+  padding:2px 0;
+}
+.board-search input::placeholder{color:var(--faint)}
+/* la croix native de Safari/Chrome ferait doublon avec la nôtre */
+.board-search input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
+.board-search .bs-clear{
+  border:0;background:transparent;cursor:pointer;padding:0 2px;
+  font-size:15px;line-height:1;color:var(--muted);
+}
+.board-search .bs-clear:hover{color:var(--ink)}
+.board-search .bs-count{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;
+  color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.board-search .bs-count.none{color:var(--accent)}
+
+/* Les post-its hors résultat s'effacent sans disparaître : la carte du mur
+   reste lisible, on voit ce qu'on écarte. */
+.postit.dimmed{
+  opacity:.16;filter:grayscale(.7);
+  pointer-events:none;
+}
+.postit.match{
+  outline:2px solid oklch(var(--accent-lch) / .6);
+  outline-offset:3px;
+}
+.postit{
+  transition:opacity .22s ease, filter .22s ease, outline-color .22s ease;
+}
 
 .board{
   position:relative;
@@ -3474,6 +3528,14 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   <div class="board-wrap">
     <div class="board-tools">
       <div class="hint" data-i18n="stack.hint">right: my stack, locked · left: yours — double-click to pin a tool I'm missing</div>
+      <div class="board-search">
+        <span class="bs-icon" aria-hidden="true">⌕</span>
+        <input id="board-find" type="search" autocomplete="off" spellcheck="false"
+               placeholder="filter the wall…" data-i18n-placeholder="stack.search_ph"
+               aria-label="Filter the notes on the board">
+        <button type="button" class="bs-clear" id="board-find-clear" aria-label="clear" hidden>×</button>
+        <span class="bs-count" id="board-find-count" aria-live="polite"></span>
+      </div>
       <div class="actions">
         <button class="board-btn" id="board-shuffle" data-i18n="stack.shuffle">↻ shuffle</button>
         <button class="board-btn" id="board-tidy" data-i18n="stack.tidy">⊞ tidy</button>
@@ -5807,6 +5869,84 @@ function bootWorks(){
     else if(fr){ /* i18n pas encore prêt : il repassera au chargement */ }
   }
 
+  /* ── filtre en direct ───────────────────────────────────────────────────
+     Le texte d'un post-it est réparti entre plusieurs éléments — le nom, la
+     catégorie manuscrite (`database`, `edge`, `infra`…), et la ligne
+     d'attribution où le nom d'une personne peut être un lien. On aplatit tout
+     ça une fois, à la création, dans `data-search` : refaire un `innerText` à
+     chaque frappe sur treize post-its coûterait un reflow par lettre.
+
+     La comparaison est faite sans accents ni casse, sinon « Traefik » ne
+     répondrait pas à « traefik » et « déposé » raterait « depose ». */
+  function fold(str){
+    return (str || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+  }
+
+  /** (Re)calcule le texte indexé d'un post-it. */
+  function indexNote(el){
+    const parts = [];
+    el.querySelectorAll('.name, .cat, .who, .by a').forEach(n => parts.push(n.textContent));
+    el.dataset.search = fold(parts.join(' ').replace(/\s+/g, ' ').trim());
+    return el.dataset.search;
+  }
+
+  const findInput = document.getElementById('board-find');
+  const findClear = document.getElementById('board-find-clear');
+  const findCount = document.getElementById('board-find-count');
+  let findQuery = '';
+
+  /** Applique la requête courante à tous les post-its, des deux zones. */
+  function applyFilter(){
+    const q = fold(findQuery).trim();
+    const searching = q.length > 0;
+    let hits = 0;
+
+    notes.forEach(el=>{
+      // un brouillon en cours de saisie n'est pas un résultat : on n'éteint
+      // jamais le post-it que le visiteur est en train d'écrire
+      if(el.classList.contains('editing')){
+        el.classList.remove('dimmed','match');
+        return;
+      }
+      if(!searching){
+        el.classList.remove('dimmed','match');
+        return;
+      }
+      const hay = el.dataset.search != null ? el.dataset.search : indexNote(el);
+      const hit = hay.includes(q);
+      el.classList.toggle('match', hit);
+      el.classList.toggle('dimmed', !hit);
+      if(hit) hits++;
+    });
+
+    if(findClear) findClear.hidden = !searching;
+    if(findCount){
+      const total = notes.filter(n => !n.classList.contains('editing')).length;
+      findCount.textContent = searching ? `${hits}/${total}` : '';
+      findCount.classList.toggle('none', searching && hits === 0);
+    }
+  }
+
+  /** Remet le mur dans son état d'origine. */
+  function clearFilter(){
+    findQuery = '';
+    if(findInput) findInput.value = '';
+    applyFilter();
+  }
+
+  if(findInput){
+    // `input` et non `keyup` : le collage, le glisser-déposer de texte et la
+    // croix native du champ passent aussi par là
+    findInput.addEventListener('input', ()=>{ findQuery = findInput.value; applyFilter(); });
+    findInput.addEventListener('keydown', e=>{
+      if(e.key === 'Escape'){ e.stopPropagation(); clearFilter(); findInput.blur(); }
+    });
+  }
+  if(findClear) findClear.addEventListener('click', ()=>{ clearFilter(); findInput.focus(); });
+
   function rand(a,b){return a + Math.random()*(b-a)}
   function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
 
@@ -5947,6 +6087,9 @@ function bootWorks(){
     board.appendChild(el);
     notes.push(el);
     fitName(el.querySelector('.name'));
+    indexNote(el);
+    // un post-it créé pendant qu'un filtre est actif doit obéir au filtre
+    applyFilter();
     return el;
   }
 
@@ -6049,6 +6192,10 @@ function bootWorks(){
         node.removeEventListener('blur', done);
         node.removeEventListener('keydown', key);
         node.removeEventListener('input', onInput);
+        // le texte a changé : l'index doit suivre, sinon le filtre répond sur
+        // l'ancienne valeur
+        indexNote(el);
+        applyFilter();
       };
       const key = (ev)=>{
         if(ev.key==='Enter'){ ev.preventDefault(); node.blur(); }
@@ -6081,7 +6228,7 @@ function bootWorks(){
       el.style.transition = 'transform .35s cubic-bezier(.5,-.4,.7,.2), opacity .35s';
       el.style.transform = `rotate(${rot()+20}deg) translateY(600px)`;
       el.style.opacity = 0;
-      setTimeout(()=>{ el.remove(); notes = notes.filter(n=>n!==el); syncZoneButtons(); }, 340);
+      setTimeout(()=>{ el.remove(); notes = notes.filter(n=>n!==el); syncZoneButtons(); applyFilter(); }, 340);
     });
   }
 
@@ -6104,6 +6251,8 @@ function bootWorks(){
     el.dataset.rot = rot;
     const box = zoneBox('guest');
     el.dataset.zone = 'guest';
+    // le brouillon est exempté du filtre tant qu'il est en cours de saisie
+    el.classList.remove('dimmed','match');
     const x = clampX('guest', rand(box.left + 14, Math.max(box.left + 16, box.right - 200)), 158);
     const y = clampY(rand(20, Math.max(24, board.clientHeight - 210)), 158);
     el.style.left = x+'px'; el.style.top = y+'px';
@@ -6168,7 +6317,7 @@ function bootWorks(){
       el.style.transition = 'transform .3s, opacity .3s';
       el.style.opacity = 0;
       el.style.transform = `rotate(${rot}deg) scale(.7)`;
-      setTimeout(()=>{ el.remove(); notes = notes.filter(n=>n!==el); syncZoneButtons(); }, 300);
+      setTimeout(()=>{ el.remove(); notes = notes.filter(n=>n!==el); syncZoneButtons(); applyFilter(); }, 300);
     }
     function settle(){
       teardown();
@@ -6186,7 +6335,9 @@ function bootWorks(){
       });
       wireNote(el);
       fitName(el.querySelector('.name'));
+      indexNote(el);
       syncZoneButtons();
+      applyFilter();
       const base = el.style.transform;
       el.animate([{transform:base+' scale(1.06)'},{transform:base}], {duration:300, easing:'cubic-bezier(.2,.9,.3,1)'});
     }

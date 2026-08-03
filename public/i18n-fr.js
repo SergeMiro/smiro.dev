@@ -73,6 +73,7 @@ window.I18N_FR = {
     "stack.hint":         "à droite : mon stack, verrouillé · à gauche : à vous — double-clic pour épingler un outil manquant",
     "stack.zone.owner":   "mon stack · en production",
     "stack.zone.guest":   "à vous · l'outil qui manque ?",
+    "stack.search_ph":    "filtrer le mur…",
     "stack.shuffle":      "↻ mélanger",
     "stack.tidy":         "⊞ ranger",
     "stack.add":          "proposer un outil",
