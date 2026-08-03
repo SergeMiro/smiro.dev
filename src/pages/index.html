@@ -2150,7 +2150,10 @@ footer a:hover{color:var(--accent)}
 
 .board{
   position:relative;
-  height:620px;
+  /* deux zones à loger : celle de l'auteur tient deux rangées de post-its,
+     celle des visiteurs doit rester assez haute pour en accueillir une. */
+  height:780px;
+  --split:56%;
   border-radius:14px;
   /* very subtle paper — barely there */
   background:
@@ -2178,6 +2181,59 @@ footer a:hover{color:var(--accent)}
   mask-image:radial-gradient(ellipse at center, #000 30%, transparent 85%);
   -webkit-mask-image:radial-gradient(ellipse at center, #000 30%, transparent 85%);
 }
+.board-owner-wash{
+  /* teinte à peine perceptible : la zone de l'auteur doit se lire comme un
+     territoire, pas comme un bloc coloré qui écrase les post-its */
+  position:absolute;left:0;right:0;top:0;height:var(--split);
+  pointer-events:none;
+  background:linear-gradient(180deg, oklch(var(--accent-wash-lch) / .5), oklch(var(--accent-wash-lch) / .16));
+}
+
+.board-split{
+  /* la ligne que le client a tracée au feutre, en langage du site : un tiret
+     dans la couleur d'accent plutôt qu'un trait rouge posé sur la maquette */
+  position:absolute;left:0;right:0;top:var(--split);
+  height:0;pointer-events:none;z-index:5;
+  border-top:2px dashed oklch(var(--accent-lch) / .45);
+}
+.board-split::after{
+  /* un halo doux des deux côtés du trait, pour l'ancrer dans le papier */
+  content:"";position:absolute;left:0;right:0;top:-9px;height:18px;
+  background:linear-gradient(180deg, transparent, oklch(var(--accent-lch) / .07), transparent);
+}
+.board-split.refused{
+  animation:splitRefuse .45s ease;
+}
+@keyframes splitRefuse{
+  0%,100%{border-top-color:oklch(var(--accent-lch) / .45)}
+  35%{border-top-color:oklch(var(--accent-lch) / 1)}
+}
+
+.board-zone-label{
+  position:absolute;z-index:6;pointer-events:none;
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted);
+  display:flex;align-items:center;gap:7px;
+  background:oklch(var(--bg-lch, 0.97 0.008 85) / .0);
+}
+.board-zone-label::before{
+  content:"";width:5px;height:5px;border-radius:50%;
+  background:oklch(var(--accent-lch) / .55);
+}
+.board-zone-label.owner{
+  /* juste au-dessus de la ligne : en haut du tableau, l'étiquette passait
+     derrière le dernier post-it de la première rangée */
+  right:16px;top:calc(var(--split) - 22px);
+}
+.board-zone-label.owner::before{ background:oklch(var(--accent-lch) / .8) }
+.board-zone-label.guest{ right:16px;top:calc(var(--split) + 14px) }
+.board-zone-label.guest::before{ background:rgba(27,26,24,.28) }
+.board-zone-label .lock{ font-size:10px;opacity:.65 }
+
+/* — post-its de l'auteur : on les regarde, on ne les déplace pas — */
+.postit.owned{ cursor:default }
+.postit.owned .x{ display:none }
+
 .board::after{
   /* whisper of paper noise */
   content:"";position:absolute;inset:0;pointer-events:none;opacity:.04;mix-blend-mode:multiply;
@@ -3416,7 +3472,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   </div>
   <div class="board-wrap">
     <div class="board-tools">
-      <div class="hint" data-i18n="stack.hint">drag to rearrange · double-click to edit · employers, drop a tool →</div>
+      <div class="hint" data-i18n="stack.hint">top zone: my stack, locked · bottom zone: yours — double-click to pin a tool →</div>
       <div class="actions">
         <button class="board-btn" id="board-shuffle" data-i18n="stack.shuffle">↻ shuffle</button>
         <button class="board-btn" id="board-tidy" data-i18n="stack.tidy">⊞ tidy</button>
@@ -5674,6 +5730,75 @@ function bootWorks(){
   let zTop = 10;
   let notes = [];
 
+  /* ── deux zones, une frontière ─────────────────────────────────────────
+     Le tableau est coupé en deux par une ligne horizontale. Au-dessus, la zone
+     de l'auteur : les outils réellement utilisés en production, posés une fois
+     et plus jamais déplacés — ni par un glisser, ni par un mélange, ni par une
+     double-clic. En dessous, la zone des visiteurs : tout ce qu'un recruteur
+     épingle atterrit là et n'en sort pas.
+
+     La frontière n'est pas qu'un décor : c'est elle qui borne le déplacement.
+     Un post-it de visiteur qui remonte est arrêté net sur la ligne, et la ligne
+     le dit en clignotant — refuser sans expliquer serait pris pour un bug. */
+  const SPLIT = 0.56;   // doit rester égal au --split du CSS
+
+  function splitY(){ return Math.round(board.clientHeight * SPLIT); }
+
+  /** Bornes verticales d'une zone, en pixels du tableau. */
+  function zoneBox(zone){
+    const s = splitY();
+    return zone === 'owner'
+      ? { top: 0, bottom: s }
+      : { top: s, bottom: board.clientHeight };
+  }
+
+  /** Ordonnée maximale d'un post-it de hauteur `h` dans sa zone. */
+  function clampY(zone, y, h){
+    const box = zoneBox(zone);
+    // l'auteur peut mordre légèrement le haut, personne ne franchit la ligne
+    const min = zone === 'owner' ? -10 : box.top + 10;
+    const max = Math.max(min, box.bottom - h - 10);
+    return Math.max(min, Math.min(max, y));
+  }
+
+  function zoneOf(el){ return el.dataset.zone === 'owner' ? 'owner' : 'guest'; }
+
+  let splitEl = null;
+  /** Signale un déplacement refusé : la ligne clignote une fois. */
+  function refuseAtSplit(){
+    if(!splitEl) return;
+    splitEl.classList.remove('refused');
+    // relire une propriété force le navigateur à rejouer l'animation
+    void splitEl.offsetWidth;
+    splitEl.classList.add('refused');
+  }
+
+  /** Pose la ligne et les deux étiquettes. Rappelée après chaque vidage. */
+  function ensureZones(){
+    const fr = window.I18N && window.I18N.getLang && window.I18N.getLang()==='fr';
+
+    const wash = document.createElement('div');
+    wash.className = 'board-owner-wash';
+    board.appendChild(wash);
+
+    splitEl = document.createElement('div');
+    splitEl.className = 'board-split';
+    board.appendChild(splitEl);
+
+    const owner = document.createElement('div');
+    owner.className = 'board-zone-label owner';
+    owner.innerHTML = '<span data-i18n="stack.zone.owner">my stack · in production</span><span class="lock">🔒</span>';
+    board.appendChild(owner);
+
+    const guest = document.createElement('div');
+    guest.className = 'board-zone-label guest';
+    guest.innerHTML = '<span data-i18n="stack.zone.guest">your suggestions · drop here</span>';
+    board.appendChild(guest);
+
+    if(window.I18N && window.I18N.apply) window.I18N.apply();
+    else if(fr){ /* i18n pas encore prêt : il repassera au chargement */ }
+  }
+
   function rand(a,b){return a + Math.random()*(b-a)}
   function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
 
@@ -5757,7 +5882,10 @@ function bootWorks(){
     const color = data.color || pick(COLORS);
     const ink   = data.ink   || pick(INKS);
     const fix   = data.fix   || pick(FIXES);
-    el.className = 'postit ' + color + ' ' + ink;
+    // `owned` : un post-it de l'auteur. Il se regarde, il ne se manipule pas.
+    const owned = data.zone === 'owner';
+    el.className = 'postit ' + color + ' ' + ink + (owned ? ' owned' : '');
+    el.dataset.zone = owned ? 'owner' : 'guest';
     el.dataset.fix = fix;
     const rot = data.rot != null ? data.rot : rand(-6,6);
     el.dataset.rot = rot;
@@ -5800,7 +5928,14 @@ function bootWorks(){
       inkify(el.querySelector('.name'), data.name || '');
     }
 
-    wireNote(el);
+    if(el.dataset.zone === 'owner'){
+      // pas d'écouteur du tout : plus sûr qu'un `if` dans chaque gestionnaire
+      el.title = (window.I18N && window.I18N.getLang && window.I18N.getLang()==='fr')
+        ? "Zone de l'auteur — outils utilisés en production, non modifiables"
+        : "Author's zone — tools used in production, not editable";
+    } else {
+      wireNote(el);
+    }
     board.appendChild(el);
     notes.push(el);
     fitName(el.querySelector('.name'));
@@ -5827,10 +5962,15 @@ function bootWorks(){
       if(!dragging) return;
       const dx = e.clientX - sx, dy = e.clientY - sy;
       if(Math.abs(dx)+Math.abs(dy) > 3) moved=true;
-      const bw = board.clientWidth, bh = board.clientHeight;
+      const bw = board.clientWidth;
       const w = el.offsetWidth, h = el.offsetHeight;
       const nx = Math.max(-20, Math.min(bw - w + 20, ox + dx));
-      const ny = Math.max(-10, Math.min(bh - h + 20, oy + dy));
+
+      // la frontière est une butée, pas une suggestion
+      const wanted = oy + dy;
+      const ny = clampY(zoneOf(el), wanted, h);
+      if(ny !== wanted && wanted < ny) refuseAtSplit();
+
       el.style.left = nx+'px'; el.style.top = ny+'px';
     });
     const endDrag = e=>{
@@ -5915,7 +6055,7 @@ function bootWorks(){
       el.style.transition = 'transform .35s cubic-bezier(.5,-.4,.7,.2), opacity .35s';
       el.style.transform = `rotate(${rot()+20}deg) translateY(600px)`;
       el.style.opacity = 0;
-      setTimeout(()=>{ el.remove(); notes = notes.filter(n=>n!==el); }, 340);
+      setTimeout(()=>{ el.remove(); notes = notes.filter(n=>n!==el); syncZoneButtons(); }, 340);
     });
   }
 
@@ -5936,9 +6076,11 @@ function bootWorks(){
     el.dataset.fix = fix;
     const rot = rand(-5,5);
     el.dataset.rot = rot;
-    const bw = board.clientWidth, bh = board.clientHeight;
-    const x = rand(bw*0.30, Math.max(bw*0.30, bw*0.56));
-    const y = rand(bh*0.16, Math.max(bh*0.16, bh*0.44));
+    const bw = board.clientWidth;
+    const box = zoneBox('guest');
+    el.dataset.zone = 'guest';
+    const x = rand(bw*0.20, Math.max(bw*0.20, bw*0.58));
+    const y = clampY('guest', rand(box.top + 16, Math.max(box.top + 18, box.bottom - 200)), 158);
     el.style.left = x+'px'; el.style.top = y+'px';
     el.style.transform = `rotate(${rot}deg)`;
     el.style.zIndex = ++zTop;
@@ -6001,7 +6143,7 @@ function bootWorks(){
       el.style.transition = 'transform .3s, opacity .3s';
       el.style.opacity = 0;
       el.style.transform = `rotate(${rot}deg) scale(.7)`;
-      setTimeout(()=>{ el.remove(); notes = notes.filter(n=>n!==el); }, 300);
+      setTimeout(()=>{ el.remove(); notes = notes.filter(n=>n!==el); syncZoneButtons(); }, 300);
     }
     function settle(){
       teardown();
@@ -6019,6 +6161,7 @@ function bootWorks(){
       });
       wireNote(el);
       fitName(el.querySelector('.name'));
+      syncZoneButtons();
       const base = el.style.transform;
       el.animate([{transform:base+' scale(1.06)'},{transform:base}], {duration:300, easing:'cubic-bezier(.2,.9,.3,1)'});
     }
@@ -6048,19 +6191,28 @@ function bootWorks(){
     setTimeout(()=>el.querySelector('.name').focus(), 130);
   }
 
-  // initial layout — loose grid + jitter
+  /* Disposition initiale : grille lâche, uniquement dans la zone de l'auteur.
+     Le pas vertical se calcule à partir de la hauteur disponible et du nombre
+     de rangées nécessaires — un tableau plus étroit fait plus de rangées, et
+     elles doivent toutes tenir au-dessus de la ligne. */
   function initialLayout(){
     board.innerHTML='';
     notes = [];
+    ensureZones();
+
     const bw = board.clientWidth;
     const cols = Math.max(3, Math.floor((bw-40) / 175));
     const cellW = (bw - 40) / cols;
+    const rows = Math.ceil(SEED.length / cols);
+    const box = zoneBox('owner');
+    const rowH = Math.max(120, Math.min(168, (box.bottom - 34 - 158) / Math.max(1, rows - 1)));
+
     SEED.forEach((d,i)=>{
       const col = i % cols;
       const row = Math.floor(i / cols);
       const x = 20 + col*cellW + rand(-12,18);
-      const y = 24 + row*168 + rand(-10,14);
-      createNote(d, {x, y});
+      const y = clampY('owner', 24 + row*rowH + rand(-8,10), 158);
+      createNote({...d, zone:'owner'}, {x, y});
     });
   }
 
@@ -6108,14 +6260,21 @@ function bootWorks(){
 
     const fr = window.I18N && window.I18N.getLang()==='fr';
     const catLabel = fr ? 'souhaité' : 'on the wishlist';
-    const bw = board.clientWidth, bh = board.clientHeight;
+    const bw = board.clientWidth;
+    const box = zoneBox('guest');
     const el = createNote({
       name: tech,
       cat:  catLabel,
       by:   { person, personUrl, company, companyUrl },
+      zone: 'guest',
       color: pick(COLORS), ink: pick(INKS), fix: pick(FIXES)
-    }, {x: rand(bw*0.28, bw*0.6), y: rand(bh*0.2, bh*0.48)});
+    }, {
+      x: rand(bw*0.18, Math.max(bw*0.18, bw*0.62)),
+      // sous la ligne, toujours : c'est la zone du visiteur
+      y: clampY('guest', rand(box.top + 16, Math.max(box.top + 18, box.bottom - 190)), 158)
+    });
 
+    syncZoneButtons();
     closeModal();
     // little pop to draw the eye to the freshly pinned note
     const base = el.style.transform;
@@ -6125,12 +6284,37 @@ function bootWorks(){
     );
   });
 
-  document.getElementById('board-shuffle').addEventListener('click', ()=>{
-    const bw = board.clientWidth, bh = board.clientHeight;
-    notes.forEach(el=>{
+  /** Les post-its que le visiteur a le droit de bouger. */
+  function guestNotes(){ return notes.filter(el => el.dataset.zone !== 'owner'); }
+
+  /* Les deux boutons ne touchent que la zone des visiteurs : mélanger le mur de
+     l'auteur reviendrait à le laisser modifier, ce que la consigne exclut. Tant
+     qu'il n'y a rien à ranger, ils sont éteints plutôt que muets. */
+  const shuffleBtn = document.getElementById('board-shuffle');
+  const tidyBtn = document.getElementById('board-tidy');
+
+  function syncZoneButtons(){
+    const empty = guestNotes().length === 0;
+    for(const b of [shuffleBtn, tidyBtn]){
+      if(!b) continue;
+      b.disabled = empty;
+      b.style.opacity = empty ? '.45' : '';
+      b.style.cursor = empty ? 'not-allowed' : '';
+      b.title = empty
+        ? ((window.I18N && window.I18N.getLang && window.I18N.getLang()==='fr')
+            ? "Rien à réorganiser : la zone des visiteurs est vide"
+            : 'Nothing to rearrange yet — the visitors zone is empty')
+        : '';
+    }
+  }
+
+  shuffleBtn.addEventListener('click', ()=>{
+    const bw = board.clientWidth;
+    const box = zoneBox('guest');
+    guestNotes().forEach(el=>{
       const w = el.offsetWidth, h = el.offsetHeight;
-      const nx = rand(10, bw - w - 10);
-      const ny = rand(10, bh - h - 10);
+      const nx = rand(10, Math.max(12, bw - w - 10));
+      const ny = clampY('guest', rand(box.top + 12, Math.max(box.top + 14, box.bottom - h - 12)), h);
       const nr = rand(-8, 8);
       el.dataset.rot = nr;
       el.style.transition = 'left .5s cubic-bezier(.2,.8,.3,1), top .5s cubic-bezier(.2,.8,.3,1), transform .5s';
@@ -6140,15 +6324,16 @@ function bootWorks(){
     });
   });
 
-  document.getElementById('board-tidy').addEventListener('click', ()=>{
+  tidyBtn.addEventListener('click', ()=>{
     const bw = board.clientWidth;
     const cols = Math.max(3, Math.floor((bw-40) / 175));
     const cellW = (bw - 40) / cols;
-    notes.forEach((el,i)=>{
+    const box = zoneBox('guest');
+    guestNotes().forEach((el,i)=>{
       const col = i % cols;
       const row = Math.floor(i / cols);
       const nx = 20 + col*cellW + 6;
-      const ny = 24 + row*168;
+      const ny = clampY('guest', box.top + 18 + row*168, el.offsetHeight);
       const nr = rand(-4, 4);
       el.dataset.rot = nr;
       el.style.transition = 'left .5s cubic-bezier(.2,.8,.3,1), top .5s cubic-bezier(.2,.8,.3,1), transform .5s';
@@ -6162,19 +6347,25 @@ function bootWorks(){
   // double-click empty board → open the add-note form
   board.addEventListener('dblclick', e=>{
     if(e.target !== board) return;
+    // un double-clic dans la zone de l'auteur n'ouvre rien : la ligne clignote
+    // pour dire pourquoi, au lieu de laisser croire à un raté
+    const y = e.clientY - board.getBoundingClientRect().top;
+    if(y < splitY()){ refuseAtSplit(); return; }
     createDraftNote();
   });
 
   initialLayout();
+  syncZoneButtons();
+
   window.addEventListener('resize', ()=>{
-    // reclamp notes
-    const bw = board.clientWidth, bh = board.clientHeight;
+    // au redimensionnement, chaque post-it revient dans SA zone
+    const bw = board.clientWidth;
     notes.forEach(el=>{
       const w = el.offsetWidth, h = el.offsetHeight;
-      let x = parseFloat(el.style.left), y = parseFloat(el.style.top);
-      x = Math.min(x, bw - w - 10);
-      y = Math.min(y, bh - h - 10);
-      el.style.left = x+'px'; el.style.top = y+'px';
+      let x = parseFloat(el.style.left);
+      x = Math.max(-20, Math.min(x, bw - w - 10));
+      el.style.left = x+'px';
+      el.style.top = clampY(zoneOf(el), parseFloat(el.style.top), h) + 'px';
     });
   });
 })();
