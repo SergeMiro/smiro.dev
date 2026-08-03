@@ -326,9 +326,12 @@
 
     /* ══════════════════════════════════════════════════════════ 04 */
     {
-      id: 'morganauto',
-      card: 'MorganAuto',
-      name: 'MorganAuto',
+      id: 'amc-motors-21',
+      // #work-morganauto was shareable before the rename, so the old id keeps
+      // resolving here instead of opening nothing
+      alias: ['morganauto'],
+      card: 'AMC Motors 21',
+      name: 'AMC Motors 21 : Automobiles-Mobilités-Conseil',
       logo: null,
       tone: 'oklch(0.6 0.1 115)', ink: '#1b1a18',
       kind: T('web app · automotive', 'application web · automobile'),
@@ -338,7 +341,7 @@
       kick: T(
         'A used-car dealer’s whole front and back office: catalogue with 360° interiors, an AI matchmaker for buyers, and a CRM that turns an enquiry into a signed quote.',
         'Tout le front et le back-office d’un concessionnaire de véhicules d’occasion : catalogue avec intérieurs à 360°, un assistant IA pour les acheteurs, et un CRM qui transforme une demande en devis signé.'),
-      repo: { url: 'https://github.com/SergeMiro/MorganAuto', label: 'SergeMiro/MorganAuto', vis: T('public', 'public') },
+      repo: { url: 'https://github.com/SergeMiro/AMC-Motors-21', label: 'SergeMiro/AMC-Motors-21', vis: T('public', 'public') },
       demo: null,
       demoNote: T('The deployment is switched off — no public access to production; the repository is the reference.',
                   'Le déploiement est éteint : pas d’accès public au prod ; le dépôt est la référence.'),
