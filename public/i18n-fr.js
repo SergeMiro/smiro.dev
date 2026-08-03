@@ -444,19 +444,19 @@ window.I18N_FR = {
     "view all 16 repositories on GitHub":
       "voir les 16 dépôts sur GitHub",
     "what this means for you":       "ce que ça veut dire pour vous",
-    "The pipeline is the":           "Le pipeline EST le",
+    "The pipeline is the":           "Le pipeline, c'est le",
     "portfolio":                     "portfolio",
     "Hiring for senior IC with AI / automation / platform? These are the patterns I bring day one.":
       "Vous recrutez un senior IC avec IA / automatisation / plateforme ? Voilà les patterns que j'apporte dès le premier jour.",
     "If you're hiring for a senior engineering role with AI, automation, or platform components — these are the patterns I'd bring to your team on day one.":
       "Si vous recrutez pour un poste d'ingénieur senior avec une composante IA, automatisation ou plateforme — voilà les patterns que j'apporterais à votre équipe dès le premier jour.",
-    "I think in":                    "Je pense en",
+    "I think in":                    "Je raisonne en",
     "systems":                       "systèmes",
-    ", not tickets.":                ", pas en tickets.",
+    ", not tickets.":                ", plutôt qu'en tickets.",
     "The pipeline above wasn't a ticket — I saw a workflow problem, designed end-to-end, shipped. Same approach to product work.":
       "Le pipeline ci-dessus n'était pas un ticket — j'ai vu un problème de workflow, j'ai conçu de bout en bout, j'ai livré. Même approche côté produit.",
     "\"Production over prototype\" isn't a slogan — it's how I scope.":
-      "« Production plutôt que prototype » n'est pas un slogan — c'est comme ça que je cadre.",
+      "Je cadre chaque projet sur un principe simple : viser la production, pas le prototype.",
     "AI is a":                       "L'IA est un",
     "tool":                          "outil",
     ", not the product.":            ", pas le produit.",
@@ -469,18 +469,18 @@ window.I18N_FR = {
     "I run my own":                  "Je gère ma propre",
     "infra":                         "infra",
     "VPS, Docker, n8n, Postgres, Firecrawl, Telegram bots — self-hosted and hardened (OWASP, firewalls, secrets), on hardware I pay for. I'd rather understand a system than rent it.":
-      "VPS, Docker, n8n, Postgres, Firecrawl, bots Telegram — self-hosted et durci (OWASP, pare-feu, secrets), sur du matériel que je paie. Je préfère comprendre un système que le louer.",
+      "VPS, Docker, n8n, Postgres, Firecrawl, bots Telegram — auto-hébergés et durcis (OWASP, pare-feu, secrets), sur du matériel que je paie et que j'administre moi-même.",
     "If I can't run it locally, I don't trust it in prod.":
-      "Si je ne peux pas le lancer en local, je ne lui fais pas confiance en prod.",
-    "I write":                       "J'écris en",
+      "Ce que je ne peux pas reproduire en local, je ne le considère pas prêt pour la production.",
+    "I write":                       "Je travaille en",
     "French":                        "français",
-    "& English.":                    "& anglais.",
+    "& English.":                    "et en anglais.",
     "Dijon, FR — open to remote / hybrid across FR & EU. Specs, reviews, customer copy in both.":
       "Dijon, FR — ouvert à distance / hybride en FR & UE. Specs, revues, copy client dans les deux langues.",
     "Native FR. Senior-level EN. C++ in CSS.":
       "FR natif. EN niveau senior. C++ en CSS.",
     "Fluent FR · senior-level EN · native UA/RU. C++ in CSS.":
-      "FR courant · EN niveau senior · UA/RU natif. C++ en CSS.",
+      "Français courant · anglais professionnel · ukrainien et russe, langues maternelles.",
 
     /* CTA */
     "Want this kind of":             "Vous voulez ce genre de",
