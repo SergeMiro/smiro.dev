@@ -304,7 +304,7 @@ window.I18N_FR = {
     "ask anything · before we meet": "posez vos questions · avant qu'on se rencontre",
     "Sergiy's":                       "Sergiy,",
     "online · ready to talk":        "en ligne · prêt à discuter",
-    "Talk by voice":                 "Parler à la voix",
+    "Call":                          "Appeler",
     "or pick a question":            "ou choisissez une question",
     /* the greeting bubble is keyed as HTML (chat.greet) — French needs the
        elision "l'avatar", which per-node translation can't produce */
@@ -317,7 +317,6 @@ window.I18N_FR = {
     "CTO":                           "CTO",
     "How do you work with a team?":  "Comment travaillez-vous en équipe ?",
     "How do you build AI agents?":   "Comment construisez-vous des agents IA ?",
-    "Talk by voice":                 "Parler par la voix",
     "or pick a question":            "ou choisis une question",
     "Or type a question…":          "Ou tape une question…",
     "What's your stack?":            "C'est quoi votre stack ?",

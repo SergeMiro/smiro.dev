@@ -2968,7 +2968,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
         <div class="cv-tagline">online · ready to talk</div>
         <button class="cv-call-btn" id="cv-call">
           <span class="cv-mic">🎙</span>
-          <span>Talk by voice</span>
+          <span>Call</span>
         </button>
         <div class="cv-or">or pick a question</div>
       </div>
@@ -3887,22 +3887,39 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   // ── voice in: Web Speech recognition, one utterance at a time ─────────
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   let rec = null;
+
+  /* One recognition turn. Chrome ends a turn on the first pause and reports a
+     plain `no-speech` error when the caller was only thinking — so the outcome has
+     to say *why* it ended, otherwise the loop cannot tell a pause from a hang-up.
+     Resolves { text } on speech, or { error } with the reason. */
   function listenOnce() {
     return new Promise((resolve) => {
-      if (!SR) return resolve(null);
-      rec = new SR();
-      rec.lang = speechLang();
-      rec.interimResults = false;
-      rec.maxAlternatives = 1;
-      rec.continuous = false;
+      if (!SR) return resolve({ error: 'unsupported' });
+      const r = new SR();
+      rec = r;
+      r.lang = speechLang();
+      r.interimResults = false;
+      r.maxAlternatives = 1;
+      r.continuous = false;
       let settled = false;
-      const done = (v) => { if (!settled) { settled = true; rec = null; resolve(v); } };
-      rec.onresult = (ev) => done(ev.results[0][0].transcript);
-      rec.onerror = () => done(null);
-      rec.onend = () => done(null);
-      try { rec.start(); } catch (e) { done(null); }
+      const done = (v) => {
+        if (settled) return;
+        settled = true;
+        // only clear the shared handle if this turn still owns it — a late event
+        // from an aborted turn must not wipe out a newer recogniser
+        if (rec === r) rec = null;
+        resolve(v);
+      };
+      r.onresult = (ev) => done({ text: ev.results[0][0].transcript });
+      r.onerror = (ev) => done({ error: (ev && ev.error) || 'error' });
+      r.onend = () => done({ error: 'end' });
+      try { r.start(); } catch (e) { done({ error: 'start-failed' }); }
     });
   }
+
+  // Permission, hardware and support problems end a call; everything else is a
+  // pause the caller is entitled to take.
+  const FATAL_MIC = ['not-allowed', 'service-not-allowed', 'audio-capture', 'unsupported'];
 
   // ── the conversation itself ───────────────────────────────────────────
   async function askAvatar(question, opts) {
@@ -3960,27 +3977,62 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
     if (!text && window.I18N) window.I18N.apply();
   }
 
+  // idempotent on purpose: the click handler, the Escape key and the end of the
+  // loop all land here, and every one of them must leave the same clean state
   function stopVoice() {
     voiceOn = false;
-    if (rec) { try { rec.abort(); } catch (e) {} rec = null; }
+    // abort() and not stop(): stop() waits for a final result and keeps the
+    // microphone held, which is what left the browser indicator lit after the
+    // button had already flipped back. The handlers stay attached on purpose, so
+    // the pending listenOnce() settles and the loop unwinds instead of dangling.
+    if (rec) { try { rec.abort(); } catch (e) {} }
     stopSpeaking();
     callBtn.classList.remove('on');
     setCallLabel(null);
     say(null);
   }
 
+  /* A call survives silence. Chrome closes a recognition turn the moment the caller
+     pauses, so ending the call on the first empty turn is what made the button flip
+     back to "Call" while the browser was still showing the microphone as live. The
+     loop now reopens the microphone instead, and only hangs up on a real fault or
+     after a long stretch of nothing. */
+  const QUIET_LIMIT = 8;      // consecutive empty turns before hanging up
+  const RETRY_MS = 350;       // Chrome throws if start() lands on a closing turn
+
   async function voiceLoop() {
+    let quiet = 0;
     while (voiceOn) {
-      say(L('listening…', 'je vous écoute…'));
-      const heard = await listenOnce();
+      say(quiet === 0
+        ? L('listening…', 'je vous écoute…')
+        : L('still listening…', 'je vous écoute toujours…'));
+      const turn = await listenOnce();
       if (!voiceOn) break;
-      if (!heard) {
-        addBubble(L("I couldn't hear that. Try again, or type your question.",
-          "Je n'ai rien entendu. Réessayez, ou écrivez votre question."), 'bot');
+
+      if (turn.text) {
+        quiet = 0;
+        await askAvatar(turn.text, { speak: true });
+        if (!voiceOn) break;
+        continue;
+      }
+
+      if (FATAL_MIC.indexOf(turn.error) !== -1) {
+        addBubble(turn.error === 'unsupported'
+          ? L('This browser has no speech recognition — Chrome, Edge or Safari do. Type your question instead.',
+              "Ce navigateur ne reconnaît pas la voix — Chrome, Edge ou Safari le font. Écrivez votre question.")
+          : L('I lost access to the microphone. Check the browser permission, then call again — or just type.',
+              "J'ai perdu l'accès au micro. Vérifiez l'autorisation du navigateur, puis rappelez — ou écrivez simplement."), 'bot');
         break;
       }
-      await askAvatar(heard, { speak: true });
-      if (!voiceOn) break;
+
+      // no-speech, aborted, a turn that closed on its own: a pause, not a hang-up
+      quiet += 1;
+      if (quiet >= QUIET_LIMIT) {
+        addBubble(L("I haven't heard anything for a while, so I've hung up. Call again whenever you like.",
+          "Je n'ai rien entendu depuis un moment, donc j'ai raccroché. Rappelez quand vous voulez."), 'bot');
+        break;
+      }
+      await new Promise((r) => setTimeout(r, RETRY_MS));
     }
     stopVoice();
   }
