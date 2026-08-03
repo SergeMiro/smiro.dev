@@ -1236,7 +1236,10 @@ body.art-open{overflow:hidden}
   padding:5px 9px;border-radius:6px;background:var(--bg);border:1px solid var(--line-2);
   color:var(--ink);user-select:all;
 }
-.pv-creds .ck{color:var(--muted);letter-spacing:.1em;text-transform:uppercase;font-size:9.5px}
+.pv-creds .ck{color:var(--muted);letter-spacing:.1em;text-transform:uppercase;font-size:9.5px;min-width:74px}
+/* the plain-prose half of an access row — how to get in when there is nothing to
+   copy and paste. Not boxed like a credential, because it is not one. */
+.pv-creds .how{color:var(--ink-2);font-family:var(--font-body);font-size:12.5px;line-height:1.45}
 .pv-more{
   margin-top:26px;padding-top:22px;border-top:1px dashed var(--line-2);
   display:flex;align-items:center;gap:10px;flex-wrap:wrap;
@@ -4877,7 +4880,17 @@ function bootWorks(){
     if(w.demo){
       links += linkHTML('demo', L('live demo', 'démo en ligne'), w.demo.label, w.demo.url);
       if(w.demo.note) links += `<p class="pv-note">${esc(T(w.demo.note))}</p>`;
-      if(w.demo.user) links += `<div class="pv-creds"><span class="ck">${L('test account', 'compte de test')}</span>`
+      /* Demo access, one row per role. `how` carries whatever gets a visitor in:
+         a credential pair on an app that has logins, or the step to take on one
+         that does not — a demo built on Telegram identity has no password to
+         publish, and inventing one would be a link that fails. */
+      if(w.demo.access) links += w.demo.access.map(a =>
+        `<div class="pv-creds"><span class="ck">${esc(T(a.role))}</span>`
+        + (a.user ? `<span class="c">${esc(a.user)}</span>` : '')
+        + (a.pass ? `<span class="c">${esc(a.pass)}</span>` : '')
+        + (a.how ? `<span class="how">${esc(T(a.how))}</span>` : '')
+        + `</div>`).join('');
+      else if(w.demo.user) links += `<div class="pv-creds"><span class="ck">${L('test account', 'compte de test')}</span>`
         + `<span class="c">${esc(w.demo.user)}</span><span class="c">${esc(w.demo.pass)}</span></div>`;
     } else if(w.demoNote) links += deadHTML(T(w.demoNote));
 

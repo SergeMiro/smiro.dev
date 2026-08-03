@@ -233,7 +233,19 @@
         'A buyers’ club that sells through Telegram and does not want a website — its customers scroll pictures and message a person. So the app automates everything around that conversation: cashback, tiers, birthday and holiday discounts that fire themselves, a fitting-room cart, both channels in one feed, margin bookkeeping, and an admin office with AI reports. Zero build step, three dependencies.',
         'Un club d’achat qui vend par Telegram et ne veut pas de site — ses clientes font défiler des photos et écrivent à une personne. L’application automatise donc tout ce qui entoure cette conversation : cashback, niveaux, remises anniversaire et fêtes qui se déclenchent seules, un panier-cabine, les deux canaux dans un seul fil, le suivi de marge, et un back-office avec rapports IA. Aucune étape de build, trois dépendances.'),
       repo: { url: 'https://github.com/SergeMiro/way2buy_telegram-app', label: 'SergeMiro/way2buy_telegram-app', vis: T('public', 'public') },
-      demo: { url: 'https://way2buy-miniapp.vercel.app', label: 'way2buy-miniapp.vercel.app', note: T('Runs with zero config — Telegram publishing is simulated and a demo-profile switcher appears in the header. The database is recreated on every cold start.', 'Fonctionne sans configuration — la publication Telegram est simulée et un sélecteur de profils de démo apparaît dans l’en-tête. La base est recréée à chaque démarrage à froid.') },
+      demo: {
+        url: 'https://way2buy-miniapp.vercel.app', label: 'way2buy-miniapp.vercel.app',
+        note: T('Both roles are open without a password: the app authenticates on Telegram identity, and in demo mode that identity is picked in the header. Telegram publishing is simulated, and the database is recreated on every cold start — nothing a visitor does is permanent.',
+                'Les deux rôles sont ouverts sans mot de passe : l’application s’authentifie sur l’identité Telegram, et en mode démo cette identité se choisit dans l’en-tête. La publication Telegram est simulée et la base est recréée à chaque démarrage à froid — rien de ce que fait un visiteur n’est permanent.'),
+        access: [
+          { role: T('client', 'client'),
+            how: T('Pick any of the seven demo clients in the header — cashback, tier, purchases and discounts follow the one you choose.',
+                   'Choisissez l’un des sept clients de démo dans l’en-tête — cashback, niveau, achats et remises suivent celui que vous prenez.') },
+          { role: T('admin', 'admin'),
+            how: T('The “Кабінет” tab, open in demo mode: clients, publishing, discount rules, promo codes, margin and the report.',
+                   'L’onglet « Кабінет », ouvert en mode démo : clients, publication, règles de remise, codes promo, marge et rapport.') },
+        ],
+      },
       sections: [
         {
           t: T('The constraint that shaped it', 'La contrainte qui l’a façonnée'),
