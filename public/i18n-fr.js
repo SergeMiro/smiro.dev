@@ -73,7 +73,10 @@ window.I18N_FR = {
     "stack.hint":         "à droite : mon stack, verrouillé · à gauche : à vous — double-clic pour épingler un outil manquant",
     "stack.zone.owner":   "mon stack · en production",
     "stack.zone.guest":   "à vous · l'outil qui manque ?",
-    "stack.search_ph":    "filtrer le mur…",
+    "stack.build":        "📌 composer un stack",
+    "stack.picked":       "sélectionnés",
+    "stack.cancel":       "annuler",
+    "stack.pin":          "épingler la pile",
     "stack.shuffle":      "↻ mélanger",
     "stack.tidy":         "⊞ ranger",
     "stack.add":          "proposer un outil",
@@ -122,6 +125,14 @@ window.I18N_FR = {
 
   /* ──────────────── source-text lookups (for-employers.html etc.) ──────────────── */
   TEXT: {
+    "filter the wall…":            "filtrer le mur…",
+    "your company / your name":    "votre société / votre nom",
+    "GraphQL, Kubernetes, Rust…":  "GraphQL, Kubernetes, Rust…",
+    "Marie Dupont":                "Marie Dupont",
+    "linkedin.com/in/…":           "linkedin.com/in/…",
+    "Acme":                        "Acme",
+    "acme.com":                    "acme.com",
+
     /* /02 “Dépôts GitHub” — the six repository cards carry raw English text,
        so they are translated here by source string. Each card opens its own
        project page, and those pages are bilingual in /works.js. */

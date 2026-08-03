@@ -2202,6 +2202,132 @@ footer a:hover{color:var(--accent)}
   transition:opacity .22s ease, filter .22s ease, outline-color .22s ease;
 }
 
+/* ══ mode sélection : le visiteur compose sa pile ══
+   On pioche dans les DEUX colonnes : l'intérêt d'un stack, c'est justement de
+   dire « voilà ce que j'utilise de votre liste, plus ce qui me manque ». */
+.board.picking .postit{cursor:pointer}
+.board.picking .postit:hover{outline:2px dashed oklch(var(--accent-lch) / .45);outline-offset:3px}
+.postit.picked{
+  outline:2.5px solid oklch(var(--accent-lch) / .9);outline-offset:3px;
+}
+.postit.picked::after{
+  content:"✓";
+  position:absolute;top:-9px;left:-9px;
+  width:22px;height:22px;border-radius:50%;
+  background:var(--accent);color:#fff;
+  font-family:var(--font-mono);font-size:12px;font-weight:700;
+  display:grid;place-items:center;
+  box-shadow:0 2px 6px rgba(27,26,24,.28);
+}
+
+.pick-bar{
+  position:absolute;left:50%;bottom:18px;transform:translateX(-50%) translateY(8px);
+  z-index:40;opacity:0;pointer-events:none;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  max-width:calc(100% - 32px);
+  padding:10px 12px;border-radius:12px;
+  background:var(--ink);color:var(--bg);
+  box-shadow:0 20px 40px -14px rgba(27,26,24,.5);
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;
+  transition:opacity .22s ease, transform .28s cubic-bezier(.2,.9,.3,1);
+}
+.board.picking .pick-bar{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+.pick-bar .pb-count{white-space:nowrap;opacity:.85}
+.pick-bar .pb-count b{color:#fff}
+.pick-bar input{
+  border:1px solid rgba(244,241,232,.28);border-radius:7px;background:rgba(244,241,232,.08);
+  color:var(--bg);font:inherit;padding:7px 9px;min-width:190px;
+}
+.pick-bar input::placeholder{color:rgba(244,241,232,.5)}
+.pick-bar input:focus{outline:none;border-color:var(--bg)}
+.pick-bar input.bad{border-color:#e06d4f;background:rgba(224,109,79,.14)}
+.pick-bar button{
+  font:inherit;border-radius:7px;padding:7px 12px;cursor:pointer;
+  border:1px solid rgba(244,241,232,.3);background:transparent;color:var(--bg);
+}
+.pick-bar button:hover{border-color:var(--bg)}
+.pick-bar button.go{background:var(--accent);border-color:var(--accent);color:#fff}
+.pick-bar button.go:disabled{opacity:.4;cursor:not-allowed}
+
+/* ══ la pile épinglée, en bas à gauche ══ */
+.board-stacks{
+  position:absolute;left:14px;bottom:12px;z-index:8;
+  display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap-reverse;
+  max-width:calc(var(--split) - 28px);
+}
+.stack{
+  position:relative;cursor:pointer;
+  width:86px;
+  font-family:var(--font-mono);
+}
+.stack-pile{position:relative;height:74px}
+.stack-pile .sheet{
+  position:absolute;left:0;top:0;width:74px;height:64px;border-radius:3px;
+  background:var(--paper-note, #f6f0dd);
+  box-shadow:0 1px 1px rgba(27,26,24,.1), 0 6px 12px -8px rgba(27,26,24,.35);
+  border:1px solid rgba(27,26,24,.06);
+}
+.stack-pile .s3{transform:rotate(-7deg) translate(6px,4px);background:#eae3cf}
+.stack-pile .s2{transform:rotate(4deg) translate(3px,2px);background:#f1ead6}
+.stack-pile .s1{
+  transform:rotate(-1.5deg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1px;
+}
+.stack-pile .s1 .n{
+  font-size:21px;font-weight:600;color:var(--ink);line-height:1;
+}
+.stack-pile .s1 .u{
+  font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:3px;
+}
+.stack:hover .stack-pile .s3{transform:rotate(-11deg) translate(9px,5px)}
+.stack:hover .stack-pile .s2{transform:rotate(7deg) translate(5px,2px)}
+.stack-pile .sheet{transition:transform .25s cubic-bezier(.2,.9,.3,1)}
+.stack-pin{
+  position:absolute;left:30px;top:-7px;font-size:14px;z-index:3;
+  filter:drop-shadow(0 2px 3px rgba(27,26,24,.3));
+}
+.stack-label{
+  margin-top:6px;font-size:10px;line-height:1.25;color:var(--ink);
+  font-weight:600;word-break:break-word;
+}
+.stack-by{display:block;font-weight:400;font-size:9px;color:var(--muted);letter-spacing:.04em}
+
+.stack-panel{
+  position:absolute;left:0;bottom:calc(100% + 10px);z-index:30;
+  width:230px;max-height:300px;overflow:auto;
+  background:var(--bg);border:1px solid var(--line-2);border-radius:11px;
+  padding:12px 13px;
+  box-shadow:0 26px 50px -18px rgba(27,26,24,.4), 0 4px 10px -4px rgba(27,26,24,.16);
+  display:none;cursor:default;
+}
+.stack.open .stack-panel{display:block}
+.stack-panel h4{
+  margin:0 0 2px;font-size:11.5px;letter-spacing:.02em;color:var(--ink);
+}
+.stack-panel .sp-by{
+  font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  margin-bottom:9px;display:block;
+}
+.stack-panel ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.stack-panel li{
+  display:flex;align-items:baseline;gap:7px;
+  font-size:11px;color:var(--ink-2);
+  padding-bottom:5px;border-bottom:1px dashed rgba(27,26,24,.09);
+}
+.stack-panel li:last-child{border-bottom:0;padding-bottom:0}
+.stack-panel li .sp-cat{
+  font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  margin-left:auto;white-space:nowrap;
+}
+.stack-panel .sp-close{
+  position:absolute;right:8px;top:7px;border:0;background:transparent;cursor:pointer;
+  font-size:15px;line-height:1;color:var(--muted);
+}
+.stack-panel .sp-close:hover{color:var(--ink)}
+.stack.dimmed{opacity:.2;filter:grayscale(.7);pointer-events:none}
+.stack.match .stack-pile .s1{outline:2px solid oklch(var(--accent-lch) / .7);outline-offset:2px}
+
 .board{
   position:relative;
   /* Deux zones côte à côte. `--split` est l'abscisse de la frontière : à sa
@@ -3531,7 +3657,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
       <div class="board-search">
         <span class="bs-icon" aria-hidden="true">⌕</span>
         <input id="board-find" type="search" autocomplete="off" spellcheck="false"
-               placeholder="filter the wall…" data-i18n-placeholder="stack.search_ph"
+               placeholder="filter the wall…" data-i18n-placeholder="filter the wall…"
                aria-label="Filter the notes on the board">
         <button type="button" class="bs-clear" id="board-find-clear" aria-label="clear" hidden>×</button>
         <span class="bs-count" id="board-find-count" aria-live="polite"></span>
@@ -3539,6 +3665,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
       <div class="actions">
         <button class="board-btn" id="board-shuffle" data-i18n="stack.shuffle">↻ shuffle</button>
         <button class="board-btn" id="board-tidy" data-i18n="stack.tidy">⊞ tidy</button>
+        <button class="board-btn" id="board-stack"><span data-i18n="stack.build">📌 build a tech stack</span></button>
         <button class="board-btn primary" id="board-add"><span class="plus">+</span> <span data-i18n="stack.add">suggest a tool</span></button>
       </div>
     </div>
@@ -3557,26 +3684,26 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
     <form id="nm-form" novalidate="novalidate">
       <div class="nm-field">
         <label for="nm-tech"><span data-i18n="nm.tech">Technology</span> <span class="req">*</span></label>
-        <input id="nm-tech" name="tech" required="required" maxlength="22" autocomplete="off" placeholder="GraphQL, Kubernetes, Rust…" data-i18n-placeholder="nm.tech_ph">
+        <input id="nm-tech" name="tech" required="required" maxlength="22" autocomplete="off" placeholder="GraphQL, Kubernetes, Rust…" data-i18n-placeholder="GraphQL, Kubernetes, Rust…">
       </div>
       <div class="nm-row">
         <div class="nm-field">
           <label for="nm-person"><span data-i18n="nm.name">Your name</span> <span class="req">*</span></label>
-          <input id="nm-person" name="person" required="required" maxlength="28" autocomplete="off" placeholder="Marie Dupont" data-i18n-placeholder="nm.name_ph">
+          <input id="nm-person" name="person" required="required" maxlength="28" autocomplete="off" placeholder="Marie Dupont" data-i18n-placeholder="Marie Dupont">
         </div>
         <div class="nm-field">
           <label for="nm-personurl"><span data-i18n="nm.link">Link</span> <span class="opt" data-i18n="nm.optional">optional</span></label>
-          <input id="nm-personurl" name="personUrl" type="text" autocomplete="off" placeholder="linkedin.com/in/…" data-i18n-placeholder="nm.link_ph">
+          <input id="nm-personurl" name="personUrl" type="text" autocomplete="off" placeholder="linkedin.com/in/…" data-i18n-placeholder="linkedin.com/in/…">
         </div>
       </div>
       <div class="nm-row">
         <div class="nm-field">
           <label for="nm-company"><span data-i18n="nm.company">Company</span> <span class="req">*</span></label>
-          <input id="nm-company" name="company" required="required" maxlength="28" autocomplete="off" placeholder="Acme" data-i18n-placeholder="nm.company_ph">
+          <input id="nm-company" name="company" required="required" maxlength="28" autocomplete="off" placeholder="Acme" data-i18n-placeholder="Acme">
         </div>
         <div class="nm-field">
           <label for="nm-companyurl"><span data-i18n="nm.site">Company site</span> <span class="opt" data-i18n="nm.optional">optional</span></label>
-          <input id="nm-companyurl" name="companyUrl" type="text" autocomplete="off" placeholder="acme.com" data-i18n-placeholder="nm.site_ph">
+          <input id="nm-companyurl" name="companyUrl" type="text" autocomplete="off" placeholder="acme.com" data-i18n-placeholder="acme.com">
         </div>
       </div>
       <div class="nm-actions">
@@ -5834,6 +5961,10 @@ function bootWorks(){
   function zoneOf(el){ return el.dataset.zone === 'owner' ? 'owner' : 'guest'; }
 
   let splitEl = null;
+  let stackRail = null;
+  let pickBar = null;
+  /** Les piles épinglées, dans l'ordre où elles ont été créées. */
+  const stacks = [];
   /** Signale un déplacement refusé : la ligne clignote une fois. */
   function refuseAtSplit(){
     if(!splitEl) return;
@@ -5864,6 +5995,23 @@ function bootWorks(){
     guest.className = 'board-zone-label guest';
     guest.innerHTML = '<span data-i18n="stack.zone.guest">yours · the tool I\'m missing?</span>';
     board.appendChild(guest);
+
+    // le rail des piles vit dans la colonne de gauche, en bas — l'endroit que
+    // le client a entouré : hors du chemin des post-its, et du bon côté du mur
+    stackRail = document.createElement('div');
+    stackRail.className = 'board-stacks';
+    board.appendChild(stackRail);
+
+    pickBar = document.createElement('div');
+    pickBar.className = 'pick-bar';
+    pickBar.innerHTML = `
+      <span class="pb-count"><b id="pb-n">0</b> <span data-i18n="stack.picked">selected</span></span>
+      <input id="pb-name" type="text" maxlength="34" autocomplete="off"
+             placeholder="your company / your name" data-i18n-placeholder="your company / your name">
+      <button type="button" id="pb-cancel" data-i18n="stack.cancel">cancel</button>
+      <button type="button" class="go" id="pb-save" data-i18n="stack.pin">pin the pile</button>
+    `;
+    board.appendChild(pickBar);
 
     if(window.I18N && window.I18N.apply) window.I18N.apply();
     else if(fr){ /* i18n pas encore prêt : il repassera au chargement */ }
@@ -5922,9 +6070,19 @@ function bootWorks(){
       if(hit) hits++;
     });
 
+    // une pile répond au filtre par son nom ET par ce qu'elle contient :
+    // chercher « post » doit trouver la pile qui embarque Postgres
+    stacks.forEach(el=>{
+      if(!searching){ el.classList.remove('dimmed','match'); return; }
+      const hit = (el.dataset.search || '').includes(q);
+      el.classList.toggle('match', hit);
+      el.classList.toggle('dimmed', !hit);
+      if(hit) hits++;
+    });
+
     if(findClear) findClear.hidden = !searching;
     if(findCount){
-      const total = notes.filter(n => !n.classList.contains('editing')).length;
+      const total = notes.filter(n => !n.classList.contains('editing')).length + stacks.length;
       findCount.textContent = searching ? `${hits}/${total}` : '';
       findCount.classList.toggle('none', searching && hits === 0);
     }
@@ -6519,7 +6677,161 @@ function bootWorks(){
 
   // double-click empty board → new note at click
   // double-click empty board → open the add-note form
+  /* ══ composer une pile ═══════════════════════════════════════════════════
+     Un visiteur qui laisse un post-it dit « il vous manque ça ». Un visiteur
+     qui compose une pile dit quelque chose de plus utile : « voilà mon stack à
+     moi », avec un nom dessus. On pioche donc dans les deux colonnes — les
+     outils de l'auteur comme ceux déposés par d'autres — sans rien déplacer :
+     une pile ne fait que référencer, elle ne prend rien au mur.
+
+     Les piles vivent le temps de la visite : ce tableau n'a pas de serveur,
+     rien n'y est enregistré, pas plus les post-its que les piles. */
+  let picking = false;
+  const picked = new Set();
+
+  function pickCount(){ return picked.size; }
+
+  function syncPickBar(){
+    const n = pickCount();
+    const nEl = document.getElementById('pb-n');
+    const save = document.getElementById('pb-save');
+    if(nEl) nEl.textContent = String(n);
+    if(save) save.disabled = n === 0;
+  }
+
+  function startPicking(){
+    if(picking) return;
+    picking = true;
+    picked.clear();
+    board.classList.add('picking');
+    // une recherche en cours cacherait la moitié du mur pendant la sélection
+    clearFilter();
+    syncPickBar();
+    const nameField = document.getElementById('pb-name');
+    if(nameField){ nameField.value = ''; nameField.classList.remove('bad'); }
+  }
+
+  function stopPicking(){
+    picking = false;
+    board.classList.remove('picking');
+    picked.forEach(el => el.classList.remove('picked'));
+    picked.clear();
+    syncPickBar();
+  }
+
+  function togglePick(el){
+    if(picked.has(el)){ picked.delete(el); el.classList.remove('picked'); }
+    else { picked.add(el); el.classList.add('picked'); }
+    syncPickBar();
+  }
+
+  /* En mode sélection, un clic sur un post-it ne doit ni le faire glisser ni
+     ouvrir son édition. On intercepte donc à la capture, avant que les
+     gestionnaires du post-it ne voient l'événement. */
+  board.addEventListener('pointerdown', e=>{
+    if(!picking) return;
+    if(pickBar && pickBar.contains(e.target)) return;
+    const note = e.target.closest ? e.target.closest('.postit') : null;
+    if(!note) return;
+    e.preventDefault();
+    e.stopPropagation();
+    togglePick(note);
+  }, true);
+
+  /** Le contenu lisible d'un post-it : ce qu'on recopie dans la pile. */
+  function readNote(el){
+    const txt = sel => {
+      const n = el.querySelector(sel);
+      return n ? n.textContent.replace(/\s+/g,' ').trim() : '';
+    };
+    return { name: txt('.name'), cat: txt('.cat'), zone: el.dataset.zone || 'guest' };
+  }
+
+  /** Épingle une pile dans le rail, en bas à gauche. */
+  function createStack(label, items){
+    const el = document.createElement('div');
+    el.className = 'stack';
+    el.dataset.label = label;
+
+    const list = items.map(it => `
+      <li><span>${escapeHtml(it.name)}</span>${it.cat ? `<span class="sp-cat">${escapeHtml(it.cat)}</span>` : ''}</li>
+    `).join('');
+
+    const unit = items.length > 1 ? 'outils' : 'outil';
+    el.innerHTML = `
+      <span class="stack-pin" aria-hidden="true">📌</span>
+      <div class="stack-pile">
+        <span class="sheet s3"></span>
+        <span class="sheet s2"></span>
+        <span class="sheet s1"><span class="n">${items.length}</span><span class="u">${unit}</span></span>
+      </div>
+      <div class="stack-label">${escapeHtml(label)}</div>
+      <div class="stack-panel">
+        <button type="button" class="sp-close" aria-label="close">×</button>
+        <h4>${escapeHtml(label)}</h4>
+        <span class="sp-by">${items.length} ${unit}</span>
+        <ul>${list}</ul>
+      </div>
+    `;
+
+    el.dataset.search = fold([label, ...items.map(i => i.name + ' ' + i.cat)].join(' '));
+
+    // ouvrir / refermer la pile
+    el.addEventListener('click', ev=>{
+      if(ev.target.closest('.stack-panel') && !ev.target.closest('.sp-close')) return;
+      const wasOpen = el.classList.contains('open');
+      stacks.forEach(s => s.classList.remove('open'));
+      if(!wasOpen) el.classList.add('open');
+    });
+
+    stackRail.appendChild(el);
+    stacks.push(el);
+
+    // petite arrivée, pour que l'œil suive la pile jusqu'à son coin
+    el.animate(
+      [{transform:'translateY(14px) scale(.8)',opacity:0},{transform:'none',opacity:1}],
+      {duration:420, easing:'cubic-bezier(.2,.9,.3,1)'}
+    );
+    return el;
+  }
+
+  // refermer une pile ouverte quand on clique ailleurs
+  document.addEventListener('pointerdown', e=>{
+    if(e.target.closest && e.target.closest('.stack')) return;
+    stacks.forEach(s => s.classList.remove('open'));
+  });
+
+  document.getElementById('board-stack').addEventListener('click', ()=>{
+    if(picking) stopPicking(); else startPicking();
+  });
+
+  board.addEventListener('click', e=>{
+    if(!picking) return;
+    const id = e.target.id;
+    if(id === 'pb-cancel'){ stopPicking(); return; }
+    if(id !== 'pb-save') return;
+
+    const field = document.getElementById('pb-name');
+    const label = (field.value || '').trim();
+    if(!label){
+      // une pile sans nom n'apprend rien à personne : c'est le seul champ requis
+      field.classList.add('bad');
+      field.focus();
+      return;
+    }
+    if(!pickCount()) return;
+
+    const items = [...picked].map(readNote);
+    stopPicking();
+    createStack(label, items);
+  });
+
+  document.addEventListener('keydown', e=>{
+    if(e.key === 'Escape' && picking) stopPicking();
+  });
+
   board.addEventListener('dblclick', e=>{
+    if(picking) return;   // en sélection, le double-clic ne crée rien
     if(e.target !== board) return;
     // un double-clic dans la zone de l'auteur n'ouvre rien : la ligne clignote
     // pour dire pourquoi, au lieu de laisser croire à un raté
