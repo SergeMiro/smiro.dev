@@ -32,7 +32,7 @@
       kind: T('client site & back-office', 'site client & back-office'),
       years: '2026',
       status: T('in production', 'en production'),
-      stack: ['Next.js 16', 'React 19', 'TypeScript', 'Tailwind 4', 'daisyUI', 'Framer Motion', 'Supabase Auth', 'PostgreSQL', 'Row-Level Security', 'Server Actions', 'Zod', 'react-hook-form', 'pdf-lib', 'jsPDF', 'Uppy + tus', 'exifr', 'Pannellum', 'Recharts', 'Leaflet', 'Google Maps', 'Google Places', 'Resend', 'Telegram Bot API', 'Mistral', 'Gemini', 'RAG', 'PWA', 'Vercel Cron', 'Biome'],
+      stack: ['Next.js 16', 'React 19', 'TypeScript', 'Tailwind 4', 'daisyUI', 'Framer Motion', 'Supabase Auth (PostgreSQL)', 'Row-Level Security', 'Server Actions', 'Zod', 'react-hook-form', 'pdf-lib', 'jsPDF', 'Uppy + tus', 'exifr', 'Pannellum', 'Recharts', 'Leaflet', 'Google Maps', 'Google Places', 'Resend', 'Telegram Bot API', 'Mistral', 'Gemini', 'RAG', 'PWA', 'Vercel Cron'],
       kick: T(
         'The whole digital side of a façade contractor in the Gard: a shopfront tuned for local search in front, and four role portals behind the login — office, client, sub-contractor and the crew standing on the scaffolding.',
         'Tout le numérique d’un façadier du Gard : une vitrine taillée pour la recherche locale devant, et quatre portails derrière la connexion — bureau, client, sous-traitant et les compagnons sur l’échafaudage.'),
@@ -124,7 +124,7 @@
       kind: T('internal platform · telephony', 'plateforme interne · téléphonie'),
       years: '2026',
       status: T('production · preprod on GitLab CI', 'production · preprod sur GitLab CI'),
-      stack: ['Next.js 15.5', 'React 19', 'Tailwind v4', 'shadcn/ui', 'Radix UI', 'Zustand', 'Zod', 'jose JWT', 'RBAC', 'Express 4', 'Sequelize 6', 'SQL Server ×4', 'FastAPI', 'Python', 'Qdrant', 'Docling', 'RAG + ACL', 'Mistral', 'Evidence.dev', 'Pino', 'OpenTelemetry', 'SigNoz', 'Brevo', 'MS Teams', 'WebRTC', 'Playwright', 'Ladle', 'Jest', 'Bruno', 'Docker', 'Traefik', 'GitLab CI'],
+      stack: ['Next.js 15.5', 'React 19', 'Tailwind v4', 'shadcn/ui', 'Radix UI', 'Zustand', 'Zod', 'jose JWT', 'RBAC', 'Express 4', 'Sequelize 6', 'SQL Server ×4', 'FastAPI', 'Python', 'Qdrant', 'Docling', 'RAG + ACL', 'Mistral', 'Evidence.dev', 'Pino', 'OpenTelemetry', 'SigNoz', 'Brevo', 'MS Teams', 'WebRTC', 'Docker', 'Traefik'],
       kick: T(
         'Fimainfo’s internal telephony platform: DID numbers and their orders, IVR strategies, campaigns, SMS and WhatsApp broadcasts, BI reporting and an AI assistant — a monorepo of five services, ~786 commits over seventeen months.',
         'La plateforme téléphonie interne de Fimainfo : numéros SDA/DID et leurs commandes, stratégies SVI, campagnes, diffusions SMS et WhatsApp, restitution BI et un assistant IA — un monorepo de cinq services, ~786 commits sur dix-sept mois.'),
@@ -228,7 +228,7 @@
       kind: T('Telegram Mini App · loyalty', 'Mini App Telegram · fidélité'),
       years: '2026',
       status: T('going to production', 'en cours de mise en production'),
-      stack: ['Node.js 20', 'Express 4', 'SQLite', 'better-sqlite3', '19 tables · 15 indexes', 'Telegram Mini App SDK', 'Telegram Bot API', 'channel_post webhook', 'long-poll fallback', 'vanilla JS', 'zero build', 'CSS design tokens', 'cashback engine', 'gamification', 'rules engine', 'idempotent scheduler', 'margin tracking', 'Gemini 1.5 Flash', 'AI propose → apply', 'node:test ×81', 'Vercel serverless'],
+      stack: ['Node.js 20', 'Express 4', 'SQLite', 'better-sqlite3', '19 tables · 15 indexes', 'Telegram Mini App SDK', 'Telegram Bot API', 'channel_post webhook', 'long-poll fallback', 'vanilla JS', 'zero build', 'CSS design tokens', 'cashback engine', 'gamification', 'rules engine', 'idempotent scheduler', 'margin tracking', 'Gemini 1.5 Flash', 'AI propose → apply', 'Vercel serverless'],
       kick: T(
         'A buyers’ club that sells through Telegram and does not want a website — its customers scroll pictures and message a person. So the app automates everything around that conversation: cashback, tiers, birthday and holiday discounts that fire themselves, a fitting-room cart, both channels in one feed, margin bookkeeping, and an admin office with AI reports. Zero build step, three dependencies.',
         'Un club d’achat qui vend par Telegram et ne veut pas de site — ses clientes font défiler des photos et écrivent à une personne. L’application automatise donc tout ce qui entoure cette conversation : cashback, niveaux, remises anniversaire et fêtes qui se déclenchent seules, un panier-cabine, les deux canaux dans un seul fil, le suivi de marge, et un back-office avec rapports IA. Aucune étape de build, trois dépendances.'),
@@ -337,7 +337,7 @@
       kind: T('web app · automotive', 'application web · automobile'),
       years: '2026',
       status: T('built · no live deployment right now', 'réalisé · pas de déploiement en ligne actuellement'),
-      stack: ['Next.js', 'React 19', 'TypeScript', 'Tailwind', 'Radix UI ×21', 'TanStack Query', 'TanStack Virtual', 'Supabase', 'PostgreSQL', 'Row-Level Security', 'Vercel AI SDK', 'OpenAI', 'VIN decode', 'BullMQ', 'Redis', 'Three.js', 'React Three Fiber', 'photo-sphere-viewer', 'TipTap', 'PDFKit', 'ECharts', 'Recharts', 'next-intl ×6', 'next-pwa', '@vercel/og', 'Cheerio', 'Playwright', 'Vitest', 'Biome', 'Docker', 'GitHub Actions', 'n8n'],
+      stack: ['Next.js', 'React 19', 'TypeScript', 'Tailwind', 'Radix UI ×21', 'TanStack Query', 'TanStack Virtual', 'Supabase (PostgreSQL)', 'Row-Level Security', 'Vercel AI SDK', 'OpenAI', 'VIN decode', 'BullMQ', 'Redis', 'Three.js', 'React Three Fiber', 'photo-sphere-viewer', 'TipTap', 'PDFKit', 'ECharts', 'Recharts', 'next-intl ×6', 'next-pwa', '@vercel/og', 'Cheerio', 'Docker', 'n8n'],
       kick: T(
         'A used-car dealer’s whole front and back office: catalogue with 360° interiors, an AI matchmaker for buyers, and a CRM that turns an enquiry into a signed quote.',
         'Tout le front et le back-office d’un concessionnaire de véhicules d’occasion : catalogue avec intérieurs à 360°, un assistant IA pour les acheteurs, et un CRM qui transforme une demande en devis signé.'),
@@ -422,7 +422,7 @@
       kind: T('AI · compliance · EU back-office', 'IA · conformité · back-office UE'),
       years: '2026',
       status: T('deployed', 'déployé'),
-      stack: ['Next.js 16', 'React 19', 'TypeScript', 'Tailwind 4', 'Radix UI', 'next-intl ×3', 'Stripe', 'Turborepo', 'pnpm workspaces', 'FastAPI ×4', 'Python', 'Pydantic v2', 'CrewAI ×5 agents', 'Celery', 'Redis', 'APScheduler', 'pandas', 'pdfplumber', 'PyPDF2', 'pytesseract', 'PaddleOCR', 'fuzzywuzzy', 'reportlab', 'openpyxl', 'Twilio', 'slowapi', 'Supabase', 'PostgreSQL', 'Docker', 'Traefik', 'Vercel', 'GitHub Actions'],
+      stack: ['Next.js 16', 'React 19', 'TypeScript', 'Tailwind 4', 'Radix UI', 'next-intl ×3', 'Stripe', 'Turborepo', 'pnpm workspaces', 'FastAPI ×4', 'Python', 'Pydantic v2', 'CrewAI ×5 agents', 'Celery', 'Redis', 'APScheduler', 'pandas', 'pdfplumber', 'PyPDF2', 'pytesseract', 'PaddleOCR', 'fuzzywuzzy', 'reportlab', 'openpyxl', 'Twilio', 'slowapi', 'Supabase (PostgreSQL)', 'Docker', 'Traefik', 'Vercel'],
       kick: T(
         'Administrative overhead for EU companies, handled by four small Python services instead of one large application: duplicate invoices, forgotten subscriptions, a crew of assistants and the reminders nobody wants to send.',
         'La charge administrative des entreprises européennes, prise en charge par quatre petits services Python plutôt qu’une grosse application : factures en double, abonnements oubliés, une équipe d’assistants et les rappels que personne ne veut envoyer.'),
@@ -760,7 +760,7 @@
       kind: T('multi-agent · markets', 'multi-agents · marchés'),
       years: '2026',
       status: T('personal lab · not financial advice', 'laboratoire personnel · pas un conseil financier'),
-      stack: ['Python 3.12', 'SQLAlchemy 2', 'Alembic', 'PostgreSQL', 'Supabase', 'pydantic-settings', 'APScheduler', '6 agents', 'IBKR · ib_insync', 'SEC EDGAR', 'yfinance', 'OpenAI-compatible LLM', 'tenacity', 'structlog', 'pytest', 'OpenClaw', 'Docker'],
+      stack: ['Python 3.12', 'SQLAlchemy 2', 'Alembic', 'Supabase (PostgreSQL)', 'pydantic-settings', 'APScheduler', '6 agents', 'IBKR · ib_insync', 'SEC EDGAR', 'yfinance', 'OpenAI-compatible LLM', 'tenacity', 'structlog', 'OpenClaw', 'Docker'],
       kick: T(
         'A multi-agent earnings bot: it reads the earnings calendar and SEC filings, scores the candidates before the open, and only then decides buy, hold or skip. A personal lab, and explicitly not financial advice.',
         'Un bot multi-agents sur les résultats d’entreprises : il lit le calendrier des publications et les dépôts SEC, note les candidats avant l’ouverture, et décide seulement ensuite acheter, conserver ou passer. Un laboratoire personnel, et explicitement pas un conseil financier.'),
