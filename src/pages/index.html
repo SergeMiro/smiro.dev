@@ -3388,6 +3388,97 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   /* two stat cells per row stay two, but they need the full gutter */
   .hero-meta .hm{width:calc(50% - 9px)}
 }
+
+/* ─────────── 6 · THE PIPELINE, READ TOP TO BOTTOM ───────────
+   The desktop pipeline is a 1020px canvas of floating spheres. It cannot
+   shrink — each label is already fitted to its own circle — and swiping a
+   diagram to find its own steps is not reading it. On a phone the same graph
+   becomes a vertical flow: one block per stage, joined by a dashed rail that
+   travels while the wave passes through it. Same NODES, same stage colours,
+   same heartbeat: a second view of one system, not a second system. */
+.pipe-m{display:none;text-align:left}
+.pipe-m .pm-stage{position:relative;padding:0 0 22px 36px}
+.pipe-m .pm-stage:last-child{padding-bottom:2px}
+/* the rail — dashes running from this stage's dot down to the next */
+.pipe-m .pm-stage::before{
+  content:"";position:absolute;left:12px;top:28px;bottom:1px;width:2px;
+  background:repeating-linear-gradient(180deg, var(--pm-c) 0 5px, transparent 5px 11px);
+  background-size:2px 11px;opacity:.42;transition:opacity .3s;
+}
+.pipe-m .pm-stage:last-child::before{content:none}
+.pipe-m .pm-stage.live::before{opacity:.9;animation:pmFlow .75s linear infinite}
+@keyframes pmFlow{to{background-position:0 11px}}
+
+.pipe-m .pm-dot{
+  position:absolute;left:0;top:1px;width:26px;height:26px;border-radius:50%;
+  display:grid;place-items:center;
+  font-family:var(--font-mono);font-size:10.5px;font-weight:600;color:#fff;
+  background:radial-gradient(circle at 34% 26%, rgba(255,255,255,.5), transparent 58%), var(--pm-c);
+  box-shadow:0 0 0 3px var(--bg), 0 2px 6px rgba(27,26,24,.16);
+  transition:transform .3s cubic-bezier(.3,1.5,.5,1), box-shadow .3s;
+}
+.pipe-m .pm-stage.live .pm-dot{
+  transform:scale(1.12);
+  box-shadow:0 0 0 3px var(--bg), 0 0 0 6px oklch(var(--accent-lch) / .18), 0 3px 10px rgba(27,26,24,.2);
+}
+.pipe-m .pm-name{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.17em;text-transform:uppercase;
+  color:var(--muted);padding:8px 0 0;transition:color .3s;
+}
+.pipe-m .pm-stage.live .pm-name{color:var(--ink)}
+
+.pipe-m .pm-nodes{display:flex;flex-direction:column;gap:7px;margin-top:11px}
+.pipe-m .pm-node{
+  appearance:none;-webkit-appearance:none;font:inherit;
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  padding:9px 11px;border-radius:12px;cursor:pointer;
+  background:var(--bg);border:1px solid var(--line);
+  transition:border-color .3s, background .3s, transform .18s;
+}
+.pipe-m .pm-node:active{transform:scale(.985)}
+.pipe-m .pm-ic{
+  flex:0 0 auto;width:27px;height:27px;border-radius:50%;
+  display:grid;place-items:center;color:#fff;
+  font-family:var(--font-mono);font-size:9.5px;font-weight:600;
+  background:radial-gradient(circle at 32% 26%, rgba(255,255,255,.45), transparent 60%), var(--pm-c);
+  box-shadow:0 2px 5px rgba(27,26,24,.14);
+}
+.pipe-m .pm-ic svg{width:14px;height:14px}
+.pipe-m .pm-txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.pipe-m .pm-t{font-family:var(--font-body);font-size:13px;line-height:1.25;color:var(--ink)}
+.pipe-m .pm-meta{font-family:var(--font-mono);font-size:10.5px;color:var(--faint)}
+/* the job has passed through: the desktop washes the sphere beige, here the
+   card warms up and keeps it until the cycle restarts */
+.pipe-m .pm-node.lit{
+  border-color:oklch(var(--accent-lch) / .45);
+  background:oklch(var(--accent-lch) / .05);
+}
+.pipe-m .pm-chev{margin-left:auto;flex:0 0 auto;color:var(--faint);font-size:11px;transition:transform .25s, color .25s}
+.pipe-m .pm-node[aria-expanded="true"] .pm-chev{transform:rotate(90deg);color:var(--accent)}
+.pipe-m .pm-desc{
+  font-family:var(--font-body);font-size:12.5px;line-height:1.5;color:var(--ink-2);
+  margin:7px 0 1px 38px;padding:1px 10px 1px 12px;display:none;
+  /* dashed again, so the detail reads as hanging off the same rail */
+  border-left:1.5px dashed var(--pm-c);
+}
+.pipe-m .pm-desc.open{display:block;animation:pmDesc .26s ease both}
+@keyframes pmDesc{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.pipe-m .pm-desc em{font-style:italic;color:var(--accent)}
+
+@media (prefers-reduced-motion: reduce){
+  .pipe-m .pm-stage.live::before{animation:none}
+  .pipe-m .pm-desc.open{animation:none}
+}
+
+@media (max-width:760px){
+  /* the canvas, its stage bar, its swipe hint and the colour legend are the
+     desktop view of this graph — the vertical flow carries the same content */
+  .pipe-scroll{display:none}
+  .pipe-stagebar{display:none}
+  .pipe-hint{display:none}
+  .jam-h .legend{display:none}
+  .pipe-m{display:block}
+}
 </style>
 </head>
 <body style="font-family: Quicksand">
@@ -3634,6 +3725,9 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
           <div class="pipe-spheres" id="pipe-spheres"></div>
         </div>
       </div>
+      <!-- phone: the same pipeline read top to bottom, built from the same NODES -->
+      <div class="pipe-m" id="pipe-m"></div>
+
       <div class="pipe-hint"><span>←</span> swipe to explore the pipeline <span>→</span></div>
 
       <div class="pipe-caption">
@@ -4998,6 +5092,56 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   });
   const sphereById = Object.fromEntries(NODES.map((n,i)=>[n.id, sphereEls[i]]));
 
+  /* — the phone view of this graph: same nodes, read top to bottom —
+     Voir « 6 · THE PIPELINE, READ TOP TO BOTTOM » dans la feuille mobile. On
+     construit depuis NODES pour que les deux vues ne puissent pas divergert :
+     une étape = un bloc, relié au suivant par des pointillés. La vague pilote
+     les deux : setLiveStage allume l'étape, impact() réchauffe la carte qu'elle
+     atteint, resetInfections() les éteint en fin de cycle. Le libellé d'étape
+     reprend le mot anglais de la barre desktop — l'i18n le traduit tout seul. */
+  const mHost   = document.getElementById('pipe-m');
+  const M_ORDER = ['trig','src','ai','filt','db','out'];
+  const M_NAME  = { trig:'trigger', src:'sources', ai:'scrape', filt:'filter', db:'store', out:'act' };
+  const mStages = {}, mNodes = {};
+  if(mHost){
+    M_ORDER.forEach((st, i)=>{
+      const box = document.createElement('div');
+      box.className = 'pm-stage';
+      box.dataset.stage = st;
+      box.style.setProperty('--pm-c', STAGE_COLOR[st]);
+      box.innerHTML = `<span class="pm-dot">${i}</span>`
+                    + `<div class="pm-name">${M_NAME[st]}</div>`
+                    + `<div class="pm-nodes"></div>`;
+      const host = box.querySelector('.pm-nodes');
+      NODES.filter(n=>n.stage===st).forEach(n=>{
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'pm-node';
+        row.dataset.id = n.id;
+        row.innerHTML = `<span class="pm-ic">${n.ic}</span>`
+                      + `<span class="pm-txt"><span class="pm-t">${n.title}</span>`
+                      + (n.meta ? `<span class="pm-meta">${n.meta}</span>` : '')
+                      + `</span><span class="pm-chev" aria-hidden="true">›</span>`;
+        // le détail que le desktop montre en survol : ici il se déplie au doigt
+        const desc = document.createElement('div');
+        desc.className = 'pm-desc';
+        desc.id = 'pm-desc-' + n.id;
+        desc.innerHTML = n.desc;
+        row.setAttribute('aria-expanded', 'false');
+        row.setAttribute('aria-controls', desc.id);
+        row.addEventListener('click', ()=>{
+          const open = desc.classList.toggle('open');
+          row.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        host.appendChild(row);
+        host.appendChild(desc);
+        mNodes[n.id] = row;
+      });
+      mHost.appendChild(box);
+      mStages[st] = box;
+    });
+  }
+
   // comet gradients — shared
   (function(){
     const defs = document.createElementNS(SVG_NS, 'defs');
@@ -5258,6 +5402,15 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   const TRAVEL_MS = 1500;   // comet flight — medium speed; line fades over this window
 
   function spawnPulse(fromNode, toNode){
+    /* Sur téléphone le canevas est `display:none` — la vue verticale prend le
+       relais. Sans mise en page, toutes les mesures valent 0 : les chemins SVG
+       partaient en « M NaN NaN » et getPointAtLength() jetait. On garde la
+       chorégraphie (mêmes durées, donc impact() éclaire la vue mobile au même
+       rythme) et on ne dessine rien — c'est aussi autant de travail épargné
+       à la batterie. */
+    if(!pipe.clientWidth){
+      return new Promise(resolve=>setTimeout(resolve, AIM_MS + TRAVEL_MS + 60));
+    }
     const m = pipeMetrics();
     const { d } = wavePath(fromNode, toNode, m);
 
@@ -5360,6 +5513,10 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
       sph.classList.add('infected');
     }
 
+    // la même arrivée, côté téléphone : la carte de ce nœud se réchauffe
+    const mCard = mNodes[targetNode.id];
+    if(mCard) mCard.classList.add('lit');
+
     setLiveStage(targetNode.stage);
     stageNow.textContent = ({
       trig:'trigger', src:'source', ai:'scrape', filt:'filter', db:'store', out:'act'
@@ -5369,6 +5526,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
 
   // strip infected state from all spheres — used at the end of a full cycle
   function resetInfections(){
+    for(const id in mNodes) mNodes[id].classList.remove('lit');
     sphereEls.forEach(s=>{
       s.classList.remove('infected');
       const w = s.querySelector('.infect-wash');
@@ -5384,6 +5542,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
 
   function setLiveStage(stage){
     [...stageBar.children].forEach(c=>c.classList.toggle('live', c.dataset.stage===stage));
+    for(const st in mStages) mStages[st].classList.toggle('live', st === stage);
   }
 
   /* — autoplay scheduler — */

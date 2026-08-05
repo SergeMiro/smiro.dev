@@ -509,7 +509,7 @@ window.I18N_FR = {
       "Toutes les 5 min, n8n se réveille et interroge chaque source d'offres en parallèle. Le battement de cœur.",
     "n8n · every 5 min":             "n8n · toutes les 5 min",
     "Saved filter URL — role, seniority, geo, freshness. Polled every 5 min.":
-      "URL filtrée — poste, séniorité, géo, fraîcheur. Polled toutes les 5 min.",
+      "URL filtrée — poste, séniorité, géo, fraîcheur. Interrogée toutes les 5 min.",
     "cron · every 5m":               "cron · toutes les 5 min",
     "France Travail":                "France Travail",
     "Official API + saved searches. Most active FR source.":

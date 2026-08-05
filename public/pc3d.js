@@ -997,8 +997,24 @@ function boot(container) {
   // camera sits where the user's eyes would be — solved distance is always
   // too far for a real first-person feel).  Only apply() and the resize
   // observer call this.
+  /* Le cadre au repos, resserré sur téléphone.
+     `solveCam` prend la plus grande des deux contraintes ; dans la scène courte
+     et large du mobile (390×250) c'est la hauteur qui décide, et 6.5 laisse deux
+     bandes vides au-dessus et sous la machine. On rentre le cadre d'un cran :
+     la caméra avance d'autant. Le réglage desktop, posé au pixel dans le
+     panneau Tune, n'est pas touché — et les curseurs continuent d'écrire dans
+     TUNE.frame, que ce facteur ne fait que multiplier. */
+  const restFrame = { w: 0, h: 0 };
+  function frameAtRest() {
+    const narrow = window.matchMedia('(max-width:760px)').matches;
+    if (!narrow) return TUNE.frame;
+    restFrame.w = TUNE.frame.w * 0.82;
+    restFrame.h = TUNE.frame.h * 0.78;
+    return restFrame;
+  }
+
   function placeCamera() {
-    solveCam(TUNE.cam, TUNE.look, TUNE.frame, camRest);
+    solveCam(TUNE.cam, TUNE.look, frameAtRest(), camRest);
     // Read POV values from TUNE so the control panel sliders work live.
     camZoom.pos.set(TUNE.focusCam.x, TUNE.focusCam.y, TUNE.focusCam.z);
     camZoom.look.set(TUNE.focusLook.x, TUNE.focusLook.y, TUNE.focusLook.z);
