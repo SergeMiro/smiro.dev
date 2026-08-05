@@ -138,6 +138,14 @@
            libre — l'invite de l'avatar y repasse en flux à cette largeur. */
         .ss-panel{right:8px;bottom:60px;top:auto;width:calc(100vw - 16px);transform-origin:bottom right}
         .ss-fab{bottom:14px;right:14px;top:auto}
+
+        /* Même plancher de lisibilité que la page : rien sous 10.5px, et les
+           deux boutons du panneau se laissent viser au doigt. */
+        .ss-label{font-size:10.5px}
+        .ss-label .v{font-size:10.5px}
+        .ss-foot{font-size:10.5px}
+        .ss-reset{font-size:10.5px;padding:9px 12px}
+        .ss-lang-btn{min-height:38px}
       }
 
       .ss-lang{

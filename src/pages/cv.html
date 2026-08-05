@@ -378,6 +378,25 @@ a{color:inherit}
   .cv-projects{grid-template-columns:1fr}
 }
 
+/* ─── phone ───
+   Same readability floor as the portfolio: the mono meta labels stop at
+   10.5px, and the name is fluid so "Mirochnyk" never touches the edge on a
+   360px screen. */
+@media (max-width:560px){
+  .cv-name{font-size:clamp(32px,11vw,46px)}
+  .cv-skill-lbl{font-size:10.5px}
+  .cv-lang .llvl{font-size:10.5px}
+  .cv-edu-item .yr{font-size:10.5px}
+  .cv-cert-item .yr{font-size:10.5px}
+  .cv-proj .cat{font-size:10.5px}
+}
+@media (max-width:430px){
+  .cv-side{padding:24px 18px}
+  .cv-main{padding:24px 18px}
+  .cv-head{padding:24px 18px 18px}
+  .cv-foot{padding:16px 18px}
+}
+
 /* ═════════════════ PRINT — ATS-friendly, single column ═════════════════ */
 @media print{
   @page{

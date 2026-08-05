@@ -71,6 +71,7 @@ window.I18N_FR = {
     "stack.h2":            "Les outils que j'attrape",
     "stack.kick":         "Opiniâtre. Self-hosted par défaut. Sobre où il faut l'être, tranchant là où ça compte.",
     "stack.hint":         "à droite : mon stack, verrouillé · à gauche : à vous — double-clic pour épingler un outil manquant",
+    "stack.swipe":        "faites glisser le mur",
     "stack.zone.owner":   "mon stack · en production",
     "stack.zone.guest":   "à vous · l'outil qui manque ?",
     "stack.build":        "📌 composer un stack",

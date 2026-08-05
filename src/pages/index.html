@@ -3216,6 +3216,179 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   .pc3d-tune-actions .active{ background:oklch(var(--accent-lch) / .5); color:var(--accent-ink); }
   @media (max-width: 900px){ .hero-r.pc-stage{ min-height: 440px; } }
 </style>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MOBILE PASS
+     Every rule below lives inside a max-width query, so the desktop
+     rendering is untouched. This block is loaded last on purpose: it has to
+     win ties against the two stylesheets above without editing them.
+
+     Three jobs, in order:
+       1. a readable type scale — nothing below 10.5px, headings that fit
+          a 360px column, and 16px form fields so iOS stops zooming on focus
+       2. zero horizontal page scroll — wide things get their own scroller
+       3. the handful of layouts that collapsed into unreadable overlap
+     ════════════════════════════════════════════════════════════════════════ -->
+<style id="mobile-pass">
+/* ─────────── 1 · TYPE SCALE ─────────── */
+@media (max-width:760px){
+  /* the h1 carries an inline font-size from the editor, hence !important */
+  h1.ht{font-size:clamp(36px,10.5vw,52px)!important;line-height:1.03;letter-spacing:-.032em}
+  .hero-l .sub, .hero-sub{font-size:15.5px}
+
+  .endcta{padding:56px 22px}
+  .endcta h2{font-size:clamp(30px,7.6vw,44px);line-height:1.06}
+  .endcta p{font-size:15.5px}
+  .endcta .btn{font-size:12.5px;padding:13px 18px}
+
+  /* project cards — the serif title and the decorative number were colliding */
+  .p-t{font-size:29px}
+  .p.big .p-t{font-size:31px}
+  .p-n{font-size:50px;top:14px;right:18px}
+  .p-cat{font-size:11px;letter-spacing:.13em;max-width:72%}
+  .p-d{font-size:14.5px}
+  .p-st span{font-size:11px;padding:4px 8px}
+  .p-bot{font-size:11.5px}
+  .p-bot .st .lang-name{font-size:11.5px}
+
+  /* the pillars carry the same oversized number */
+  .pillar .num{font-size:52px;top:14px;right:18px}
+  .pillar h3{max-width:78%}
+  .pillar .tags span{font-size:11px}
+
+  /* project reader */
+  .pv-stack span{font-size:11px;padding:5px 8px}
+
+  /* mono/meta floor: nothing under 10.5px on a phone */
+  .sidx{font-size:11px}
+  .agent-chip{font-size:10.5px}
+  /* these five carry a descendant selector upstream — a bare class would lose
+     the specificity fight, media query or not */
+  .hrow .hchip{font-size:10.5px}
+  .hrow .hlink{font-size:10.5px}
+  .agroup-h .repo{font-size:10.5px}
+  .avatar-msg .am-cta{font-size:10.5px}
+  .agent-role{font-size:10.5px}
+  .abadge{font-size:10.5px}
+  .orb-tag{font-size:11px}
+  .orb-state{font-size:10.5px}
+  .orb-state-pill{font-size:11px}
+  .agroup-try{font-size:11px}
+  .agents-count{font-size:11px}
+  .board-btn{font-size:11.5px}
+  .board-zone-label{font-size:10.5px}
+  .postit{font-size:12.5px}
+  .dc-meta{font-size:11px}
+  .rt{font-size:11px}
+  .repo{font-size:10.5px}
+  .sbx-q{font-size:11px}
+  .sbx-foot{font-size:10.5px}
+  .hlink{font-size:10.5px}
+  .am-cta{font-size:10.5px}
+  .tt{font-size:11px}
+  .pipe-hint{font-size:11px}
+  .lbl{font-size:11px}
+
+  /* iOS zooms the whole page when a focused field is under 16px */
+  input:not([type=range]):not([type=checkbox]):not([type=radio]),
+  textarea, select{font-size:16px}
+}
+
+/* ─────────── 2 · NO HORIZONTAL PAGE SCROLL ─────────── */
+@media (max-width:760px){
+  /* the four board buttons are flex:0 0 auto, so they pushed the body to
+     515px wide at a 390px viewport — the row now owns its own line */
+  .board-tools{align-items:stretch;row-gap:10px}
+  .board-tools .hint{flex:1 1 100%}
+  .board-search{flex:1 1 100%;min-width:0}
+  .board-tools .actions{flex:1 1 100%;min-width:0;justify-content:flex-start}
+
+  /* six pipeline stages on one non-wrapping row got clipped mid-word */
+  .pipe-stagebar{flex-wrap:wrap;justify-content:flex-start;gap:8px 12px;padding:0}
+
+  /* horizontal scrollers: keep the swipe inside the widget and off the
+     browser's back-gesture */
+  .pipe-scroll{overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+}
+
+/* ─────────── 3 · LAYOUTS THAT COLLAPSED ─────────── */
+@media (max-width:760px){
+  /* .ttl is flex:1 next to a 262px meta line, so it computed to width:0 and
+     its wrapped children printed straight over the meta text */
+  .agroup-h{position:relative;flex-wrap:wrap;align-items:flex-start;
+            row-gap:7px;padding:14px 56px 14px 16px}
+  .agroup-h .ttl{flex:1 1 100%;font-size:19px}
+  .agroup-h .meta{flex:1 1 100%;line-height:1.55;font-size:10.5px}
+  .agroup-h .agroup-toggle{position:absolute;top:12px;right:14px;width:38px;height:38px}
+
+  /* the agent search truncated its own input and wrapped the count 3-up */
+  .agents-search{flex-wrap:wrap;row-gap:9px}
+  .agents-search input{flex:1 1 100%;min-width:0}
+  .agents-count{margin-left:0;flex:1 1 100%}
+
+  /* the 3D laptop was framed for a landscape column: at 350×440 the camera
+     solved backwards and left the machine small between two empty bands.
+     Full-bleed and a landscape-ish box give it the whole screen width. */
+  .hero-r.pc-stage{min-height:clamp(230px,64vw,320px);
+                   margin-left:-20px;margin-right:-20px;width:calc(100% + 40px)}
+}
+
+/* the post-it wall keeps its two zones and its divider — it just scrolls
+   sideways now instead of squeezing 19 notes into a 210px column.
+   The hint is styled first and switched on inside the query, so the query
+   stays the thing that wins. */
+.board-swipe{
+  display:none;
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);margin-top:12px;gap:8px;justify-content:center;align-items:center;
+}
+.board-swipe span{opacity:.6}
+@media (max-width:780px){
+  .board-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
+                overscroll-behavior-x:contain;border-radius:14px;
+                scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
+  .board{min-width:740px}
+  .board-swipe{display:flex}
+}
+
+/* ─────────── 3b · THE TABLET BAND ───────────
+   Between 761 and 920 the deck is already two cards per row, so a card is
+   250–425px wide while the type is still the desktop size: the 40px serif
+   title runs into the 80px number. The cards get the phone treatment, the
+   rest of the page keeps its desktop scale. */
+@media (min-width:761px) and (max-width:920px){
+  .p-t{font-size:30px}
+  .p.big .p-t{font-size:32px}
+  .p-n{font-size:58px;top:16px;right:20px}
+  .p-cat{max-width:72%}
+  .p-st span{font-size:10px}
+}
+
+/* ─────────── 4 · TAP TARGETS ───────────
+   Anything a finger is meant to hit gets 38px of height. The state pills in
+   the sandbox are `pointer-events:none` labels, not buttons, so they stay
+   as they are — and the sphere labels keep their JS-fitted --tt-size, since
+   forcing those larger would push the text out of its circle. */
+@media (max-width:760px){
+  .board-btn{min-height:38px;padding-block:0;display:inline-flex;align-items:center}
+  .agroup-try{min-height:38px}
+  .pick-bar button{min-height:38px}
+  .board-search .bs-clear{min-width:32px;min-height:32px}
+  .nav-burger{min-width:42px;min-height:42px}
+}
+
+/* ─────────── 5 · PHONE-TIGHT ─────────── */
+@media (max-width:430px){
+  section{padding:72px 18px}
+  .hero{padding:20px 18px 36px}
+  .hero-r.pc-stage{margin-left:-18px;margin-right:-18px;width:calc(100% + 36px)}
+  .p-t{font-size:26px}
+  .p-n{font-size:44px}
+  .endcta{padding:48px 18px}
+  /* two stat cells per row stay two, but they need the full gutter */
+  .hero-meta .hm{width:calc(50% - 9px)}
+}
+</style>
 </head>
 <body style="font-family: Quicksand">
 
@@ -3759,7 +3932,12 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
         <button class="board-btn primary" id="board-add"><span class="plus">+</span> <span data-i18n="stack.add">suggest a tool</span></button>
       </div>
     </div>
-    <div class="board" id="postit-board"></div>
+    <!-- the scroller is a wrapper, not the board itself: the layout JS reads
+         board.clientWidth to place the notes, so the board keeps its own width -->
+    <div class="board-scroll">
+      <div class="board" id="postit-board"></div>
+    </div>
+    <div class="board-swipe"><span>←</span> <span data-i18n="stack.swipe">swipe the wall</span> <span>→</span></div>
   </div>
 </section>
 
@@ -6416,6 +6594,12 @@ function bootWorks(){
       if(e.target.classList.contains('x')) return;
       if(el.querySelector('.name[contenteditable="true"]')) return;
       if(el.querySelector('.cat[contenteditable="true"]')) return;
+      /* Sur téléphone le mur défile horizontalement et la page verticalement.
+         Si le doigt pouvait aussi déplacer un post-it, le moindre scroll
+         emporterait la note posée sous le doigt. Le glisser reste donc au
+         pointeur fin ; le tap et le double-tap (édition, épinglage) ne
+         passent pas par ce gestionnaire et continuent de fonctionner. */
+      if(e.pointerType === 'touch' && window.matchMedia('(max-width:780px)').matches) return;
       dragging=true; moved=false;
       sx=e.clientX; sy=e.clientY;
       ox=parseFloat(el.style.left); oy=parseFloat(el.style.top);
@@ -6999,6 +7183,21 @@ function bootWorks(){
 
   initialLayout();
   syncZoneButtons();
+
+  /* Sur téléphone, le mur défile latéralement (`.board-scroll`). La vue doit
+     s'ouvrir sur la colonne de l'auteur — c'est le contenu — et non sur la
+     zone vide des visiteurs. On laisse dépasser la frontière à gauche : elle
+     dit qu'il y a quelque chose de l'autre côté. */
+  (function openOnTheWall(){
+    const sc = board.closest('.board-scroll');
+    if(!sc) return;
+    const settle = ()=>{
+      if(sc.scrollWidth <= sc.clientWidth + 4) return;   // desktop : rien à faire
+      sc.scrollLeft = Math.max(0, splitX() - 26);
+    };
+    settle();
+    window.addEventListener('resize', settle);
+  })();
 
   window.addEventListener('resize', ()=>{
     // au redimensionnement, chaque post-it revient dans SA colonne
