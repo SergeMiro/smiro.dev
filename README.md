@@ -9,7 +9,8 @@ that answers from a Markdown file I can edit without a deploy.**
 [![Three.js](https://img.shields.io/badge/Three.js-0.183-000000?logo=threedotjs&logoColor=white)](https://threejs.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.2-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Vercel](https://img.shields.io/badge/Vercel-static_%2B_edge-000000?logo=vercel&logoColor=white)](https://vercel.com/)
-[![Deepgram](https://img.shields.io/badge/Deepgram-Aura_TTS-13EF93)](https://deepgram.com/)
+[![Deepgram](https://img.shields.io/badge/Deepgram-Aura--2_TTS-13EF93)](https://deepgram.com/)
+[![Gemini TTS](https://img.shields.io/badge/Gemini-TTS_french_voice-4285F4?logo=googlegemini&logoColor=white)](https://ai.google.dev/gemini-api/docs/speech-generation)
 [![n8n](https://img.shields.io/badge/n8n-self--hosted-EA4B71?logo=n8n&logoColor=white)](https://n8n.io/)
 
 🌐 **Live:** [smiro.dev](https://smiro.dev) — no login, the whole site is the demo.
@@ -59,8 +60,16 @@ An avatar you can talk to, whose persona lives in a Markdown file rather than in
 - The system prompt is assembled server-side from **`public/kb/sergiy.md`** and cached for an
   hour — editing that file changes what the avatar says, with no deploy
 - **Rate limited** (12 requests/hour) with caps on system prompt, message length and history
-- **`/api/tts`** — a Deepgram Aura TTS proxy that keeps `DEEPGRAM_API_KEY` server-side and
-  returns `audio/mpeg`; the client falls back to Web Speech if the proxy refuses
+- **`/api/tts`** — the voice, behind one endpoint and two providers, keys server-side.
+  French goes to **Gemini** (`Charon`, a male voice) because Deepgram ships only two
+  French voices; everything else goes to **Deepgram Aura-2** (`odysseus` in English),
+  which also catches French when Gemini is rate-limited or slow. Answers are
+  `audio/wav` from Gemini, `audio/mpeg` from Deepgram, and the `X-TTS-Voice` header
+  names whoever sang. Web Speech in the browser is the last resort.
+- The avatar is **written to be heard**: terms in full instead of acronyms, numbers as
+  words, and an unavoidable acronym spelled as one pronounceable word — the rules live
+  in `avatarPrompt()` and in `kb/sergiy.md`, with a client-side expansion table as the
+  net under them
 
 ### Bilingual layer
 
@@ -115,7 +124,7 @@ pages.
 | Runtime on the page | Vanilla JavaScript — no client framework hydration |
 | Serverless | Vercel **Edge** function (`/api/agent-chat`) · Vercel serverless function (`/api/tts`) · TypeScript |
 | AI providers | OpenRouter · Groq · Google Gemini 2.5 Flash |
-| Speech | Deepgram Aura TTS · Web Speech API fallback |
+| Speech | Gemini TTS (French) · Deepgram Aura-2 (rest, and fallback) · Web Speech API last resort |
 | Integrations | GitHub REST API |
 | i18n | Hand-rolled: `data-i18n` attributes + MutationObserver, EN/FR |
 | Hosting | Vercel — static output with immutable asset caching |
@@ -145,12 +154,12 @@ pages.
                   │                          │
                   ▼                          ▼
     /api/agent-chat  (Edge)         /api/tts  (Serverless)
-    SSE streaming proxy             Deepgram Aura proxy
+    SSE streaming proxy             Gemini TTS → Deepgram Aura-2
     rate limit 12/h                 keeps the key server-side
     system prompt ← kb/sergiy.md
                   │
                   ▼
-    OpenRouter · Groq · Gemini      Deepgram
+    OpenRouter · Groq · Gemini      Gemini · Deepgram
 ```
 
 Decisions worth naming:
@@ -194,8 +203,8 @@ AI provider key is needed for the avatar; the site itself builds and runs withou
 | --- | --- |
 | `OPENROUTER_API_KEY` | Free GLM, DeepSeek, Qwen and Llama models via openrouter.ai |
 | `GROQ_API_KEY` | Ultra-fast Llama / Qwen via groq.com |
-| `GEMINI_API_KEY` | Google Gemini 2.5 Flash |
-| `DEEPGRAM_API_KEY` | Deepgram Aura text-to-speech |
+| `GEMINI_API_KEY` | Google Gemini 2.5 Flash — chat, and the French TTS voice |
+| `DEEPGRAM_API_KEY` | Deepgram Aura-2 text-to-speech — every other language, and the fallback |
 
 ## Content model
 
@@ -244,7 +253,7 @@ src/pages/
   cv-fr.html        CV, French
 api/
   agent-chat.ts     Vercel Edge function — multi-provider SSE chat proxy
-  tts.ts            Vercel serverless function — Deepgram Aura proxy
+  tts.ts            Vercel serverless function — Gemini TTS, Deepgram Aura-2 under it
 public/
   theme.js          OKLCH palettes, blocking in <head>
   settings.js       settings panel UI
