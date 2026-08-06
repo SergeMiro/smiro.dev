@@ -40,6 +40,9 @@
   --faint:    #9a9385;
   --line:     rgba(27,26,24,0.09);
   --line-2:   rgba(27,26,24,0.18);
+  /* the scrolling hairline — a shade stronger than --line-2, which is a border
+     colour and reads as dirt on a moving bar */
+  --sb-thumb: rgba(27,26,24,0.26);
 
   /* --accent / --brick / the whole accent ladder live in /theme.css so the
      switcher has a single source of truth. Do not redeclare them here: this
@@ -62,6 +65,59 @@ html{overflow-x:hidden}
 body{
   background: var(--bg);
   overflow-x:hidden;
+}
+
+/* ───── scrollbars inside panes that scroll ─────────────────────────────────
+   A pane admits it scrolls only while the pointer is on it: a hairline, half
+   transparent, no end buttons, and gone again when the pointer leaves. Both
+   axes, one rule.
+
+   The track keeps its width the whole time and only the thumb changes colour.
+   Hiding the bar with `scrollbar-width:none` and bringing it back on hover is
+   the obvious way to write this and the wrong one: the bar occupies layout, so
+   every line of text would jump sideways the moment the pointer arrived.
+
+   `::-webkit-scrollbar-button` is the pair of triangles at the ends. Chromium
+   draws them once a scrollbar is styled at all, and there is no way to ask for
+   a bar without them other than sending them away.
+
+   Behind `hover: hover` on purpose: a touch screen has no pointer that could
+   arrive or leave, and its own overlay bars already fade in and out by
+   themselves — a rule keyed on :hover would simply delete the affordance.
+   :focus-within keeps the bar for whoever scrolls the pane from the keyboard.
+
+   The list is every scrolling pane on the page: mobile nav drawer, the
+   pipeline strip, the reader sheet, the chat log, the stack picker, the
+   sandbox log, the post-it wall. */
+@media (hover: hover) {
+  :is(.drawer, .pipe-scroll, .art-sheet, .chat-body, .stack-panel, .sbx-log, .board-scroll){
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;   /* thumb, then track */
+  }
+  :is(.drawer, .pipe-scroll, .art-sheet, .chat-body, .stack-panel, .sbx-log, .board-scroll):is(:hover, :focus-within){
+    scrollbar-color: var(--sb-thumb) transparent;
+  }
+  /* Chromium and WebKit: an 8px lane holding a 4px thumb — thin to look at,
+     still wide enough to grab, because the transparent border is part of the
+     target and only the padding box is painted. */
+  :is(.drawer, .pipe-scroll, .art-sheet, .chat-body, .stack-panel, .sbx-log, .board-scroll)::-webkit-scrollbar{
+    width: 8px; height: 8px; background: transparent;
+  }
+  :is(.drawer, .pipe-scroll, .art-sheet, .chat-body, .stack-panel, .sbx-log, .board-scroll)::-webkit-scrollbar-thumb{
+    background: transparent;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    border-radius: 99px;
+    transition: background-color .18s ease;
+  }
+  :is(.drawer, .pipe-scroll, .art-sheet, .chat-body, .stack-panel, .sbx-log, .board-scroll):is(:hover, :focus-within)::-webkit-scrollbar-thumb{
+    background: var(--sb-thumb);
+    background-clip: padding-box;
+  }
+  :is(.drawer, .pipe-scroll, .art-sheet, .chat-body, .stack-panel, .sbx-log, .board-scroll)::-webkit-scrollbar-button,
+  :is(.drawer, .pipe-scroll, .art-sheet, .chat-body, .stack-panel, .sbx-log, .board-scroll)::-webkit-scrollbar-corner{
+    display: none; width: 0; height: 0; background: transparent;
+  }
 }
 
 /* ───── nav ───── */
@@ -304,7 +360,20 @@ h1.ht .crossed::before{
 .pillar{
   background:var(--bg);border:1px solid var(--line-2);border-radius:14px;padding:28px;
   position:relative;overflow:hidden;
+  /* `isolation` is what lets the rain canvas below sit at z-index:-1 and still
+     be seen: it makes the card a stacking context, so a negative layer paints
+     above the card's own background instead of disappearing behind it — and it
+     lands under the heading and the paragraph without any of them needing a
+     z-index of their own. */
+  isolation:isolate;
 }
+/* the code rain — painted by /matrix.js, which only builds it on hover */
+.card-rain{
+  position:absolute;inset:0;z-index:-1;
+  pointer-events:none;
+  opacity:0;transition:opacity .26s ease;
+}
+.card-rain.on{opacity:.42}   /* keep in step with VEIL in matrix.js */
 .pillar .num{
   font-family:var(--font-serif);font-size:80px;line-height:.8;font-weight:300;font-style:italic;
   opacity:.18;letter-spacing:-.04em;position:absolute;top:18px;right:24px;
@@ -371,12 +440,10 @@ h1.ht .crossed::before{
 .pipe-scroll{
   overflow-x:auto;overflow-y:visible;
   padding:3px 0;
-  scrollbar-width:thin;scrollbar-color:var(--line-2) transparent;
+  /* the bar itself is cast in the shared pointer-only block up top */
   -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
           mask-image:linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
 }
-.pipe-scroll::-webkit-scrollbar{height:6px}
-.pipe-scroll::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:3px}
 
 .pipe-stagebar{
   position:relative;display:flex;justify-content:space-between;
@@ -814,6 +881,10 @@ h1.ht .crossed::before{
   /* colonne : c'est ce qui permet de pousser la citation en bas de carte */
   display:flex;flex-direction:column;
   position:relative;overflow:hidden;
+  /* comme .pillar : rend la carte contexte d'empilement, pour que la pluie de
+     code (/matrix.js, z-index:-1) passe au-dessus du dégradé de fond et sous
+     le texte, sans toucher au balisage */
+  isolation:isolate;
   border-radius:18px;padding:34px 34px 30px;
   /* papier légèrement plus clair en haut qu'en bas : la carte se détache du
      fond sans avoir besoin d'un cadre marqué */
@@ -2899,7 +2970,6 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   display:none;flex-direction:column;gap:8px;
   margin-top:2px;padding-right:2px;
   font-size:12.5px;line-height:1.5;text-align:left;
-  scrollbar-width:thin;
 }
 .sbx-log.on{display:flex}
 .sbx-log .b{
@@ -3232,8 +3302,11 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
 <style id="mobile-pass">
 /* ─────────── 1 · TYPE SCALE ─────────── */
 @media (max-width:760px){
-  /* the h1 carries an inline font-size from the editor, hence !important */
-  h1.ht{font-size:clamp(36px,10.5vw,52px)!important;line-height:1.03;letter-spacing:-.032em}
+  /* the h1 carries an inline font-size from the editor, hence !important.
+     Every number here is the old scale × 0.84375 — the same 64 → 54 px the
+     desktop heading took — so the phone shrinks by exactly as much and the
+     four lines keep breaking where they did. */
+  h1.ht{font-size:clamp(30.5px,8.86vw,44px)!important;line-height:1.03;letter-spacing:-.032em}
   .hero-l .sub, .hero-sub{font-size:15.5px}
 
   .endcta{padding:56px 22px}
@@ -3345,8 +3418,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
 .board-swipe span{opacity:.6}
 @media (max-width:780px){
   .board-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
-                overscroll-behavior-x:contain;border-radius:14px;
-                scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
+                overscroll-behavior-x:contain;border-radius:14px}
   .board{min-width:740px}
   .board-swipe{display:flex}
 }
@@ -3610,7 +3682,7 @@ canvas.orb{width:260px;height:260px;display:block;border-radius:50%;}
   <div class="hero-grid">
     <div>
       <div class="eyebrow"><span class="pulse"></span>for <span style="color:var(--accent);font-weight:600">recruiters &amp; hiring managers</span></div>
-      <h1 class="ht" style="font-size: 64px">
+      <h1 class="ht" style="font-size: 54px">
         I don't <span class="crossed">apply</span><br>
         for jobs.<br>
         I <em>build a system</em><br>
@@ -8137,6 +8209,7 @@ function bootWorks(){
 <script src="/i18n-fr.js?v=2"></script>
 <script src="/i18n.js?v=2"></script>
 <script src="/settings.js?v=2"></script>
+<script src="/matrix.js?v=1" defer></script>
 <script type="module" src="/pc3d.js?v=2"></script>
 <script>
 // POV tuning panel — lets you dial in the perfect camera framing live
