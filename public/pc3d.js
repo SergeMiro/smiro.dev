@@ -42,6 +42,9 @@
    Since v9 the focused framing is direct (not solved) — camZoom.pos/look
    are read straight from TUNE.focusCam / TUNE.focusLook so the live-tuning
    panel can adjust them interactively.
+   Both framings then step back by TUNE.pull, written in apparent pixels
+   rather than world units (see pullFactor) — the phone and the desktop stage
+   need different world distances to lose the same seven pixels.
    ════════════════════════════════════════════════════════════════════════ */
 
 import * as THREE from 'three';
@@ -234,6 +237,11 @@ function boot(container) {
     focusCam: { x: -0.25, y: 2.98, z: 6.83 },
     focusLook: { x: 0.0, y: 1.02, z: -0.73 },
     focusFrame: { w: 5.0, h: 3.8 },
+    // A last nudge away from the machine, on top of both framings above, and
+    // written in *apparent pixels* because that is the unit the eye judges:
+    // `rest` takes 7 px off the parked laptop, `focus` 2.5 px off the zoomed
+    // POV. pullFactor() turns each into a distance factor per layout.
+    pull: { rest: 7, focus: 2.5 },
     zoomMs: 650,               // duration of the push-in / pull-out (cubic-eased) — 50 % faster
     zoomSpeed: 0.075,          // per-frame follow lerp on top of it, at 60 fps
     // screen plane pose, LID-LOCAL. 3:2 to match the canvas — do not distort.
@@ -993,31 +1001,60 @@ function boot(container) {
     camPos.lerpVectors(camRest.pos, camZoom.pos, k);
     camLook.lerpVectors(camRest.look, camZoom.look, k);
   }
-  // Re-solve the idle framing, then set the POV framing directly (so the
-  // camera sits where the user's eyes would be — solved distance is always
-  // too far for a real first-person feel).  Only apply() and the resize
-  // observer call this.
-  /* Le cadre au repos, resserré sur téléphone.
+  const narrowStage = () => window.matchMedia('(max-width:760px)').matches;
+
+  /* TUNE.pull, en pixels, traduit en facteur de distance.
+     Le rapport n'est pas 1/d : la largeur perçue de la machine est portée par
+     son arête avant, plus proche de l'œil que le point visé, donc plus
+     sensible au recul. Plutôt que de le dériver, on le mesure — pixels perdus
+     par pour-cent de distance ajoutée, relevé dans le navigateur sur la
+     silhouette projetée (les sommets réels, pas la bbox : les huit coins d'une
+     boîte alignée sur les axes exagèrent le contour de moitié). `rest` se lit
+     sur la machine entière, `focus` sur l'écran du capot — seul objet dont on
+     voie encore les bords en POV. La réponse est linéaire sur la plage utile,
+     donc un facteur suffit. Les mêmes 7 px coûtent plus cher sur téléphone :
+     la machine y est plus petite, chaque pour-cent rend donc moins de pixels.
+       stage bureau 627×560 · stage téléphone 390×250 */
+  const PULL_PPP = {
+    rest: { wide: 5.02, narrow: 3.11 },
+    focus: { wide: 4.88, narrow: 2.15 },
+  };
+  const pullFactor = (which) =>
+    1 + TUNE.pull[which] / (100 * PULL_PPP[which][narrowStage() ? 'narrow' : 'wide']);
+
+  /* Le cadre au repos, resserré sur téléphone, puis reculé de TUNE.pull.rest.
      `solveCam` prend la plus grande des deux contraintes ; dans la scène courte
      et large du mobile (390×250) c'est la hauteur qui décide, et 6.5 laisse deux
      bandes vides au-dessus et sous la machine. On rentre le cadre d'un cran :
      la caméra avance d'autant. Le réglage desktop, posé au pixel dans le
-     panneau Tune, n'est pas touché — et les curseurs continuent d'écrire dans
-     TUNE.frame, que ce facteur ne fait que multiplier. */
+     panneau Tune, garde ses proportions — et les curseurs continuent d'écrire
+     dans TUNE.frame, que ces deux facteurs ne font que multiplier. */
   const restFrame = { w: 0, h: 0 };
   function frameAtRest() {
-    const narrow = window.matchMedia('(max-width:760px)').matches;
-    if (!narrow) return TUNE.frame;
-    restFrame.w = TUNE.frame.w * 0.82;
-    restFrame.h = TUNE.frame.h * 0.78;
+    const narrow = narrowStage();
+    const k = pullFactor('rest');
+    restFrame.w = TUNE.frame.w * (narrow ? 0.82 : 1) * k;
+    restFrame.h = TUNE.frame.h * (narrow ? 0.78 : 1) * k;
     return restFrame;
   }
 
+  // Re-solve the idle framing, then set the POV framing directly (so the
+  // camera sits where the user's eyes would be — solved distance is always
+  // too far for a real first-person feel).  Only apply() and the resize
+  // observer call this.
   function placeCamera() {
     solveCam(TUNE.cam, TUNE.look, frameAtRest(), camRest);
-    // Read POV values from TUNE so the control panel sliders work live.
-    camZoom.pos.set(TUNE.focusCam.x, TUNE.focusCam.y, TUNE.focusCam.z);
+    // Read POV values from TUNE so the control panel sliders work live, then
+    // slide the eye back along its own view ray by TUNE.pull.focus pixels. The
+    // sliders keep describing the POV itself; the pull is a constant on top of
+    // whatever they say, so tuning and this offset never fight.
+    const k = pullFactor('focus');
     camZoom.look.set(TUNE.focusLook.x, TUNE.focusLook.y, TUNE.focusLook.z);
+    camZoom.pos.set(
+      camZoom.look.x + (TUNE.focusCam.x - camZoom.look.x) * k,
+      camZoom.look.y + (TUNE.focusCam.y - camZoom.look.y) * k,
+      camZoom.look.z + (TUNE.focusCam.z - camZoom.look.z) * k,
+    );
     aimCamera(focusZoom);
     camera.position.copy(camPos);
     camAt.copy(camLook);
