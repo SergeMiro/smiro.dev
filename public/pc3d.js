@@ -240,8 +240,10 @@ function boot(container) {
     // A last nudge away from the machine, on top of both framings above, and
     // written in *apparent pixels* because that is the unit the eye judges:
     // `rest` takes 7 px off the parked laptop, `focus` 2.5 px off the zoomed
-    // POV. pullFactor() turns each into a distance factor per layout.
-    pull: { rest: 7, focus: 2.5 },
+    // POV, and `result` 3 px more again once the CV is on the screen — the
+    // offer wants a little more air around it than the terminal did.
+    // pullFactor() turns each into a distance factor per layout.
+    pull: { rest: 7, focus: 2.5, result: 3 },
     zoomMs: 650,               // duration of the push-in / pull-out (cubic-eased) — 50 % faster
     zoomSpeed: 0.075,          // per-frame follow lerp on top of it, at 60 fps
     // screen plane pose, LID-LOCAL. 3:2 to match the canvas — do not distort.
@@ -1019,8 +1021,15 @@ function boot(container) {
     rest: { wide: 5.02, narrow: 3.11 },
     focus: { wide: 4.88, narrow: 2.15 },
   };
+  /* Le pas de plus quand le CV est à l'écran. C'est un drapeau et non une
+     lecture de `state` : le recul est calculé au démarrage, avant que la machine
+     à états n'existe, et `state` est déclaré plus bas — le lire ici lèverait une
+     ReferenceError au premier placeCamera(). */
+  let cvOnScreen = false;
+  const pullPx = (which) =>
+    TUNE.pull[which] + (which === 'focus' && cvOnScreen ? TUNE.pull.result : 0);
   const pullFactor = (which) =>
-    1 + TUNE.pull[which] / (100 * PULL_PPP[which][narrowStage() ? 'narrow' : 'wide']);
+    1 + pullPx(which) / (100 * PULL_PPP[which][narrowStage() ? 'narrow' : 'wide']);
 
   /* Le cadre au repos, resserré sur téléphone, puis reculé de TUNE.pull.rest.
      `solveCam` prend la plus grande des deux contraintes ; dans la scène courte
@@ -1042,12 +1051,16 @@ function boot(container) {
   // camera sits where the user's eyes would be — solved distance is always
   // too far for a real first-person feel).  Only apply() and the resize
   // observer call this.
-  function placeCamera() {
-    solveCam(TUNE.cam, TUNE.look, frameAtRest(), camRest);
-    // Read POV values from TUNE so the control panel sliders work live, then
-    // slide the eye back along its own view ray by TUNE.pull.focus pixels. The
-    // sliders keep describing the POV itself; the pull is a constant on top of
-    // whatever they say, so tuning and this offset never fight.
+  // The POV framing on its own, no camera move. Read POV values from TUNE so the
+  // control panel sliders work live, then slide the eye back along its own view
+  // ray by the pull in pixels. The sliders keep describing the POV itself; the
+  // pull is a constant on top of whatever they say, so tuning and this offset
+  // never fight.
+  // Called on its own when the CV arrives and takes its three extra pixels:
+  // placeCamera() would snap the eye there, which is right on a resize and wrong
+  // here — the follow lerp in frame() should carry those pixels so the framing
+  // settles instead of jumping.
+  function aimZoom() {
     const k = pullFactor('focus');
     camZoom.look.set(TUNE.focusLook.x, TUNE.focusLook.y, TUNE.focusLook.z);
     camZoom.pos.set(
@@ -1055,6 +1068,11 @@ function boot(container) {
       camZoom.look.y + (TUNE.focusCam.y - camZoom.look.y) * k,
       camZoom.look.z + (TUNE.focusCam.z - camZoom.look.z) * k,
     );
+  }
+
+  function placeCamera() {
+    solveCam(TUNE.cam, TUNE.look, frameAtRest(), camRest);
+    aimZoom();
     aimCamera(focusZoom);
     camera.position.copy(camPos);
     camAt.copy(camLook);
@@ -1223,6 +1241,8 @@ function boot(container) {
   function enterFocus() {
     if (state !== 'idle' && state !== 'typing') return;   // guard: one way in
     state = 'focused';
+    cvOnScreen = false;   // the terminal framing, until a build says otherwise
+    aimZoom();
     typed = Math.max(typed, restChars());
     container.classList.add('is-engaged');
     container.style.cursor = 'pointer';
@@ -1230,6 +1250,8 @@ function boot(container) {
   function exitFocus() {
     if (!engaged()) return;
     state = 'typing';
+    cvOnScreen = false;
+    aimZoom();
     container.style.cursor = 'default';
     // The CV card sits on the screen, so the pointer is still over the machine
     // at the moment we pull out — without this the very next frame would read
@@ -1641,7 +1663,13 @@ function boot(container) {
       const be = now - buildStart;
       drawTerminal(be);
       const total = TERM_PER_LINE * txt().term.length + TERM_HOLD;
-      if (be > total) { state = 'result'; buildStart = now; }
+      if (be > total) {
+        state = 'result';
+        buildStart = now;
+        // the offer takes its extra three pixels of air; the follow lerp glides
+        cvOnScreen = true;
+        aimZoom();
+      }
     } else if (state === 'result') {
       // the offer is on screen: the key has nothing left to ask for, so it cools
       // back to the same colour as every other key
