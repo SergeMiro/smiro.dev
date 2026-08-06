@@ -73,6 +73,20 @@ const GEMINI_LANGS = new Set(['fr']);
 const GEMINI_MAX_CHARS = 700;
 const GEMINI_TIMEOUT_MS = 20_000;
 
+// The model is a chat model wearing a TTS hat, and a bare short line reads to it
+// as something to answer rather than something to say: "Bonjour." comes back 400
+// ("Model tried to generate text, but it should only be used for TTS"), and
+// "Oui." comes back 200 with zero bytes of audio. An explicit instruction settles
+// it — measured: with this prefix "Bonjour." speaks in 1.21 s, and the prefix
+// itself is not read aloud. It is French because French is the only language
+// routed here; Gemini takes the spoken language from the text, so an English
+// instruction over a French line would be arguing with itself.
+const GEMINI_READ_ALOUD = 'Lis ce texte à voix haute, mot pour mot : ';
+// Shorter than an eighth of a second is not a spoken sentence. It is the empty
+// answer above, which would otherwise reach the visitor as a valid, silent WAV
+// and drop the sentence without a sound.
+const GEMINI_MIN_PCM_BYTES = 6000;   // 24 kHz × 16 bit mono ≈ 48 000 bytes a second
+
 // Gemini hands back raw signed 16-bit little-endian PCM, mono, at the rate named
 // in its own mimeType (`audio/L16;codec=pcm;rate=24000`). No browser plays that,
 // so it gets the 44-byte RIFF header that makes it a WAV file.
@@ -112,7 +126,7 @@ async function geminiSpeak(text: string, key: string): Promise<ArrayBuffer | nul
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
         signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
         body: JSON.stringify({
-          contents: [{ parts: [{ text }] }],
+          contents: [{ parts: [{ text: GEMINI_READ_ALOUD + text }] }],
           generationConfig: {
             responseModalities: ['AUDIO'],
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: GEMINI_VOICE } } },
@@ -128,6 +142,7 @@ async function geminiSpeak(text: string, key: string): Promise<ArrayBuffer | nul
     if (!part?.data) return null;
     const rate = Number(/rate=(\d+)/.exec(part.mimeType ?? '')?.[1]) || 24000;
     const raw = atob(part.data);
+    if (raw.length < GEMINI_MIN_PCM_BYTES) return null;   // silence is not an answer
     const pcm = new Uint8Array(raw.length);
     for (let i = 0; i < raw.length; i++) pcm[i] = raw.charCodeAt(i);
     return wavFromPcm(pcm, rate);
