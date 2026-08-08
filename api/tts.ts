@@ -71,20 +71,30 @@ const GEMINI_LANGS = new Set(['fr']);
 // this is a guard against a pasted wall of text, not a normal path: a long
 // request would spend a minute generating and blow the function's budget.
 const GEMINI_MAX_CHARS = 700;
-const GEMINI_TIMEOUT_MS = 20_000;
+const GEMINI_TIMEOUT_MS = 12_000;    // per attempt
 
-// The model is a chat model wearing a TTS hat, and a bare short line reads to it
-// as something to answer rather than something to say: "Bonjour." comes back 400
-// ("Model tried to generate text, but it should only be used for TTS"), and
-// "Oui." comes back 200 with zero bytes of audio. An explicit instruction settles
-// it — measured: with this prefix "Bonjour." speaks in 1.21 s, and the prefix
+// Speech here is sampled, not computed, and a rare sample comes out degenerate:
+// the very same request returns either audio or `finishReason: OTHER` with no
+// parts at all, and occasionally a 400 saying the model "tried to generate text"
+// instead of speaking. Measured on one word, "Oui.", across repeats: 0.73 s of
+// audio, 0.77 s, then nothing, then 0.73 s again. So neither is a property of the
+// text and neither is a reason to give up — it is a reason to ask again.
+// Three attempts, and Deepgram only if all three come back empty.
+const GEMINI_TRIES = 3;
+const GEMINI_RETRY_PAUSE_MS = 400;
+// …but not past this, whatever the attempts are doing: an edge function that
+// spends half a minute on one sentence has already lost the visitor.
+const GEMINI_BUDGET_MS = 22_000;
+
+// An explicit instruction makes the "answer it instead of saying it" reading much
+// rarer — measured: with this prefix "Bonjour." speaks in 1.21 s, and the prefix
 // itself is not read aloud. It is French because French is the only language
 // routed here; Gemini takes the spoken language from the text, so an English
 // instruction over a French line would be arguing with itself.
 const GEMINI_READ_ALOUD = 'Lis ce texte à voix haute, mot pour mot : ';
-// Shorter than an eighth of a second is not a spoken sentence. It is the empty
-// answer above, which would otherwise reach the visitor as a valid, silent WAV
-// and drop the sentence without a sound.
+// Shorter than an eighth of a second is not a spoken sentence — it is the empty
+// sample above. Caught here so it becomes another attempt rather than a valid,
+// silent WAV that drops the sentence without a sound.
 const GEMINI_MIN_PCM_BYTES = 6000;   // 24 kHz × 16 bit mono ≈ 48 000 bytes a second
 
 // Gemini hands back raw signed 16-bit little-endian PCM, mono, at the rate named
@@ -114,10 +124,10 @@ function wavFromPcm(pcm: Uint8Array, rate: number): ArrayBuffer {
   return buf;
 }
 
-// null means "not this time" for every reason there is — no key, rate-limited,
-// timed out, an empty candidate. The caller falls through to Deepgram, so none of
-// them is worth telling the visitor about.
-async function geminiSpeak(text: string, key: string): Promise<ArrayBuffer | null> {
+// One attempt. `null` says "ask again" — an empty sample, a refusal to speak, a
+// timeout; `'stop'` says "do not", which is only the minute quota, since asking
+// again inside the same window can only be refused again.
+async function geminiOnce(text: string, key: string): Promise<ArrayBuffer | null | 'stop'> {
   try {
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
@@ -134,6 +144,7 @@ async function geminiSpeak(text: string, key: string): Promise<ArrayBuffer | nul
         }),
       }
     );
+    if (res.status === 429 || res.status === 403) return 'stop';
     if (!res.ok) return null;
     const data = (await res.json()) as {
       candidates?: Array<{ content?: { parts?: Array<{ inlineData?: { data?: string; mimeType?: string } }> } }>;
@@ -142,13 +153,28 @@ async function geminiSpeak(text: string, key: string): Promise<ArrayBuffer | nul
     if (!part?.data) return null;
     const rate = Number(/rate=(\d+)/.exec(part.mimeType ?? '')?.[1]) || 24000;
     const raw = atob(part.data);
-    if (raw.length < GEMINI_MIN_PCM_BYTES) return null;   // silence is not an answer
+    if (raw.length < GEMINI_MIN_PCM_BYTES) return null;
     const pcm = new Uint8Array(raw.length);
     for (let i = 0; i < raw.length; i++) pcm[i] = raw.charCodeAt(i);
     return wavFromPcm(pcm, rate);
   } catch {
-    return null;
+    return null;   // a timeout is worth one more try inside the budget
   }
+}
+
+// Up to GEMINI_TRIES samples of the same sentence, because a degenerate one says
+// nothing about the next. null only once the budget or the attempts run out — and
+// then the caller falls through to Deepgram, which is nobody's business but ours.
+async function geminiSpeak(text: string, key: string): Promise<ArrayBuffer | null> {
+  const deadline = Date.now() + GEMINI_BUDGET_MS;
+  for (let attempt = 1; attempt <= GEMINI_TRIES; attempt++) {
+    const got = await geminiOnce(text, key);
+    if (got === 'stop') return null;
+    if (got) return got;
+    if (attempt === GEMINI_TRIES || Date.now() + GEMINI_RETRY_PAUSE_MS >= deadline) return null;
+    await new Promise((r) => setTimeout(r, GEMINI_RETRY_PAUSE_MS));
+  }
+  return null;
 }
 
 // An English voice reading French is worse than no voice at all — the browser's
